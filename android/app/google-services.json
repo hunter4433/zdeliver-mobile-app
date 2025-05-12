@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "631344061445",
+    "project_id": "zdeliver-acc55",
+    "storage_bucket": "zdeliver-acc55.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:631344061445:android:b729dd9c8b0f6b1400d06c",
+        "android_client_info": {
+          "package_name": "com.example.mrsgorilla"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDLr0f-78O3_7ZggukjT_xKh5BxPZ-cTv0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
