@@ -443,197 +443,197 @@ class _CheckoutPage extends State<CheckoutPage> {
                 const SizedBox(height: 100),
               ],
             ),
-          ),
+          );
 
 
-          // Fixed bottom button - UPDATED
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: Container(
-              color: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Only show this when address is selected
-                  if (_addressSelected)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  "Deliver to",
-                                  style: TextStyle(
-                                    fontSize: 15,fontWeight: FontWeight.w700,
-                                    color: Color(0xFFE47650),
-                                  ),
-                                ),
-                                Text(
-                                  _selectedAddress.split(' - ').first,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  "Hs no. 15, Sharadanagari, karjat, mirajgaon road...",
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    color: Colors.grey.shade600,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          OutlinedButton(
-                            onPressed: () {
-                              _showAddressSelectionSheet();
-                            },
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-                              side: const BorderSide(color: Color(0xFFE47650)),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(13),
-                              ),
-                            ),
-                            child: const Text(
-                              "Change",
-                              style: TextStyle(fontSize: 16,
-                                color: Color(0xFFE47650),
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-
-                  // Payment row
-                  Row(
-                    children: [
-                      // Only show payment method when address is selected
-                      if (_addressSelected)
-                        Expanded(
-                          flex: 2,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 35),
-                            child: Row(
-                              children: [
-                                const SizedBox(width: 8),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      "Pay using",
-                                      style: TextStyle(fontSize: 14, color: Colors.grey),
-                                    ),
-                                    Row(
-                                      children: [
-                                        const Text(
-                                          "Cash on delivery",
-                                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                                        ),
-                                        const SizedBox(width: 5),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-
-                      // Payment button - MODIFIED
-                      Expanded(
-                        flex: _addressSelected ? 3 : 5,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            if (_addressSelected) {
-                              // Handle payment
-                              _proceedToPayment();
-                            } else {
-                              // Show address selection
-                              _showAddressSelectionSheet();
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF3F2E78),
-                            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 18),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                          ),
-                          child: _addressSelected
-                          // Content when address is selected - Show price and "Place Order"
-                              ? Row(
-                            children: [
-                              // Left side: To pay + Rs. 120
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: const [
-                                  Text(
-                                    "To pay",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 14,
-                                      color: Colors.white70,
-                                    ),
-                                  ),
-                                  Text(
-                                    "Rs. 120",
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w700,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(width: 24),
-                              // Right side: Place Order text
-                              Text(
-                                "Place Order",
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
-                          )
-                          // Content when no address is selected - Only "Select Address to deliver order"
-                              : Center(
-                            child: Text(
-                              "Select Address to deliver order",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-
-
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+    //       // Fixed bottom button - UPDATED
+    //       Positioned(
+    //         left: 0,
+    //         right: 0,
+    //         bottom: 0,
+    //         child: Container(
+    //           color: Colors.white,
+    //           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    //           child: Column(
+    //             mainAxisSize: MainAxisSize.min,
+    //             children: [
+    //               // Only show this when address is selected
+    //               if (_addressSelected)
+    //                 Padding(
+    //                   padding: const EdgeInsets.only(bottom: 12),
+    //                   child: Row(
+    //                     children: [
+    //                       Expanded(
+    //                         child: Column(
+    //                           crossAxisAlignment: CrossAxisAlignment.start,
+    //                           children: [
+    //                             const Text(
+    //                               "Deliver to",
+    //                               style: TextStyle(
+    //                                 fontSize: 15,fontWeight: FontWeight.w700,
+    //                                 color: Color(0xFFE47650),
+    //                               ),
+    //                             ),
+    //                             Text(
+    //                               _selectedAddress.split(' - ').first,
+    //                               style: const TextStyle(
+    //                                 fontSize: 16,
+    //                                 fontWeight: FontWeight.bold,
+    //                               ),
+    //                             ),
+    //                             Text(
+    //                               "Hs no. 15, Sharadanagari, karjat, mirajgaon road...",
+    //                               style: TextStyle(
+    //                                 fontSize: 15,
+    //                                 color: Colors.grey.shade600,
+    //                                 overflow: TextOverflow.ellipsis,
+    //                               ),
+    //                             ),
+    //                           ],
+    //                         ),
+    //                       ),
+    //                       OutlinedButton(
+    //                         onPressed: () {
+    //                           _showAddressSelectionSheet();
+    //                         },
+    //                         style: OutlinedButton.styleFrom(
+    //                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+    //                           side: const BorderSide(color: Color(0xFFE47650)),
+    //                           shape: RoundedRectangleBorder(
+    //                             borderRadius: BorderRadius.circular(13),
+    //                           ),
+    //                         ),
+    //                         child: const Text(
+    //                           "Change",
+    //                           style: TextStyle(fontSize: 16,
+    //                             color: Color(0xFFE47650),
+    //                             fontWeight: FontWeight.w800,
+    //                           ),
+    //                         ),
+    //                       ),
+    //                     ],
+    //                   ),
+    //                 ),
+    //
+    //
+    //               // Payment row
+    //               Row(
+    //                 children: [
+    //                   // Only show payment method when address is selected
+    //                   if (_addressSelected)
+    //                     Expanded(
+    //                       flex: 2,
+    //                       child: Container(
+    //                         padding: const EdgeInsets.symmetric(vertical: 35),
+    //                         child: Row(
+    //                           children: [
+    //                             const SizedBox(width: 8),
+    //                             Column(
+    //                               crossAxisAlignment: CrossAxisAlignment.start,
+    //                               children: [
+    //                                 const Text(
+    //                                   "Pay using",
+    //                                   style: TextStyle(fontSize: 14, color: Colors.grey),
+    //                                 ),
+    //                                 Row(
+    //                                   children: [
+    //                                     const Text(
+    //                                       "Cash on delivery",
+    //                                       style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+    //                                     ),
+    //                                     const SizedBox(width: 5),
+    //                                   ],
+    //                                 ),
+    //                               ],
+    //                             ),
+    //                           ],
+    //                         ),
+    //                       ),
+    //                     ),
+    //
+    //
+    //                   // Payment button - MODIFIED
+    //                   Expanded(
+    //                     flex: _addressSelected ? 3 : 5,
+    //                     child: ElevatedButton(
+    //                       onPressed: () {
+    //                         if (_addressSelected) {
+    //                           // Handle payment
+    //                           _proceedToPayment();
+    //                         } else {
+    //                           // Show address selection
+    //                           _showAddressSelectionSheet();
+    //                         }
+    //                       },
+    //                       style: ElevatedButton.styleFrom(
+    //                         backgroundColor: const Color(0xFF3F2E78),
+    //                         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 18),
+    //                         shape: RoundedRectangleBorder(
+    //                           borderRadius: BorderRadius.circular(20),
+    //                         ),
+    //                       ),
+    //                       child: _addressSelected
+    //                       // Content when address is selected - Show price and "Place Order"
+    //                           ? Row(
+    //                         children: [
+    //                           // Left side: To pay + Rs. 120
+    //                           Column(
+    //                             crossAxisAlignment: CrossAxisAlignment.start,
+    //                             children: const [
+    //                               Text(
+    //                                 "To pay",
+    //                                 style: TextStyle(
+    //                                   fontWeight: FontWeight.w600,
+    //                                   fontSize: 14,
+    //                                   color: Colors.white70,
+    //                                 ),
+    //                               ),
+    //                               Text(
+    //                                 "Rs. 120",
+    //                                 style: TextStyle(
+    //                                   fontSize: 18,
+    //                                   fontWeight: FontWeight.w700,
+    //                                   color: Colors.white,
+    //                                 ),
+    //                               ),
+    //                             ],
+    //                           ),
+    //                           SizedBox(width: 24),
+    //                           // Right side: Place Order text
+    //                           Text(
+    //                             "Place Order",
+    //                             style: TextStyle(
+    //                               fontSize: 18,
+    //                               fontWeight: FontWeight.w800,
+    //                               color: Colors.white,
+    //                             ),
+    //                           ),
+    //                         ],
+    //                       )
+    //                       // Content when no address is selected - Only "Select Address to deliver order"
+    //                           : Center(
+    //                         child: Text(
+    //                           "Select Address to deliver order",
+    //                           style: TextStyle(
+    //                             fontSize: 16,
+    //                             fontWeight: FontWeight.w800,
+    //                             color: Colors.white,
+    //                           ),
+    //                         ),
+    //                       ),
+    //                     ),
+    //
+    //
+    //                   ),
+    //                 ],
+    //               ),
+    //             ],
+    //           ),
+    //         ),
+    //       ),
+    //     ],
+    //   ),
+    // );
   }
 
 
