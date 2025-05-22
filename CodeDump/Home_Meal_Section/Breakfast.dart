@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:mrsgorilla/Home_Meal_Section/Breakfast_Details.dart';
+
+import 'Breakfast_Details.dart';
+// import 'package:mrsgorilla/Home_Meal_Section/Breakfast_Details.dart';
 // import 'package:your_app_name/pages/meal_details/aloo_paratha_page.dart';
 
-class LunchSection extends StatefulWidget {
-  const LunchSection({Key? key}) : super(key: key);
+class BreakfastSection extends StatefulWidget {
+  const BreakfastSection({Key? key}) : super(key: key);
 
   @override
-  State<LunchSection> createState() => _LunchSectionState();
+  State<BreakfastSection> createState() => _BreakfastSectionState();
 }
 
-class _LunchSectionState extends State<LunchSection> {
+class _BreakfastSectionState extends State<BreakfastSection> {
   List<dynamic> breakfastItems = [];
   bool isLoading = true;
   String errorMessage = '';
@@ -31,11 +33,12 @@ class _LunchSectionState extends State<LunchSection> {
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({'category': 'lunch'}),
+        body: json.encode({'category': 'breakfast'}),
       );
 
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
+        print("breakfast");
         print(responseData);
         setState(() {
           breakfastItems = responseData['dishes'] ?? [];
@@ -156,7 +159,7 @@ class _LunchSectionState extends State<LunchSection> {
           child: Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              'Choose meal-Lunch',
+              'Choose meal-Breakfasts',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -182,10 +185,13 @@ class _LunchSectionState extends State<LunchSection> {
               final String dishName = item['name'] ?? 'Unknown Dish';
               final String imagePath = getImagePath(item['image_url'], dishName);
               final String ingredients = getIngredientsText(item);
+              final String description = item['description'] ?? 'Not Available';
               final bool isHighlighted = index == 2; // Example: highlight the third item
 
               return GestureDetector(
                 onTap: () {
+                  print('mohit');
+                  print(item);
                   print('$dishName selected');
                   Navigator.push(
                     context,
@@ -194,7 +200,7 @@ class _LunchSectionState extends State<LunchSection> {
                         dishName: item['name'],
                         ingredients: item['ingredients'],
                         description: item['description'],
-                          Image:item['image_url_2']
+                        Image:item['image_url_2']
                       ),
                     ),
                   );

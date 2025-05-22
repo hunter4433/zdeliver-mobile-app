@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:mrsgorilla/Home_Meal_Section/Breakfast_Details.dart';
+// import 'package:mrsgorilla/Home_Meal_Section/Breakfast_Details.dart';
+
+import 'Breakfast_Details.dart';
 // import 'package:your_app_name/pages/meal_details/aloo_paratha_page.dart';
 
 class DinnerSection extends StatefulWidget {

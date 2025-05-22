@@ -3,9 +3,9 @@ import 'package:mrsgorilla/mapView.dart';
 import 'package:mrsgorilla/Home_Recommend_section/standardGorillaCart.dart';
 import 'package:mrsgorilla/Home_Recommend_section/gorillaFruitcart.dart';
 import 'package:mrsgorilla/Home_Recommend_section/customize_cart.dart';
-import 'package:mrsgorilla/Home_Recommend_section/GroceryPage.dart';
+
 import 'dart:convert';
-import 'menu/support.dart';
+import '../lib/menu/support.dart';
 import "package:mrsgorilla/menu/Addreass.dart";
 import "package:mrsgorilla/address_book.dart";
 import "package:mrsgorilla/menu/order_details.dart";
@@ -14,7 +14,7 @@ import 'package:mrsgorilla/menu/notifications.dart';
 import 'package:mrsgorilla/menu/cart_history.dart';
 import 'package:mrsgorilla/searchResult.dart';
 import 'package:http/http.dart' as http;
-import 'package:mrsgorilla/menu/basket.dart';
+// import '../CodeDump/basket.dart';
 import 'package:flutter/material.dart';
 import 'package:mrsgorilla/orderPlace.dart';
 import 'package:mrsgorilla/searchPage.dart';
@@ -24,8 +24,7 @@ import 'package:mrsgorilla/address_selection.dart';
 import 'package:mrsgorilla/address_selection_sheet.dart';
 import 'package:mrsgorilla/auth_page.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mrsgorilla/Home_featured/most_bought.dart';
-import 'package:mrsgorilla/Home_featured/lowPriceItems.dart';
+
 
 class newDmeo extends StatefulWidget {
   const newDmeo({Key? key}) : super(key: key);
@@ -43,7 +42,6 @@ class _newDmeo extends State<newDmeo> with SingleTickerProviderStateMixin {
   late Animation<double> _drawerAnimation;
   late Animation<double> _scrimAnimation;
   bool _isDrawerOpen = false;
-  List<dynamic> _featuredItems = [];
   List<dynamic> _lowPriceItems = [];
   bool _isLoading = true;
   bool addressLoading=true;
@@ -56,7 +54,6 @@ class _newDmeo extends State<newDmeo> with SingleTickerProviderStateMixin {
     super.initState();
     _secureStorage = const FlutterSecureStorage();
     _initializePage();
-    _fetchLowPriceItems();
     _drawerController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 250),
@@ -88,95 +85,19 @@ class _newDmeo extends State<newDmeo> with SingleTickerProviderStateMixin {
     });
   }
 
-  // void navigateToTargetPage(BuildContext context) {
-  //   Navigator.push(
-  //     context,
-  //     MaterialPageRoute(builder: (context) => FreshVegPage()), // Replace with your page
-  //   );
-  // }
-  //
-  // void navigateToHerbsPage(BuildContext context) {
-  //   Navigator.push(
-  //     context,
-  //     MaterialPageRoute(builder: (context) => HerbsPage()), // Replace with your page
-  //   );
-  // }
-  //
-  // void navigateToStaplePage(BuildContext context) {
-  //   Navigator.push(
-  //     context,
-  //     MaterialPageRoute(builder: (context) => StaplePage()), // Replace with your page
-  //   );
-  // }
 
   Future<void> _initializePage() async {
     // Retrieve saved address first
     savedAddress = await _secureStorage.read(key: 'saved_address');
 
-    // Then fetch featured items
-    await _fetchFeaturedItems();
-
-// Update loading state
+   // Update loading state
     setState(() {
       addressLoading= false;
     });
   }
 
-  Future<void> _fetchFeaturedItems() async {
-    savedAddress = await _secureStorage.read(key: 'saved_address');
-    try {
-      final response = await http.get(
-        Uri.parse('http://3.111.39.222/api/v1/promotion/featured'),
-      );
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> responseData = json.decode(response.body);
-
-        setState(() {
-          _featuredItems = responseData['data'] ?? [];
-          _isLoading = false;
-        });
-      } else {
-        setState(() {
-          _errorMessage = 'Failed to load featured items';
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Error connecting to server';
-        _isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _fetchLowPriceItems() async {
-    try {
-      final response = await http.get(
-        Uri.parse('http://3.111.39.222/api/v1/promotion/low-price'),
-      );
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> responseData = json.decode(response.body);
-
-        setState(() {
-          _lowPriceItems = responseData['data'] ?? [];
-          _isLoading = false;
-        });
-      } else {
-        setState(() {
-          _errorMessage = 'Failed to load low-price items';
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Error connecting to server';
-        _isLoading = false;
-      });
-    }
-  }
-
+  
   @override
   Widget build(BuildContext context) {
 
@@ -261,7 +182,6 @@ class _newDmeo extends State<newDmeo> with SingleTickerProviderStateMixin {
                   ),
                 ),
 
-                // Daily Fresh promotional banner
                 Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
@@ -344,14 +264,7 @@ class _newDmeo extends State<newDmeo> with SingleTickerProviderStateMixin {
                   backgroundColor: Colors.white,
                   imagePath: 'assets/images/homecustomizecart.png',
                 ),
-                // _buildRecommendedItem(
-                //   index: 3,
-                //   title: 'Customized order',
-                //   subtitle: 'any 5 vegitables and fruits',
-                //   time: '17 min',
-                //   backgroundColor: Colors.white,
-                //   imagePath: 'assets/images/homescooter.png',
-                // ),
+
                 SizedBox(height: 15,),
 
                 Divider(height: 40,),
@@ -400,7 +313,7 @@ class _newDmeo extends State<newDmeo> with SingleTickerProviderStateMixin {
               },
             ),
 
-// Animated drawer
+          // Animated drawer
             AnimatedBuilder(
               animation: _drawerAnimation,
               builder: (context, child) {
@@ -518,7 +431,7 @@ class _newDmeo extends State<newDmeo> with SingleTickerProviderStateMixin {
                         // Menu items
                         _buildMenuItem('assets/images/menu1.png', "Support", SupportScreen()),
                         _buildMenuItem('assets/images/menu2.png', "My history", OrderHistoryScreen()),
-                        _buildMenuItem('assets/images/menu3.png', "My Baskets", BasketPage()),
+                        // _buildMenuItem('assets/images/menu3.png', "My Baskets", BasketPage()),
                         _buildMenuItem('assets/images/menu4.png', "Address book", AddressBookPage()),
                         _buildMenuItem('assets/images/menu5.png', "Vegetables quality", OrderDetailsPage()),
                         _buildMenuItem('assets/images/menu6.png', "Notifications", NotificationsScreen()),
@@ -636,12 +549,7 @@ class _newDmeo extends State<newDmeo> with SingleTickerProviderStateMixin {
                   MaterialPageRoute(builder: (context) => customize_cart()),
                 );
                 break;
-              case 3:
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => GroceryPage()),
-                );
-                break;
+
             }
           }
         });
@@ -739,88 +647,6 @@ class _newDmeo extends State<newDmeo> with SingleTickerProviderStateMixin {
   }
 }
 
-void _showDeliveryOptionsBottomSheet(BuildContext context, dynamic item) {
-  showModalBottomSheet(
-    context: context,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    isScrollControlled: true,
-    builder: (context) {
-      return Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),  // Rounded top-left corner
-            topRight: Radius.circular(20), // Rounded top-right corner
-          ),
-        ),
-        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 30),
-        height: MediaQuery.of(context).size.height * 0.22,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'How do you want your order delivered as?',
-              style: GoogleFonts.leagueSpartan(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-                color: Colors.black87,
-              ),
-              textAlign: TextAlign.center,
-            ),
-
-            SizedBox(height: 15),
-            OutlinedButton(
-              onPressed: () {
-                // Close bottom sheet and navigate to checkout with item data
-                Navigator.pop(context);
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => CheckoutPage(
-                          // Pass the entire item object to the checkout page
-                          selectedProducts: [
-                            {
-                              // Map the item to match the expected structure
-                              'name': item['item_name'],
-                              'image_url': item['image_url'],
-                              // 'price_per_unit': item['price_per_unit'],
-                              // 'old_price_per_unit': item['old_price_per_unit'],
-                              // Add any other relevant fields
-                              // You might want to add a quantity field
-                              'quantity': 1,
-                            }
-                          ],
-                          // Optional: add source screen if needed
-                          sourceScreen: 'customiseCart',
-                        )
-                    )
-                );
-              },
-              style: OutlinedButton.styleFrom(
-                backgroundColor: Color(0xFFF15A25),
-                padding: EdgeInsets.symmetric(vertical: 15),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                side: BorderSide(color: Colors.grey, width: 1),
-              ),
-              child: Text(
-                'Customized cart',
-                style: GoogleFonts.leagueSpartan(
-                  fontSize: 20,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    },
-  );
-}
 
 
 Future<bool> sendVendorNotification() async {
@@ -1049,5 +875,3 @@ class CartBottomSheet {
 
 }
 
-// Usage in your app
-// CartBottomSheet.show(context);

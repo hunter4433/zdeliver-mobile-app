@@ -3,23 +3,26 @@ import 'package:flutter/material.dart';
 import 'package:mrsgorilla/Home_Recommend_section/standardGorillaCart.dart';
 import 'package:mrsgorilla/Home_Recommend_section/gorillaFruitcart.dart';
 import 'package:mrsgorilla/Home_Recommend_section/customize_cart.dart';
-import 'package:mrsgorilla/Home_Recommend_section/GroceryPage.dart';
+
 import 'dart:convert';
-import 'menu/support.dart';
-import "package:mrsgorilla/menu/basket.dart";
+import '../lib/menu/support.dart';
+import 'Home_Meal_Section/Breakfast.dart';
+import 'Home_Meal_Section/Lunch.dart';
+import 'Home_Meal_Section/dinner.dart';
+import "basket.dart";
 import "package:mrsgorilla/menu/Addreass.dart";
 import "package:mrsgorilla/menu/order_details.dart";
 import 'package:mrsgorilla/menu/order_history.dart';
 import 'package:mrsgorilla/menu/notifications.dart';
 import 'package:mrsgorilla/menu/cart_history.dart';
-import 'package:mrsgorilla/Home_Incart_Section/FreshVegetable.dart';
-import 'package:mrsgorilla/Home_Incart_Section/herbsPage.dart';
-import 'package:mrsgorilla/Home_Incart_Section/staplePage.dart';
-import 'package:mrsgorilla/Home_Meal_Section/Breakfast_Details.dart';
+// import 'package:mrsgorilla/Home_Incart_Section/FreshVegetable.dart';
+// import 'package:mrsgorilla/Home_Incart_Section/herbsPage.dart';
+// import 'package:mrsgorilla/Home_Incart_Section/staplePage.dart';
+// import 'package:mrsgorilla/Home_Meal_Section/Breakfast_Details.dart';
 import 'package:mrsgorilla/searchResult.dart';
-import 'package:mrsgorilla/Home_Meal_Section/Breakfast.dart';
-import 'package:mrsgorilla/Home_Meal_Section/Lunch.dart';
-import 'package:mrsgorilla/Home_Meal_Section/dinner.dart';
+// import 'package:mrsgorilla/Home_Meal_Section/Breakfast.dart';
+// import 'package:mrsgorilla/Home_Meal_Section/Lunch.dart';
+// import 'package:mrsgorilla/Home_Meal_Section/dinner.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -73,24 +76,24 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   }
 
   void navigateToTargetPage(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => FreshVegPage()), // Replace with your page
-    );
+    // Navigator.push(
+    //   context,
+    //   MaterialPageRoute(builder: (context) => FreshVegPage()), // Replace with your page
+    // );
   }
 
   void navigateToHerbsPage(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => HerbsPage()), // Replace with your page
-    );
+    // Navigator.push(
+    //   context,
+    //   MaterialPageRoute(builder: (context) => HerbsPage()), // Replace with your page
+    // );
   }
 
   void navigateToStaplePage(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => StaplePage()), // Replace with your page
-    );
+    // Navigator.push(
+    //   context,
+    //   MaterialPageRoute(builder: (context) => StaplePage()), // Replace with your page
+    // );
   }
 
   @override
@@ -694,7 +697,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               case 3:
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => GroceryPage()),
+                  MaterialPageRoute(builder: (context) => customize_cart()),
                 );
                 break;
             }

@@ -3,8 +3,6 @@ import 'package:mrsgorilla/address_selection_sheet.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:mrsgorilla/orderPlace.dart';
-import 'package:mrsgorilla/menu/basket.dart';
-import 'package:mrsgorilla/Home_Recommend_section/GroceryPage.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 
@@ -127,50 +125,6 @@ class _CheckoutPage extends State<CheckoutPage> {
 
                       Row(
                         children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => BasketPage()
-                                    )
-                                );
-                              },
-                              style: OutlinedButton.styleFrom(
-                                backgroundColor: const Color(0xFFF0F8FF),
-                                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 18),
-                                side: BorderSide(color: Colors.grey.shade500, width: 2),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                   Text(
-                                    "Create Basket",
-                                     style: GoogleFonts.leagueSpartan(
-                                      fontSize: 16,
-                                      color: Colors.black87,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  Container(
-                                    height: 22,
-                                    width: 22,
-                                    decoration: const BoxDecoration(
-                                      borderRadius: BorderRadius.all(Radius.circular(4)),
-                                      image: DecorationImage(
-                                        image: AssetImage('assets/images/home8.png'),
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
                           const SizedBox(width: 15),
                           Expanded(
                             child: ElevatedButton(

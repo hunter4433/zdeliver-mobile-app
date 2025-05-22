@@ -3,26 +3,26 @@ import 'package:mrsgorilla/mapView.dart';
 import 'package:mrsgorilla/Home_Recommend_section/standardGorillaCart.dart';
 import 'package:mrsgorilla/Home_Recommend_section/gorillaFruitcart.dart';
 import 'package:mrsgorilla/Home_Recommend_section/customize_cart.dart';
-import 'package:mrsgorilla/Home_Recommend_section/GroceryPage.dart';
+
 import 'dart:convert';
-import 'menu/support.dart';
-import "package:mrsgorilla/menu/basket.dart";
+import '../lib/menu/support.dart';
+import "basket.dart";
 import "package:mrsgorilla/menu/Addreass.dart";
 import "package:mrsgorilla/address_book.dart";
 import "package:mrsgorilla/menu/order_details.dart";
 import 'package:mrsgorilla/menu/order_history.dart';
 import 'package:mrsgorilla/menu/notifications.dart';
 import 'package:mrsgorilla/menu/cart_history.dart';
-import 'package:mrsgorilla/Home_Incart_Section/FreshVegetable.dart';
-import 'package:mrsgorilla/Home_Incart_Section/herbsPage.dart';
-import 'package:mrsgorilla/Home_Incart_Section/staplePage.dart';
-import 'package:mrsgorilla/Home_Meal_Section/Breakfast_Details.dart';
+// import 'package:mrsgorilla/Home_Incart_Section/FreshVegetable.dart';
+// import 'package:mrsgorilla/Home_Incart_Section/herbsPage.dart';
+// import 'package:mrsgorilla/Home_Incart_Section/staplePage.dart';
+// import 'package:mrsgorilla/Home_Meal_Section/Breakfast_Details.dart';
 import 'package:mrsgorilla/searchResult.dart';
-import 'package:mrsgorilla/Home_Meal_Section/Breakfast.dart';
-import 'package:mrsgorilla/Home_Meal_Section/Lunch.dart';
-import 'package:mrsgorilla/Home_Meal_Section/dinner.dart';
+// import 'package:mrsgorilla/Home_Meal_Section/Breakfast.dart';
+// import 'package:mrsgorilla/Home_Meal_Section/Lunch.dart';
+// import 'package:mrsgorilla/Home_Meal_Section/dinner.dart';
 import 'package:http/http.dart' as http;
-import 'package:mrsgorilla/menu/basket.dart';
+import 'basket.dart';
 import 'package:flutter/material.dart';
 import 'package:mrsgorilla/orderPlace.dart';
 import 'package:mrsgorilla/searchPage.dart';
@@ -32,8 +32,7 @@ import 'package:mrsgorilla/address_selection.dart';
 import 'package:mrsgorilla/address_selection_sheet.dart';
 import 'package:mrsgorilla/auth_page.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mrsgorilla/Home_featured/most_bought.dart';
-import 'package:mrsgorilla/Home_featured/lowPriceItems.dart';
+
 // import 'package:mrsgorilla/Home_Recommend_section/standardGorillaCart.dart';
 
 class Dmeo extends StatefulWidget {
@@ -702,14 +701,14 @@ class _Dmeo extends State<Dmeo> with SingleTickerProviderStateMixin {
                       TextButton(
                         onPressed: () {
 
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => FeaturedItemsPage(
-                                  featuredItems: _featuredItems
-                              ), // Replace with your target screen
-                            ),
-                          );
+                          // Navigator.push(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //     builder: (context) => FeaturedItemsPage(
+                          //         featuredItems: _featuredItems
+                          //     ), // Replace with your target screen
+                          //   ),
+                          // );
                         },
                         child: Text(
                           "see all",
@@ -794,14 +793,14 @@ class _Dmeo extends State<Dmeo> with SingleTickerProviderStateMixin {
                       ),
                       TextButton(
                         onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => LowPriceItemsPage(
-                                  featuredItems: _lowPriceItems
-                              ), // Replace with your target screen
-                            ),
-                          );
+                          // Navigator.push(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //     builder: (context) => LowPriceItemsPage(
+                          //         featuredItems: _lowPriceItems
+                          //     ), // Replace with your target screen
+                          //   ),
+                          // );
                         }, // Add navigation logic here
                         child: Text(
                           "see all",
@@ -1158,7 +1157,7 @@ class _Dmeo extends State<Dmeo> with SingleTickerProviderStateMixin {
               case 3:
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => GroceryPage()),
+                  MaterialPageRoute(builder: (context) => customize_cart()),
                 );
                 break;
             }

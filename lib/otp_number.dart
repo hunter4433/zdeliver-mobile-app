@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import './HomePage.dart';
-import"Dmeo.dart";
 import 'package:google_fonts/google_fonts.dart';
+import 'gohome.dart';
 
 
 class OtpVerificationScreen extends StatefulWidget {
@@ -290,7 +289,7 @@ print(responseData);
                           Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => Dmeo (),
+                              builder: (context) => HomePageWithMap (),
                             ),
                                 (route) => false,
                           );
@@ -300,7 +299,7 @@ print(responseData);
                           Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => Dmeo(),
+                              builder: (context) => HomePageWithMap(),
                             ),
                                 (route) => false,
                           );
