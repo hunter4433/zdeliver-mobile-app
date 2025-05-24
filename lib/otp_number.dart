@@ -4,10 +4,12 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:google_fonts/google_fonts.dart';
 import 'gohome.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 
 class OtpVerificationScreen extends StatefulWidget {
   final String phoneNumber;
+  // static const _storage = FlutterSecureStorage();
 
 
   const OtpVerificationScreen({
@@ -32,12 +34,14 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   int _remainingSeconds = 30;
   Timer? _timer;
   bool isLoading=false;
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
   Future<Map<String, dynamic>> verifyOtp(String phoneNumber, String otp) async {
-    final String baseUrl = 'http://3.111.39.222/auth';
+    final String baseUrl = 'http://13.126.169.224/api/auth';
+
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/verify-otp'), // Adjust the endpoint to match your backend route
+        Uri.parse('$baseUrl/verify-otp'),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -48,9 +52,23 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       );
 
       final responseData = jsonDecode(response.body);
-print(responseData);
+      print(responseData);
+
       if (response.statusCode == 200) {
-        // Existing user login
+        print(response.body);
+
+        // Store user data for existing user
+        final userId = responseData['userId']?.toString();
+        final phone_number = responseData['phone_number']?.toString();
+        await _secureStorage.write(
+            key: 'phone_number',
+            value: phone_number!
+        );
+        await _secureStorage.write(
+            key: 'userId',
+            value: userId!
+        );
+
         return {
           'success': true,
           'message': responseData['message'],
@@ -58,7 +76,20 @@ print(responseData);
           'isNewUser': false,
         };
       } else if (response.statusCode == 201) {
-        // New user registration
+        print(response.body);
+
+        // Store user data for new user
+        final userId = responseData['userId']?.toString();
+        final phone_number = responseData['phone_number']?.toString();
+        await _secureStorage.write(
+            key: 'phone_number',
+            value: phone_number!
+        );
+        await _secureStorage.write(
+            key: 'userId',
+            value: userId!
+        );
+
         return {
           'success': true,
           'message': responseData['message'],
@@ -78,6 +109,7 @@ print(responseData);
       };
     }
   }
+
 
 
   @override

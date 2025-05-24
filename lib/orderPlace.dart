@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mrsgorilla/mapView.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class OrderPlacedPage extends StatefulWidget {
   final String? address;
@@ -16,7 +17,10 @@ class _OrderPlacedPageState extends State<OrderPlacedPage> with SingleTickerProv
   late Animation<double> _scaleAnimation;
   late Animation<double> _opacityAnimation;
   late Animation<Offset> _slideAnimation;
-
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+  
+  
+  
   @override
   void initState() {
     super.initState();
@@ -53,6 +57,25 @@ class _OrderPlacedPageState extends State<OrderPlacedPage> with SingleTickerProv
     Future.delayed(const Duration(milliseconds: 300), () {
       _animationController.forward();
     });
+  }
+
+  Future<String?> getAddress() async {
+    try {
+      return await _secureStorage.read(key: 'saved_address');
+    } catch (e) {
+      print('Error reading saved_address: $e');
+      return null;
+    }
+  }
+  Future<String?> getPhoneNumber() async {
+    try {
+      String? number= await _secureStorage.read(key: 'phone_number');
+      String details= "Guest $number";
+      return details;
+    } catch (e) {
+      print('Error reading phone number: $e');
+      return null;
+    }
   }
 
   @override
@@ -153,7 +176,7 @@ class _OrderPlacedPageState extends State<OrderPlacedPage> with SingleTickerProv
                         ),
                         child: Center(
                           child: Image.asset(
-                            'assets/images/delivery_animation.gif',
+                            'assets/images/newlogo.png',
                             width: 100,
                             height: 100,
                             // Replace with your animation asset
@@ -270,20 +293,24 @@ class _OrderPlacedPageState extends State<OrderPlacedPage> with SingleTickerProv
                   ),
                   const SizedBox(height: 4),
                   const Text(
-                    'Katik Gadade',
+                    'Guest',
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 15,
                       color: Color(0xFF303030),
                     ),
                   ),
-                  Text(
-                    widget.address ?? 'Hs no. 15, Sharadanagari, karjat, mirajgaon road,\n414402, dist- ahmednagar.',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15,
-                      color: Color(0xFF303030),
-                    ),
+                  FutureBuilder<String?>(
+                    future: getAddress(), // Use your authService instance
+                    builder: (context, snapshot) {
+                      return Text(
+                        snapshot.data ?? 'Loading...',
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: 14,
+                        ),
+                      );
+                    },
                   ),
                   const SizedBox(height: 12),
                   const Divider(color: Colors.white, height: 10),
@@ -296,13 +323,17 @@ class _OrderPlacedPageState extends State<OrderPlacedPage> with SingleTickerProv
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Kartik - +918247451335',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                      color: Color(0xFF303030),
-                    ),
+                  FutureBuilder<String?>(
+                    future: getPhoneNumber(), // Use your authService instance
+                    builder: (context, snapshot) {
+                      return Text(
+                        snapshot.data ?? 'Loading...',
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: 14,
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),

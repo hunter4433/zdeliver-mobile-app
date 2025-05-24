@@ -58,45 +58,87 @@ class _MapScreenState extends State<MapScreen> {
   void initState() {
     super.initState();
     _loadMarkerImages();
-    _checkAndRequestLocationPermission();
+    // _checkAndRequestLocationPermission();
+    _checkLocationPermission();
+  }
+
+  Future<String> _getAddressFromCoordinates(double latitude, double longitude) async {
+    try {
+      // Use Nominatim OpenStreetMap API for reverse geocoding (coords to address)
+      final response = await http.get(
+        Uri.parse(
+            'https://nominatim.openstreetmap.org/reverse?format=json&lat=$latitude&lon=$longitude&zoom=18&addressdetails=1'
+        ),
+        headers: {
+          'Accept-Language': 'en', // Ensure English results
+          'User-Agent': 'LocationPickerComponent/1.0', // Required by Nominatim usage policy
+        },
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Network response was not ok (${response.statusCode})');
+      }
+
+      final data = json.decode(response.body);
+      print(data);
+
+      if (data != null && data['display_name'] != null) {
+        await _secureStorage.write(
+                      key: 'saved_address',
+                       value: data['display_name']!
+                  );
+        String? savedAddress = await _secureStorage.read(key: 'saved_address');
+        print('changdan hee');
+        print(savedAddress);
+        // Return the formatted address
+        return data['display_name'] as String;
+      } else {
+        // If no results found, return the raw coordinates
+        return '$latitude, $longitude';
+      }
+    } catch (error) {
+      print('Error converting coordinates to address: $error');
+      // Return raw coordinates if geocoding fails
+      return '$latitude, $longitude';
+    }
   }
 
 
   // Method to convert coordinates to address using Mapbox Geocoding API
-  Future<String?> _getAddressFromCoordinates(double latitude, double longitude) async {
-    String ACCESS_TOKEN = const String.fromEnvironment("ACCESS_TOKEN");
-    final url = 'https://api.mapbox.com/geocoding/v5/mapbox.places/'
-        '$longitude,$latitude.json?access_token=$ACCESS_TOKEN';
-
-    try {
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-
-        // Check if features exist and are not empty
-        if (data['features'] != null && data['features'].isNotEmpty) {
-          // You can customize the address format as needed
-          // This example uses the most complete place name
-          final placeNames = data['features'].map((feature) =>
-          feature['place_name'] as String
-          ).toList();
-
-         String? _currentAddress = placeNames.isNotEmpty ? placeNames.first : null;
-
-          await _secureStorage.write(
-              key: 'saved_address',
-              value: _currentAddress!
-          );
-
-          return placeNames.isNotEmpty ? placeNames.first : null;
-        }
-      }
-      return null;
-    } catch (e) {
-      print('Error fetching address: $e');
-      return null;
-    }
-  }
+  // Future<String?> _getAddressFromCoordinates(double latitude, double longitude) async {
+  //   String ACCESS_TOKEN = const String.fromEnvironment("ACCESS_TOKEN");
+  //   final url = 'https://api.mapbox.com/geocoding/v5/mapbox.places/'
+  //       '$longitude,$latitude.json?access_token=$ACCESS_TOKEN';
+  //
+  //   try {
+  //     final response = await http.get(Uri.parse(url));
+  //     if (response.statusCode == 200) {
+  //       final data = json.decode(response.body);
+  //
+  //       // Check if features exist and are not empty
+  //       if (data['features'] != null && data['features'].isNotEmpty) {
+  //         // You can customize the address format as needed
+  //         // This example uses the most complete place name
+  //         final placeNames = data['features'].map((feature) =>
+  //         feature['place_name'] as String
+  //         ).toList();
+  //
+  //        String? _currentAddress = placeNames.isNotEmpty ? placeNames.first : null;
+  //
+  //         await _secureStorage.write(
+  //             key: 'saved_address',
+  //             value: _currentAddress!
+  //         );
+  //
+  //         return placeNames.isNotEmpty ? placeNames.first : null;
+  //       }
+  //     }
+  //     return null;
+  //   } catch (e) {
+  //     print('Error fetching address: $e');
+  //     return null;
+  //   }
+  // }
 
   // Add this method to fetch directions
   // In your _getDirections method, update the coordinate handling:
@@ -154,25 +196,46 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-
-  Future<void> _checkAndRequestLocationPermission() async {
+  Future<void> _checkLocationPermission() async {
     final permission = await Geolocator.checkPermission();
 
-    if (mounted) {
-      setState(() {
-        hasLocationPermission = permission == LocationPermission.whileInUse ||
-            permission == LocationPermission.always;
-      });
-    }
+    bool newPermissionStatus = permission == LocationPermission.whileInUse ||
+        permission == LocationPermission.always;
 
-    if (hasLocationPermission) {
-      print('Initializing location features');
-      _initializeLocationFeatures();
-    } else {
-      print('No location permission yet, will initialize when granted');
-      _requestLocationPermission();
+    if (mounted && newPermissionStatus != hasLocationPermission) {
+      setState(() {
+        hasLocationPermission = newPermissionStatus;
+      });
+
+      if (hasLocationPermission) {
+        print('Location permission granted, initializing location features');
+        _initializeLocationFeatures();
+        // Stop monitoring
+      } else {
+        print('Location permission not available');
+      }
     }
   }
+
+  //
+  // Future<void> _checkAndRequestLocationPermission() async {
+  //   final permission = await Geolocator.checkPermission();
+  //
+  //   if (mounted) {
+  //     setState(() {
+  //       hasLocationPermission = permission == LocationPermission.whileInUse ||
+  //           permission == LocationPermission.always;
+  //     });
+  //   }
+  //
+  //   if (hasLocationPermission) {
+  //     print('Initializing location features');
+  //     _initializeLocationFeatures();
+  //   } else {
+  //     print('No location permission yet, will initialize when granted');
+  //     _requestLocationPermission();
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {

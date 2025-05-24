@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import "package:mrsgorilla/address_selection.dart";
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AddressBookPage extends StatefulWidget {
   const AddressBookPage({Key? key}) : super(key: key);
@@ -14,6 +15,7 @@ class _AddressBookPageState extends State<AddressBookPage> {
   List<dynamic> _addresses = [];
   bool _isLoading = true;
   String _errorMessage = '';
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
   @override
   void initState() {
@@ -23,15 +25,18 @@ class _AddressBookPageState extends State<AddressBookPage> {
 
   Future<void> _fetchAddresses() async {
     try {
+      String? userId= await _secureStorage.read(key: 'userId');
+     print('http://13.126.169.224/api/v1/addresses?user_id=$userId');
+
       // Replace with your actual API endpoint
       final response = await http.get(
-        Uri.parse('http://3.111.39.222/api/v1/addresses?user_id=1'),
+        Uri.parse('http://13.126.169.224/api/v1/addresses?user_id=$userId'),
         headers: {
           'Content-Type': 'application/json',
           // Add any necessary authentication headers
         },
       );
-
+print('mhit not here $response');
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(response.body);
 

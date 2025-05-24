@@ -9,13 +9,17 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:mrsgorilla/api/firebase.dart';
 import 'firebase_options.dart';
+// Add location permission imports
+import 'package:geolocator/geolocator.dart';
+
+import 'gohome.dart';
 
 // Global navigator key for use in notification navigation
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 // Handler for background messages (must be a top-level function)
 @pragma('vm:entry-point')
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // Initialize Firebase here if needed when app is terminated
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   print('Handling a background message: ${message.messageId}');
@@ -23,12 +27,35 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   print('Background message notification: ${message.notification?.title}');
 }
 
+// Function to request location permission
+Future<void> requestLocationPermission() async {
+  try {
+    LocationPermission permission = await Geolocator.checkPermission();
+
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      print('Location permissions are permanently denied');
+      // You might want to show a dialog explaining why location is needed
+      // and direct users to app settings
+    } else if (permission == LocationPermission.denied) {
+      print('Location permissions denied');
+    } else {
+      print('Location permission granted: $permission');
+    }
+  } catch (e) {
+    print('Error requesting location permission: $e');
+  }
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
     // Register background handler before initializing Firebase
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
     // Initialize Firebase
     await Firebase.initializeApp(
@@ -38,9 +65,13 @@ void main() async {
     // Initialize notification service
     await NotificationService().initialize();
 
+    // Request location permission after notification setup
+    await requestLocationPermission();
+
     // Other initializations...
     String ACCESS_TOKEN = const String.fromEnvironment("ACCESS_TOKEN");
     mapbox.MapboxOptions.setAccessToken(ACCESS_TOKEN);
+
   } catch (e) {
     print("Error during initialization: $e");
   }
@@ -61,7 +92,9 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.deepPurple,
         fontFamily: 'Roboto',
       ),
-      home: LoginScreen(),
+       home: LoginScreen(),
+      //   home:  HomePageWithMap(),
+
     );
   }
 }

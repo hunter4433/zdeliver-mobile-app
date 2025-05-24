@@ -263,158 +263,6 @@ class _CheckoutPage extends State<CheckoutPage> {
                   ),
                 ),
 
-// Bill details section - Only shown when navigated from grocery page
-                // Bill details section - Only shown when navigated from grocery page
-                // Bill details section - Only shown when navigated from grocery page and billData is available
-               widget.sourceScreen == 'GroceryPage'
-                ?  Container(
-                    margin: const EdgeInsets.fromLTRB(5, 25, 5, 0),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "To pay : Rs. ${widget.billData!['grand_total'].toStringAsFixed(2)}",
-                          style: GoogleFonts.leagueSpartan(
-                            fontSize: 19,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Text(
-                          "Rs ${widget.billData!['saved_amount'].toStringAsFixed(0)} saved with ${widget.billData!['discount_code']}",
-                          style: GoogleFonts.leagueSpartan(
-                            color: Color(0xFF4A8F3C),fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                         Text(
-                          "Bill Details",
-                           style: GoogleFonts.leagueSpartan(
-                            fontSize: 19,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text("Items Total", style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16)),
-                            Text(
-                              "Rs. ${widget.billData!['items_total'].toStringAsFixed(2)}",
-                              style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
-                            ),
-                          ],
-                        ),
-                        Container(
-                          width: double.infinity,
-                          height: 1,
-                          margin: const EdgeInsets.symmetric(vertical: 8),
-                          child: CustomPaint(
-                            painter: DashPainter(color: Colors.grey),
-                          ),
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                const Text(
-                                  "Discounts",
-                                  style: TextStyle(color: Color(0xFF4A8F3C), fontSize: 16, fontWeight: FontWeight.w600),
-                                ),
-                                const SizedBox(width: 10),
-                                const Icon(Icons.info_outline, size: 16, color: Colors.grey),
-                              ],
-                            ),
-                            Text(
-                              "Rs. ${widget.billData!['discount_amount'].toStringAsFixed(2)}",
-                              style: const TextStyle(
-                                fontSize: 16,
-                                color: Color(0xFF4A8F3C),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Container(
-                          width: double.infinity,
-                          height: 1,
-                          margin: const EdgeInsets.symmetric(vertical: 8),
-                          child: CustomPaint(
-                            painter: DashPainter(color: Colors.grey),
-                          ),
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                const Text("Platform fee", style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16)),
-                                const SizedBox(width: 10),
-                                const Icon(Icons.info_outline, size: 16, color: Colors.grey),
-                              ],
-                            ),
-                            Text(
-                              "Rs. ${widget.billData!['platform_fee'].toStringAsFixed(2)}",
-                              style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
-                            ),
-                          ],
-                        ),
-                        Container(
-                          width: double.infinity,
-                          height: 1,
-                          margin: const EdgeInsets.symmetric(vertical: 8),
-                          child: CustomPaint(
-                            painter: DashPainter(color: Colors.grey),
-                          ),
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                const Text("Delivery charge", style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16)),
-                                const SizedBox(width: 10),
-                                const Icon(Icons.info_outline, size: 16, color: Colors.grey),
-                              ],
-                            ),
-                            Text(
-                              "Rs. ${widget.billData!['delivery_charge'].toStringAsFixed(2)}",
-                              style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
-                            ),
-                          ],
-                        ),
-                        Container(
-                          width: double.infinity,
-                          height: 1,
-                          margin: const EdgeInsets.symmetric(vertical: 8),
-                          child: CustomPaint(
-                            painter: DashPainter(color: Colors.grey),
-                          ),
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              "Grand Total",
-                              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 17),
-                            ),
-                            Text(
-                              "Rs. ${widget.billData!['grand_total'].toStringAsFixed(2)}",
-                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  )
-                          : const SizedBox.shrink(),
-
                 // Bottom branding
                 Container(
                   alignment: Alignment.center,
@@ -560,8 +408,6 @@ class _CheckoutPage extends State<CheckoutPage> {
                         child: ElevatedButton(
                           onPressed: () async {
                             if (_addressSelected) {
-                              // Handle payment
-                              // _proceedToPayment();
                               placeOrder();
 
                               showDialog(
@@ -587,12 +433,6 @@ class _CheckoutPage extends State<CheckoutPage> {
                                       builder: (context) => OrderPlacedPage()),
                                 );
                               }
-                              // Navigator.push(
-                              //     context,
-                              //     MaterialPageRoute(
-                              //         builder: (context) => OrderPlacedPage()
-                              //     )
-                              // );
                             }else {
                               // Show address selection
                               _showAddressSelectionSheet();
@@ -621,14 +461,7 @@ class _CheckoutPage extends State<CheckoutPage> {
                                       color: Colors.white70,
                                     ),
                                   ),
-                                  // Text(
-                                  //   "$totalpay",
-                                  //   style: TextStyle(
-                                  //     fontSize: 17,
-                                  //     fontWeight: FontWeight.w700,
-                                  //     color: Colors.white,
-                                  //   ),
-                                  // ),
+
                                 ],
                               ),
                               SizedBox(width: 17),

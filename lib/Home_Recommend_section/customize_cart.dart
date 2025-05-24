@@ -69,7 +69,7 @@ class _GroceryPageState extends State<customize_cart> {
   Future<void> fetchItems() async {
     try {
       final response = await http.get(
-        Uri.parse('http://3.111.39.222/api/v1/items/all'),
+        Uri.parse('http://13.126.169.224/api/v1/items/all'),
         headers: {"Content-Type": "application/json"},
         // body: jsonEncode({"category": "vegetables"}), // Change category if needed
       );

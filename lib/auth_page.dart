@@ -49,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<bool> sendOtp(String phoneNumber) async {
-    final String baseUrl = 'http://3.111.39.222/auth';
+    final String baseUrl = 'http://13.126.169.224/api/auth';
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/send-otp'), // Adjust the endpoint to match your backend route
@@ -148,32 +148,32 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
 
                 // Skip login button
-                Positioned(
-                  top: 50,
-                  right: 20,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => HomePageWithMap(),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      foregroundColor: Colors.black87,
-                      backgroundColor: Colors.white.withOpacity(0.75), // Semi-transparent background
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(19),
-                      ),
-                    ),
-                    child: const Text(
-                      'Skip Login',
-                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                    ),
-                  ),
-                ),
+                // Positioned(
+                //   top: 50,
+                //   right: 20,
+                //   child: ElevatedButton(
+                //     onPressed: () {
+                //       Navigator.push(
+                //         context,
+                //         MaterialPageRoute(
+                //           builder: (context) => HomePageWithMap(),
+                //         ),
+                //       );
+                //     },
+                //     style: ElevatedButton.styleFrom(
+                //       foregroundColor: Colors.black87,
+                //       backgroundColor: Colors.white.withOpacity(0.75), // Semi-transparent background
+                //       elevation: 2,
+                //       shape: RoundedRectangleBorder(
+                //         borderRadius: BorderRadius.circular(19),
+                //       ),
+                //     ),
+                //     child: const Text(
+                //       'Skip Login',
+                //       style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                //     ),
+                //   ),
+                // ),
               ],
             ),
             const SizedBox(height: 5),
@@ -201,42 +201,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
 
             const SizedBox(height: 10),
-
-            // // FCM Token display
-            // Container(
-            //   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-            //   margin: const EdgeInsets.symmetric(horizontal: 20),
-            //   decoration: BoxDecoration(
-            //     color: Colors.grey[100],
-            //     borderRadius: BorderRadius.circular(10),
-            //     border: Border.all(color: Colors.grey[300]!),
-            //   ),
-            //   child: Column(
-            //     crossAxisAlignment: CrossAxisAlignment.start,
-            //     children: [
-            //       Text(
-            //         'FCM Token:',
-            //         style: TextStyle(
-            //           fontWeight: FontWeight.bold,
-            //           fontSize: 12,
-            //           color: Colors.grey[700],
-            //         ),
-            //       ),
-            //       const SizedBox(height: 4),
-            //       Text(
-            //         fcmToken,
-            //         style: TextStyle(
-            //           fontSize: 12,
-            //           color: Colors.grey[800],
-            //         ),
-            //         maxLines: 3,
-            //         overflow: TextOverflow.ellipsis,
-            //       ),
-            //     ],
-            //   ),
-            // ),
-
-            // const SizedBox(height: 10),
 
             // Phone number input
             Padding(

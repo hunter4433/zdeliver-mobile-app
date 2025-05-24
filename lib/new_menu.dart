@@ -1,7 +1,37 @@
 import 'package:flutter/material.dart';
 
+import 'address_book.dart';
+import 'auth_page.dart';
+import 'menu/Addreass.dart';
+import 'menu/notifications.dart';
+import 'menu/order_history.dart';
+import 'menu/support.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+// import ''
+
 class ProfilePage extends StatelessWidget {
   const ProfilePage({Key? key}) : super(key: key);
+
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+  // Method to retrieve stored user ID
+  Future<String?> getAddress() async {
+    try {
+      return await _secureStorage.read(key: 'saved_address');
+    } catch (e) {
+      print('Error reading saved_address: $e');
+      return null;
+    }
+  }
+
+  // Method to retrieve stored phone number
+  Future<String?> getPhoneNumber() async {
+    try {
+      return await _secureStorage.read(key: 'phone_number');
+    } catch (e) {
+      print('Error reading phone number: $e');
+      return null;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,22 +77,27 @@ class ProfilePage extends StatelessWidget {
                             const SizedBox(width: 12),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              children: const [
-                                Text(
-                                  'Hey Nirmala',
+                              children: [
+                                const Text(
+                                  'Hey Guest',
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                SizedBox(height: 2),
-                                Text(
-                                  '+91-8275451335',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                  ),
+                                const SizedBox(height: 2),
+                                FutureBuilder<String?>(
+                                  future: getPhoneNumber(), // Use your authService instance
+                                  builder: (context, snapshot) {
+                                    return Text(
+                                      snapshot.data ?? 'Loading...',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                      ),
+                                    );
+                                  },
                                 ),
                               ],
                             ),
@@ -113,12 +148,17 @@ class ProfilePage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    const Text(
-                      'Neelkanth boys hostel, Anu Himachal pradesh, india 177005',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                      ),
+                    FutureBuilder<String?>(
+                      future: getAddress(), // Use your authService instance
+                      builder: (context, snapshot) {
+                        return Text(
+                          snapshot.data ?? 'Loading...',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                        );
+                      },
                     ),
                     const SizedBox(height: 12),
                     // Change address button
@@ -165,7 +205,7 @@ class ProfilePage extends StatelessWidget {
                         context: context,
                         icon: Icons.headset_mic_outlined, // Placeholder icon
                         title: 'Support',
-                        onTap: () => _navigateToPage(context, 'SupportPage'),
+                        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => SupportScreen())),
                       ),
                       const Divider(height: 1, indent: 28, endIndent: 28),
 
@@ -174,7 +214,7 @@ class ProfilePage extends StatelessWidget {
                         context: context,
                         icon: Icons.history_outlined, // Placeholder icon
                         title: 'My history',
-                        onTap: () => _navigateToPage(context, 'HistoryPage'),
+                        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => OrderHistoryScreen())),
                       ),
                       const Divider(height: 1, indent: 28, endIndent: 28),
 
@@ -183,17 +223,17 @@ class ProfilePage extends StatelessWidget {
                         context: context,
                         icon: Icons.book_outlined, // Placeholder icon
                         title: 'Address book',
-                        onTap: () => _navigateToPage(context, 'AddressBookPage'),
+                        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => AddressBookPage())),
                       ),
                       const Divider(height: 1, indent: 28, endIndent: 28),
 
                       // Favourites option
-                      _buildMenuOption(
-                        context: context,
-                        icon: Icons.favorite_border, // Placeholder icon
-                        title: 'Favourites',
-                        onTap: () => _navigateToPage(context, 'FavouritesPage'),
-                      ),
+                      // _buildMenuOption(
+                      //   context: context,
+                      //   icon: Icons.favorite_border, // Placeholder icon
+                      //   title: 'Favourites',
+                      //   onTap: () => _navigateToPage(context, 'FavouritesPage'),
+                      // ),
                       const Divider(height: 1, indent: 28, endIndent: 28),
 
                       // Notifications option
@@ -201,7 +241,7 @@ class ProfilePage extends StatelessWidget {
                         context: context,
                         icon: Icons.notifications_outlined, // Placeholder icon
                         title: 'Notifications',
-                        onTap: () => _navigateToPage(context, 'NotificationsPage'),
+                        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => NotificationsScreen())),
                       ),
                       const Divider(height: 1, indent: 28, endIndent: 28),
 
@@ -210,7 +250,7 @@ class ProfilePage extends StatelessWidget {
                         context: context,
                         icon: Icons.share_outlined, // Placeholder icon
                         title: 'Share app',
-                        onTap: () => _navigateToPage(context, 'ShareAppPage'),
+                        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => OrderHistoryScreen())),
                       ),
                       const Divider(height: 1, indent: 28, endIndent: 28),
 
@@ -219,7 +259,7 @@ class ProfilePage extends StatelessWidget {
                         context: context,
                         icon: Icons.people_outline, // Placeholder icon
                         title: 'About us',
-                        onTap: () => _navigateToPage(context, 'AboutUsPage'),
+                        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => OrderHistoryScreen())),
                       ),
                       const Divider(height: 1, indent: 28, endIndent: 28),
 
@@ -231,6 +271,11 @@ class ProfilePage extends StatelessWidget {
                           style: TextStyle(fontSize: 16),
                         ),
                         onTap: () {
+
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) =>LoginScreen()),
+                          );
                           // Implement logout functionality
                         },
                       ),
@@ -244,6 +289,10 @@ class ProfilePage extends StatelessWidget {
                           style: TextStyle(fontSize: 16),
                         ),
                         onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) =>LoginScreen()),
+                          );
                           // Implement delete account functionality
                         },
                       ),

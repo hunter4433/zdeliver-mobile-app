@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/http.dart' as _secureStorage;
 import 'dart:convert';
 import 'package:mrsgorilla/address_selection.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AddressSelectionSheet extends StatefulWidget {
   final Function(String) onAddressSelected;
@@ -33,6 +35,7 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
   List<dynamic> _addresses = [];
   bool _isLoading = true;
   String _errorMessage = '';
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
   @override
   void initState() {
@@ -42,19 +45,40 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
 
   Future<void> _fetchAddresses() async {
     try {
+      String? userId = await _secureStorage.read(key: 'userId');
+      String? savedAddress = await _secureStorage.read(key: 'saved_address');
+
+      print('http://13.126.169.224/api/v1/addresses?user_id=$userId');
       // Replace with your actual API endpoint
       final response = await http.get(
-        Uri.parse('http://3.111.39.222/api/v1/addresses?user_id=1'),
+        Uri.parse('http://13.126.169.224/api/v1/addresses?user_id=$userId'),
         headers: {
           'Content-Type': 'application/json',
           // Add any required headers like authorization tokens
         },
       );
 
+      print('Mohit Here');
+      print(response);
+
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
+
         setState(() {
-          _addresses = responseData['data'];
+          _addresses = responseData['data'] ?? [];;
+
+          // Add saved address to the beginning of the list if it exists
+          // if (savedAddress != null && savedAddress.isNotEmpty) {
+            _addresses.insert(0, {
+              'id': 'saved_location',
+              'full_address': savedAddress,
+              'type': 'Current Location',
+              'isCurrentLocation': true
+            });
+          // }
+          print('mohit here');
+          print(_addresses);
+
           _isLoading = false;
         });
       } else {
@@ -64,6 +88,7 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
         });
       }
     } catch (e) {
+      print(e.toString());
       setState(() {
         _errorMessage = 'Error: ${e.toString()}';
         _isLoading = false;
@@ -74,7 +99,7 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: MediaQuery.of(context).size.height * 0.85,
+      height: MediaQuery.of(context).size.height * 0.45,
       decoration: const BoxDecoration(
         color: Color(0xFFF0F8FF),
         borderRadius: BorderRadius.only(
@@ -119,73 +144,73 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
           //   ),
           // ),
 
-          // Current location (unchanged)
-          Container(
-            margin: const EdgeInsets.all(16),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.grey.shade200),
-            ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.location_on,
-                  color: Colors.red,
-                  size: 36,
-                ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Current location",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        "Enable device location to fetch current location",
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(6.0),
-                  child: ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.orange,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: const BorderSide(color: Colors.white),
-                      ),
-                      shadowColor: Colors.black.withOpacity(0.5),
-                    ).copyWith(
-                      elevation: MaterialStateProperty.all(4),
-                      shadowColor: MaterialStateProperty.all(Colors.black.withOpacity(0.5)),
-                    ),
-                    child: const Text(
-                      "Enable",
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          // // Current location (unchanged)
+          // Container(
+          //   margin: const EdgeInsets.all(16),
+          //   padding: const EdgeInsets.all(16),
+          //   decoration: BoxDecoration(
+          //     color: Colors.grey.shade50,
+          //     borderRadius: BorderRadius.circular(24),
+          //     border: Border.all(color: Colors.grey.shade200),
+          //   ),
+          //   child: Row(
+          //     children: [
+          //       const Icon(
+          //         Icons.location_on,
+          //         color: Colors.red,
+          //         size: 36,
+          //       ),
+          //       const SizedBox(width: 12),
+          //       const Expanded(
+          //         child: Column(
+          //           crossAxisAlignment: CrossAxisAlignment.start,
+          //           children: [
+          //             Text(
+          //               "Current location",
+          //               style: TextStyle(
+          //                 fontSize: 18,
+          //                 fontWeight: FontWeight.bold,
+          //               ),
+          //             ),
+          //             Text(
+          //               "Enable device location to fetch current location",
+          //               style: TextStyle(
+          //                 fontSize: 14,
+          //                 color: Colors.grey,
+          //               ),
+          //             ),
+          //           ],
+          //         ),
+          //       ),
+          //       Padding(
+          //         padding: const EdgeInsets.all(6.0),
+          //         child: ElevatedButton(
+          //           onPressed: () {},
+          //           style: ElevatedButton.styleFrom(
+          //             backgroundColor: Colors.white,
+          //             foregroundColor: Colors.orange,
+          //             elevation: 0,
+          //             shape: RoundedRectangleBorder(
+          //               borderRadius: BorderRadius.circular(12),
+          //               side: const BorderSide(color: Colors.white),
+          //             ),
+          //             shadowColor: Colors.black.withOpacity(0.5),
+          //           ).copyWith(
+          //             elevation: MaterialStateProperty.all(4),
+          //             shadowColor: MaterialStateProperty.all(Colors.black.withOpacity(0.5)),
+          //           ),
+          //           child: const Text(
+          //             "Enable",
+          //             style: TextStyle(
+          //               fontSize: 15,
+          //               fontWeight: FontWeight.w700,
+          //             ),
+          //           ),
+          //         ),
+          //       ),
+          //     ],
+          //   ),
+          // ),
 
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),

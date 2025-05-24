@@ -22,7 +22,7 @@ class _FruitCartBottomSheetState extends State<FruitCartBottomSheet> {
   Future<void> fetchFruits() async {
     try {
       final response = await http.post(
-        Uri.parse('http://3.111.39.222/api/v1/veggies/category'),
+        Uri.parse('http://13.126.169.224/api/v1/veggies/category'),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"category": "fruits"}),
       );

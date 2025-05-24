@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:mrsgorilla/new_menu.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mrsgorilla/address_selection_sheet.dart';
 
 class HomePageWithMap extends StatefulWidget {
   const HomePageWithMap({Key? key}) : super(key: key);
@@ -27,12 +28,14 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
   late Animation<double> _scrimAnimation;
   bool _isDrawerOpen = false;
   bool _isCardExpanded = false;
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+  bool _addressSelected = false;
+  String _selectedAddress = "";
 
   // Drag controller
   DraggableScrollableController _dragController = DraggableScrollableController();
 
   // Secure storage
-  late final FlutterSecureStorage _secureStorage;
   String? savedAddress;
   bool addressLoading = true;
 
@@ -43,7 +46,6 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
   @override
   void initState() {
     super.initState();
-    _secureStorage = const FlutterSecureStorage();
     _initializePage();
 
     _drawerController = AnimationController(
@@ -63,6 +65,27 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
     _dragController.addListener(_handleDragUpdate);
   }
 
+  Future<String?> getAddress() async {
+    try {
+      String? address = await _secureStorage.read(key: 'saved_address');
+
+      if (address == null || address.isEmpty) {
+        return 'No address saved';
+      }
+
+      // Optional: Format the address for better display
+      // You can adjust the character limit as needed
+      if (address.length > 35) {
+        return '${address.substring(0, 35)}...';
+      }
+
+      return address;
+    } catch (e) {
+      print('Error reading saved_address: $e');
+      return 'Error loading address';
+    }
+  }
+
   void _handleDragUpdate() {
     if (_dragController.isAttached) {
       double position = _dragController.size;
@@ -76,9 +99,30 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
     }
   }
 
+  void _showAddressSelectionSheet() {
+    // Use the static method from AddressSelectionSheet class
+    AddressSelectionSheet.showAddressSelectionSheet(
+      context,
+          (address) {
+        // Handle the selected address
+        _selectAddress(address);
+        // The sheet will be closed automatically
+      },
+    );
+  }
+
+  void _selectAddress(String address) {
+    setState(() {
+      _addressSelected = true;
+      _selectedAddress = address;
+    });
+    Navigator.pop(context); // Close the bottom sheet
+  }
+
   Future<void> _initializePage() async {
     // Retrieve saved address
     savedAddress = await _secureStorage.read(key: 'saved_address');
+    print('sav3ed address is $savedAddress ');
 
     setState(() {
       addressLoading = false;
@@ -183,7 +227,7 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
                           width: 240,
                           height: 240,
                           child: Image.asset(
-                            'assets/images/qr_code.png',
+                            'assets/images/Image.jpg',
                             fit: BoxFit.contain,
                           ),
                         ),
@@ -339,19 +383,26 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            "Kartik - Home",
+                            "Guest - Home",
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
                             ),
                           ),
-                          Text(
-                            "Neelkanth boys hostel,Anu...",
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                            ),
-                          ),
+                          FutureBuilder<String?>(
+                            future: getAddress(),
+                            builder: (context, snapshot) {
+                              return Text(
+                                snapshot.data ?? 'Loading...',
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 14,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              );
+                            },
+                          )
                         ],
                       ),
                     ),
@@ -560,6 +611,8 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
                             Expanded(
                               child: GestureDetector(
                                 onTap: selectedRecommendedIndex != null ? () async {
+
+                                  _showAddressSelectionSheet();
                                   // Show loading indicator
                                   showDialog(
                                     context: context,
@@ -570,16 +623,18 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
                                   );
 
                                   // Make API call
-                                  bool success = await sendVendorNotification();
+                                  // bool success = await sendVendorNotification();
 
                                   // Close loading indicator
                                   Navigator.pop(context);
-
-                                  // Navigate to next page
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(builder: (context) => OrderPlacedPage()),
-                                  );
+                                  if (_addressSelected) {
+                                    // Navigate to next page
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (context) =>
+                                          OrderPlacedPage()),
+                                    );
+                                  }
                                 } : null,
                                 child: Container(
                                   height: 64,
@@ -759,7 +814,7 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
                               Text(
                                 subtitle,
                                 style: GoogleFonts.leagueSpartan(
-                                  fontSize: 15,
+                                  fontSize: 14,
                                   fontWeight: FontWeight.w500,
                                   color: Colors.grey[700],
                                 ),
@@ -797,7 +852,7 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
                         Text(
                           time,
                           style: GoogleFonts.leagueSpartan(
-                            fontSize: 21,
+                            fontSize: 18,
                             fontWeight: FontWeight.w500,
                             color: Colors.green,
                           ),
@@ -805,7 +860,7 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
                         Text(
                           "away",
                           style: GoogleFonts.leagueSpartan(
-                            fontSize: 16,
+                            fontSize: 15,
                             fontWeight: FontWeight.w500,
                             color: Colors.grey[600],
                           ),

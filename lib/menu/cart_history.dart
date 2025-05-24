@@ -23,7 +23,7 @@ class BookingHistoryItem {
 }
 
 class Booking {
-  final int id;
+  final String? id;
   final int userId;
   final String bookingType;
   final double totalPrice;
@@ -113,8 +113,8 @@ class _CartHistoryPageState extends State<CartHistoryPage> {
     try {
 
       final url = widget.historyType == 'all'
-          ? Uri.parse('http://3.111.39.222/api/v1/book/user/${widget.userId}')
-          : Uri.parse('http://3.111.39.222/api/v1/book/user/${widget.userId}?type=${widget.historyType}');
+          ? Uri.parse('http://13.126.169.224/api/v1/book/user/${widget.userId}')
+          : Uri.parse('http://13.126.169.224/api/v1/book/user/${widget.userId}?type=${widget.historyType}');
 
       final response = await http.get(url);
       print('Response body: ${response.body}');
