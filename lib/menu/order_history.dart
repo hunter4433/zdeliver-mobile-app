@@ -1,18 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class OrderHistoryScreen extends StatelessWidget {
+class OrderHistoryScreen extends StatefulWidget {
+  @override
+  State<OrderHistoryScreen> createState() => _OrderHistoryScreenState();
+}
+
+class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   final List<Map<String, dynamic>> historyData = [
     {
       "title": "Z vegetable cart",
       "address": "Hs no. 15 shardanganagri ,mirajgaon road karhat",
-      "time": "11:30 AM",
+      "time": "11:00 AM",
       "date": "11/03/2025",
       "items": [
-        "https://img.icons8.com/emoji/48/onion.png",
-        "https://img.icons8.com/emoji/48/broccoli.png",
-        "https://img.icons8.com/emoji/48/eggplant.png",
-        "https://img.icons8.com/emoji/48/carrot.png",
+        "https://img.icons8.com/emoji/48/cucumber.png",
+        "https://img.icons8.com/emoji/48/cucumber.png",
+        "https://img.icons8.com/emoji/48/cucumber.png",
+        "https://img.icons8.com/emoji/48/cucumber.png",
+        "https://img.icons8.com/emoji/48/cucumber.png",
+        "https://img.icons8.com/emoji/48/cucumber.png",
+        "https://img.icons8.com/emoji/48/cucumber.png",
         "https://img.icons8.com/emoji/48/cucumber.png",
       ],
     },
@@ -22,13 +30,209 @@ class OrderHistoryScreen extends StatelessWidget {
       "time": "11:30 AM",
       "date": "11/03/2025",
       "items": [
-        "https://img.icons8.com/emoji/48/onion.png",
-        "https://img.icons8.com/emoji/48/broccoli.png",
-        "https://img.icons8.com/emoji/48/eggplant.png",
+        "https://img.icons8.com/emoji/48/cucumber.png",
+        "https://img.icons8.com/emoji/48/cucumber.png",
+        "https://img.icons8.com/emoji/48/cucumber.png",
+        "https://img.icons8.com/emoji/48/cucumber.png",
+        "https://img.icons8.com/emoji/48/cucumber.png",
+        "https://img.icons8.com/emoji/48/cucumber.png",
+        "https://img.icons8.com/emoji/48/cucumber.png",
         "https://img.icons8.com/emoji/48/cucumber.png",
       ],
     },
   ];
+
+  // Filter options
+  final List<String> filters = [
+    'Full history',
+    'Z vegetable cart history',
+    'Z fruit cart history',
+    'Z customized cart history',
+  ];
+
+  // Use a Set to store multiple selected filters
+  Set<String> selectedFilters = {'Full history'};
+
+  List<Map<String, dynamic>> get filteredHistory {
+    // If "Full history" is selected or nothing is selected, show all
+    if (selectedFilters.contains('Full history') || selectedFilters.isEmpty) {
+      return historyData;
+    }
+    // Otherwise, filter by selected types
+    return historyData.where((d) {
+      final title = d['title'].toString().toLowerCase();
+      bool match = false;
+      if (selectedFilters.contains('Z vegetable cart history') &&
+          title.contains('vegetable'))
+        match = true;
+      if (selectedFilters.contains('Z fruit cart history') &&
+          title.contains('fruit'))
+        match = true;
+      if (selectedFilters.contains('Z customized cart history') &&
+          title.contains('customized'))
+        match = true;
+      return match;
+    }).toList();
+  }
+
+  void _showFilterSheet() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children:
+                    filters.map((filter) {
+                      return CheckboxListTile(
+                        controlAffinity: ListTileControlAffinity.leading,
+                        title: Text(filter),
+                        value: selectedFilters.contains(filter),
+                        onChanged: (val) {
+                          setModalState(() {
+                            if (filter == 'Full history') {
+                              // If "Full history" is selected, clear others
+                              selectedFilters = {'Full history'};
+                            } else {
+                              selectedFilters.remove('Full history');
+                              if (val == true) {
+                                selectedFilters.add(filter);
+                              } else {
+                                selectedFilters.remove(filter);
+                              }
+                              // If none selected, default to "Full history"
+                              if (selectedFilters.isEmpty) {
+                                selectedFilters = {'Full history'};
+                              }
+                            }
+                          });
+                          setState(() {});
+                        },
+                      );
+                    }).toList(),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // Sort options
+  final List<String> sortOptions = [
+    'Date - ascending',
+    'Date - descending',
+    'Bill price - highest first',
+    'Bill price - lowest first',
+    'Earliest arrival first',
+    'Earliest arrival last',
+  ];
+
+  Set<String> selectedSorts = {};
+
+  // Dummy bill and arrival data for demonstration
+  // Add these fields to each historyData item in your real data
+  // "bill": 100, "arrival": "11:00 AM"
+  List<Map<String, dynamic>> get sortedHistory {
+    List<Map<String, dynamic>> list = List<Map<String, dynamic>>.from(
+      filteredHistory,
+    );
+
+    for (String sort in selectedSorts) {
+      if (sort == 'Date - ascending') {
+        list.sort(
+          (a, b) => _parseDate(a['date']).compareTo(_parseDate(b['date'])),
+        );
+      } else if (sort == 'Date - descending') {
+        list.sort(
+          (a, b) => _parseDate(b['date']).compareTo(_parseDate(a['date'])),
+        );
+      } else if (sort == 'Bill price - highest first') {
+        list.sort((a, b) => (b['bill'] ?? 0).compareTo(a['bill'] ?? 0));
+      } else if (sort == 'Bill price - lowest first') {
+        list.sort((a, b) => (a['bill'] ?? 0).compareTo(b['bill'] ?? 0));
+      } else if (sort == 'Earliest arrival first') {
+        list.sort(
+          (a, b) => _parseTime(
+            a['arrival'] ?? a['time'],
+          ).compareTo(_parseTime(b['arrival'] ?? b['time'])),
+        );
+      } else if (sort == 'Earliest arrival last') {
+        list.sort(
+          (a, b) => _parseTime(
+            b['arrival'] ?? b['time'],
+          ).compareTo(_parseTime(a['arrival'] ?? a['time'])),
+        );
+      }
+    }
+    return list;
+  }
+
+  DateTime _parseDate(String date) {
+    // Expects format "dd/MM/yyyy"
+    final parts = date.split('/');
+    return DateTime(
+      int.parse(parts[2]),
+      int.parse(parts[1]),
+      int.parse(parts[0]),
+    );
+  }
+
+  TimeOfDay _parseTime(String time) {
+    // Expects format "hh:mm AM/PM"
+    final format = RegExp(r'(\d+):(\d+) (\w{2})');
+    final match = format.firstMatch(time);
+    if (match != null) {
+      int hour = int.parse(match.group(1)!);
+      int minute = int.parse(match.group(2)!);
+      String period = match.group(3)!;
+      if (period == 'PM' && hour != 12) hour += 12;
+      if (period == 'AM' && hour == 12) hour = 0;
+      return TimeOfDay(hour: hour, minute: minute);
+    }
+    return TimeOfDay(hour: 0, minute: 0);
+  }
+
+  void _showSortSheet() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children:
+                    sortOptions.map((sort) {
+                      return CheckboxListTile(
+                        controlAffinity: ListTileControlAffinity.leading,
+                        title: Text(sort),
+                        value: selectedSorts.contains(sort),
+                        onChanged: (val) {
+                          setModalState(() {
+                            if (val == true) {
+                              selectedSorts.add(sort);
+                            } else {
+                              selectedSorts.remove(sort);
+                            }
+                          });
+                          setState(() {});
+                        },
+                      );
+                    }).toList(),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Map<int, int> currentItemIndex = {};
 
   @override
   Widget build(BuildContext context) {
@@ -62,50 +266,57 @@ class OrderHistoryScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Container(
+              height: 35,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  Text('Filters'),
-                  SizedBox(width: 10),
-                  IconButton(
-                    icon: Icon(Icons.filter_list, color: Colors.grey[500]),
-                    onPressed: () {
-                      // Implement filter functionality if needed
-                    },
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('Filters'),
+                      SizedBox(width: 10),
+                      IconButton(
+                        icon: Icon(Icons.filter_list, color: Colors.grey[500]),
+                        onPressed: _showFilterSheet,
+                      ),
+                    ],
+                  ),
+                  VerticalDivider(
+                    color: Colors.grey[500],
+                    thickness: 2,
+                    indent: 2,
+                    endIndent: 2,
+                    width: 24,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('Sort by'),
+                      SizedBox(width: 10),
+                      IconButton(
+                        icon: Icon(Icons.filter_list, color: Colors.grey[500]),
+                        onPressed: _showSortSheet,
+                      ),
+                    ],
                   ),
                 ],
               ),
-              VerticalDivider(
-                color: Colors.grey[500],
-                thickness: 1.5,
-                indent: 2,
-                endIndent: 2,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Sort by'),
-                  SizedBox(width: 10),
-                  IconButton(
-                    icon: Icon(Icons.filter_list, color: Colors.grey[500]),
-                    onPressed: () {
-                      // Implement filter functionality if needed
-                    },
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
 
           Expanded(
             child: ListView.builder(
-              itemCount: historyData.length,
+              itemCount: sortedHistory.length,
               padding: const EdgeInsets.all(12),
               itemBuilder: (context, index) {
-                final data = historyData[index];
+                final data = sortedHistory[index];
+                final items = data["items"] as List;
+                final idx = currentItemIndex[index] ?? 0;
+                final showArrow = items.length > 5 && (idx + 5) < items.length;
+
                 return Card(
                   color: Colors.white,
                   shape: RoundedRectangleBorder(
@@ -162,32 +373,58 @@ class OrderHistoryScreen extends StatelessWidget {
                         Divider(thickness: 1.5, color: Colors.grey[300]),
                         Text("Items bought", style: TextStyle()),
 
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            ...data["items"].map<Widget>(
-                              (img) => Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 2.0,
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              ...List.generate(
+                                items.length < 5 ? items.length : 5,
+                                (i) {
+                                  int displayIdx = idx + i;
+                                  if (displayIdx >= items.length)
+                                    return SizedBox.shrink();
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 2.0,
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 5.0,
+                                      ),
+                                      child: CircleAvatar(
+                                        backgroundImage: NetworkImage(
+                                          items[displayIdx],
+                                        ),
+                                        radius: 20,
+                                        backgroundColor: Colors.transparent,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                              if (showArrow)
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    left: 15.0,
+                                    right: 5.0,
+                                  ),
+                                  child: IconButton(
+                                    icon: Icon(
+                                      Icons.arrow_forward_ios_rounded,
+                                      size: 18,
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        // Move window right, but don't overflow
+                                        if ((idx + 5) < items.length) {
+                                          currentItemIndex[index] = idx + 1;
+                                        }
+                                      });
+                                    },
+                                  ),
                                 ),
-                                child: CircleAvatar(
-                                  backgroundImage: NetworkImage(img),
-                                  radius: 20,
-                                  backgroundColor: Colors.transparent,
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                left: 8.0,
-                                right: 5.0,
-                              ),
-                              child: Icon(
-                                Icons.arrow_forward_ios_rounded,
-                                size: 18,
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ],
                     ),
