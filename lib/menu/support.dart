@@ -12,7 +12,7 @@ class SupportScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: const Color(0xFF4527A0), // Deep purple color
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -26,7 +26,7 @@ class SupportScreen extends StatelessWidget {
             child: Align(
               alignment: Alignment.bottomLeft,
               child: Text(
-                ' History',
+                ' Support',
                 style: GoogleFonts.leagueSpartan(
                   color: Colors.white,
                   fontSize: 26,
@@ -43,7 +43,7 @@ class SupportScreen extends StatelessWidget {
           children: [
             // Call us Section
             Text(
-              "Call us",
+              "Our Story",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 6),

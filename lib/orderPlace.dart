@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'package:mrsgorilla/mapView.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -12,15 +13,14 @@ class OrderPlacedPage extends StatefulWidget {
   State<OrderPlacedPage> createState() => _OrderPlacedPageState();
 }
 
-class _OrderPlacedPageState extends State<OrderPlacedPage> with SingleTickerProviderStateMixin {
+class _OrderPlacedPageState extends State<OrderPlacedPage>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _opacityAnimation;
   late Animation<Offset> _slideAnimation;
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
-  
-  
-  
+
   @override
   void initState() {
     super.initState();
@@ -67,10 +67,11 @@ class _OrderPlacedPageState extends State<OrderPlacedPage> with SingleTickerProv
       return null;
     }
   }
+
   Future<String?> getPhoneNumber() async {
     try {
-      String? number= await _secureStorage.read(key: 'phone_number');
-      String details= "Guest $number";
+      String? number = await _secureStorage.read(key: 'phone_number');
+      String details = "Guest $number";
       return details;
     } catch (e) {
       print('Error reading phone number: $e');
@@ -103,7 +104,7 @@ class _OrderPlacedPageState extends State<OrderPlacedPage> with SingleTickerProv
                     alignment: Alignment.center,
                     children: [
                       // Centered title
-                       Align(
+                      Align(
                         alignment: Alignment.center,
                         child: Text(
                           'Order placed',
@@ -119,17 +120,21 @@ class _OrderPlacedPageState extends State<OrderPlacedPage> with SingleTickerProv
                         alignment: Alignment.centerLeft,
                         child: GestureDetector(
                           onTap: () => Navigator.pop(context),
-                          child: const Icon(Icons.arrow_back, color: Colors.white, size: 35),
+                          child: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                            size: 35,
+                          ),
                         ),
                       ),
                     ],
                   ),
 
                   // Centered subtitle
-                   Text(
+                  Text(
                     'order will be arriving soon',
                     textAlign: TextAlign.center,
-                     style: GoogleFonts.leagueSpartan(
+                    style: GoogleFonts.leagueSpartan(
                       fontWeight: FontWeight.w500,
                       color: Colors.white,
                       fontSize: 20,
@@ -147,10 +152,7 @@ class _OrderPlacedPageState extends State<OrderPlacedPage> with SingleTickerProv
                 SizedBox(
                   height: 422,
                   width: MediaQuery.of(context).size.width,
-                  child: MapScreen(
-                    containerHeight: 422,
-                    isEmbedded: true,
-                  ),
+                  child: MapScreen(containerHeight: 422, isEmbedded: true),
                 ),
 
                 // Centered animation circle
@@ -200,18 +202,33 @@ class _OrderPlacedPageState extends State<OrderPlacedPage> with SingleTickerProv
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                         Expanded(
-                          child: Text(
-                            'We will assign you a \ndelivery partner soon',
-                            style: GoogleFonts.roboto(
-                              fontSize: 21,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF303030),
-                            ),
+                        Expanded(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Lottie.asset(
+                                'assets/lottie/hourglass.json',
+                                width: 60,
+                                height: 60,
+                                repeat: true,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'We will assign you a \ndelivery partner soon',
+                                style: GoogleFonts.roboto(
+                                  fontSize: 21,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF303030),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 18),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 6,
+                            horizontal: 18,
+                          ),
                           decoration: const BoxDecoration(
                             gradient: LinearGradient(
                               begin: Alignment.topCenter,
@@ -273,9 +290,9 @@ class _OrderPlacedPageState extends State<OrderPlacedPage> with SingleTickerProv
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   Text(
+                  Text(
                     'Receivers details',
-                     style: GoogleFonts.leagueSpartan(
+                    style: GoogleFonts.leagueSpartan(
                       color: Color(0xFF4CAF50),
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
@@ -283,9 +300,9 @@ class _OrderPlacedPageState extends State<OrderPlacedPage> with SingleTickerProv
                   ),
                   const SizedBox(height: 8),
                   const Divider(color: Colors.white, height: 10),
-                   Text(
+                  Text(
                     'Delivery address',
-                     style: GoogleFonts.leagueSpartan(
+                    style: GoogleFonts.leagueSpartan(
                       fontSize: 21,
                       fontWeight: FontWeight.w600,
                       color: Color(0xFF303030),
@@ -314,9 +331,9 @@ class _OrderPlacedPageState extends State<OrderPlacedPage> with SingleTickerProv
                   ),
                   const SizedBox(height: 12),
                   const Divider(color: Colors.white, height: 10),
-                   Text(
+                  Text(
                     'Receivers details',
-                     style: GoogleFonts.leagueSpartan(
+                    style: GoogleFonts.leagueSpartan(
                       fontSize: 21,
                       fontWeight: FontWeight.w600,
                       color: Color(0xFF303030),
@@ -355,7 +372,7 @@ class _OrderPlacedPageState extends State<OrderPlacedPage> with SingleTickerProv
                 ],
                 borderRadius: BorderRadius.circular(12),
               ),
-              child:  Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Column(
@@ -378,11 +395,7 @@ class _OrderPlacedPageState extends State<OrderPlacedPage> with SingleTickerProv
                       ),
                     ],
                   ),
-                  Icon(
-                    Icons.chevron_right,
-                    size: 40,
-                    color: Color(0xFF9E9E9E),
-                  ),
+                  Icon(Icons.chevron_right, size: 40, color: Color(0xFF9E9E9E)),
                 ],
               ),
             ),
@@ -403,10 +416,7 @@ class _OrderPlacedPageState extends State<OrderPlacedPage> with SingleTickerProv
                   ),
                   Text(
                     'your personalized sabzi cart',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade400,
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade400),
                   ),
                 ],
               ),

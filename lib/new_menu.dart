@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mrsgorilla/about_us.dart';
+import 'package:share_plus/share_plus.dart';
 
 import 'address_book.dart';
 import 'auth_page.dart';
@@ -55,7 +57,10 @@ class ProfilePage extends StatelessWidget {
 
               // Header section with profile and name
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 28,
+                  vertical: 12,
+                ),
                 child: Row(
                   children: [
                     Column(
@@ -88,7 +93,8 @@ class ProfilePage extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 2),
                                 FutureBuilder<String?>(
-                                  future: getPhoneNumber(), // Use your authService instance
+                                  future:
+                                      getPhoneNumber(), // Use your authService instance
                                   builder: (context, snapshot) {
                                     return Text(
                                       snapshot.data ?? 'Loading...',
@@ -118,7 +124,7 @@ class ProfilePage extends StatelessWidget {
                             color: Colors.white.withOpacity(0.5),
                             spreadRadius: 5,
                             blurRadius: 10,
-                          )
+                          ),
                         ],
                       ),
                     ),
@@ -128,13 +134,19 @@ class ProfilePage extends StatelessWidget {
 
               // Divider
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 28,
+                  vertical: 12,
+                ),
                 child: Divider(color: Colors.white24, height: 1),
               ),
 
               // Address section
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 width: double.infinity,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -175,7 +187,11 @@ class ProfilePage extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: const [
-                          Icon(Icons.location_on_outlined, color: Colors.white, size: 18),
+                          Icon(
+                            Icons.location_on_outlined,
+                            color: Colors.white,
+                            size: 18,
+                          ),
                           SizedBox(width: 8),
                           Text(
                             'Change address',
@@ -190,7 +206,10 @@ class ProfilePage extends StatelessWidget {
 
               // Divider
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 28,
+                  vertical: 12,
+                ),
                 child: Divider(color: Colors.white24, height: 1),
               ),
 
@@ -205,7 +224,12 @@ class ProfilePage extends StatelessWidget {
                         context: context,
                         icon: Icons.headset_mic_outlined, // Placeholder icon
                         title: 'Support',
-                        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => SupportScreen())),
+                        onTap:
+                            () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => SupportScreen(),
+                              ),
+                            ),
                       ),
                       const Divider(height: 1, indent: 28, endIndent: 28),
 
@@ -214,7 +238,12 @@ class ProfilePage extends StatelessWidget {
                         context: context,
                         icon: Icons.history_outlined, // Placeholder icon
                         title: 'My history',
-                        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => OrderHistoryScreen())),
+                        onTap:
+                            () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => OrderHistoryScreen(),
+                              ),
+                            ),
                       ),
                       const Divider(height: 1, indent: 28, endIndent: 28),
 
@@ -223,7 +252,12 @@ class ProfilePage extends StatelessWidget {
                         context: context,
                         icon: Icons.book_outlined, // Placeholder icon
                         title: 'Address book',
-                        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => AddressBookPage())),
+                        onTap:
+                            () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => AddressBookPage(),
+                              ),
+                            ),
                       ),
                       const Divider(height: 1, indent: 28, endIndent: 28),
 
@@ -241,7 +275,12 @@ class ProfilePage extends StatelessWidget {
                         context: context,
                         icon: Icons.notifications_outlined, // Placeholder icon
                         title: 'Notifications',
-                        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => NotificationsScreen())),
+                        onTap:
+                            () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => NotificationsScreen(),
+                              ),
+                            ),
                       ),
                       const Divider(height: 1, indent: 28, endIndent: 28),
 
@@ -250,7 +289,18 @@ class ProfilePage extends StatelessWidget {
                         context: context,
                         icon: Icons.share_outlined, // Placeholder icon
                         title: 'Share app',
-                        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => OrderHistoryScreen())),
+                        onTap: () async {
+                          print('Share app tapped');
+                          // Use SharePlus to share the app
+                          await SharePlus.instance.share(
+                            ShareParams(
+                              text:
+                                  'Check out this amazing app!\n link: https://www.example.com',
+                              subject: 'Z Deliver App',
+                              // uri: Uri.parse('https://www.youtube.com/'),
+                            ),
+                          );
+                        },
                       ),
                       const Divider(height: 1, indent: 28, endIndent: 28),
 
@@ -259,22 +309,31 @@ class ProfilePage extends StatelessWidget {
                         context: context,
                         icon: Icons.people_outline, // Placeholder icon
                         title: 'About us',
-                        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => OrderHistoryScreen())),
+                        onTap:
+                            () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => AboutUsScreen(),
+                              ),
+                            ),
                       ),
                       const Divider(height: 1, indent: 28, endIndent: 28),
 
                       // Logout option
                       ListTile(
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 28, vertical: 8),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 28,
+                          vertical: 8,
+                        ),
                         title: const Text(
                           'Logout',
                           style: TextStyle(fontSize: 16),
                         ),
                         onTap: () {
-
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) =>LoginScreen()),
+                            MaterialPageRoute(
+                              builder: (context) => LoginScreen(),
+                            ),
                           );
                           // Implement logout functionality
                         },
@@ -283,7 +342,10 @@ class ProfilePage extends StatelessWidget {
 
                       // Delete account option
                       ListTile(
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         title: const Text(
                           'Delete account',
                           style: TextStyle(fontSize: 16),
@@ -291,7 +353,9 @@ class ProfilePage extends StatelessWidget {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) =>LoginScreen()),
+                            MaterialPageRoute(
+                              builder: (context) => LoginScreen(),
+                            ),
                           );
                           // Implement delete account functionality
                         },
@@ -303,10 +367,7 @@ class ProfilePage extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         child: const Text(
                           'terms of services & privacy policy',
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 12,
-                          ),
+                          style: TextStyle(color: Colors.grey, fontSize: 12),
                         ),
                       ),
                     ],
@@ -342,10 +403,7 @@ class ProfilePage extends StatelessWidget {
           size: 24,
         ),
       ),
-      title: Text(
-        title,
-        style: const TextStyle(fontSize: 16),
-      ),
+      title: Text(title, style: const TextStyle(fontSize: 16)),
       onTap: onTap,
     );
   }

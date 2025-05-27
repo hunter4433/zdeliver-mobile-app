@@ -88,8 +88,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       navigatorKey: navigatorKey, // Used for navigation from notifications
       theme: ThemeData(primarySwatch: Colors.deepPurple, fontFamily: 'Roboto'),
-      //  home: LoginScreen(),
-      home: HomePageWithMap(),
+      home: LoginScreen(),
+      // home: HomePageWithMap(),
     );
   }
 }
