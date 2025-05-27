@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mrsgorilla/about_us.dart';
+import 'package:mrsgorilla/mapView.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'address_book.dart';
@@ -175,8 +176,28 @@ class ProfilePage extends StatelessWidget {
                     const SizedBox(height: 12),
                     // Change address button
                     OutlinedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         // Navigate to change address page
+                        await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder:
+                                (context) => MapScreen(
+                                  isEmbedded: false,
+                                  startInPinMode:
+                                      true, // <-- Enable pin mode on open
+                                  onLocationPinned: (lat, lng, address) {
+                                    // Handle the pinned address here
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Address pinned: $address',
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                          ),
+                        );
                       },
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Colors.white),
@@ -328,7 +349,12 @@ class ProfilePage extends StatelessWidget {
                           'Logout',
                           style: TextStyle(fontSize: 16),
                         ),
-                        onTap: () {
+                        onTap: () async {
+                          // Clear secure storage
+                          await _secureStorage.deleteAll();
+
+                          // Navigate to login screen
+
                           Navigator.push(
                             context,
                             MaterialPageRoute(

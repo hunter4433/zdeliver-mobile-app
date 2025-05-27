@@ -18,7 +18,8 @@ class HomePageWithMap extends StatefulWidget {
   State<HomePageWithMap> createState() => _HomePageWithMapState();
 }
 
-class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderStateMixin {
+class _HomePageWithMapState extends State<HomePageWithMap>
+    with TickerProviderStateMixin {
   // Track which recommended item is selected
   int? selectedRecommendedIndex;
 
@@ -31,9 +32,11 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
   bool _addressSelected = false;
   String _selectedAddress = "";
-
+  String name = "Nirmala";
+  String discountPercentage = "25";
   // Drag controller
-  DraggableScrollableController _dragController = DraggableScrollableController();
+  DraggableScrollableController _dragController =
+      DraggableScrollableController();
 
   // Secure storage
   String? savedAddress;
@@ -54,11 +57,11 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
     );
 
     _drawerAnimation = Tween<double>(begin: -300, end: 0).animate(
-        CurvedAnimation(parent: _drawerController, curve: Curves.easeInOut)
+      CurvedAnimation(parent: _drawerController, curve: Curves.easeInOut),
     );
 
     _scrimAnimation = Tween<double>(begin: 0, end: 0.5).animate(
-        CurvedAnimation(parent: _drawerController, curve: Curves.easeInOut)
+      CurvedAnimation(parent: _drawerController, curve: Curves.easeInOut),
     );
 
     // Add listener to the drag controller to implement snap behavior
@@ -101,14 +104,11 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
 
   void _showAddressSelectionSheet() {
     // Use the static method from AddressSelectionSheet class
-    AddressSelectionSheet.showAddressSelectionSheet(
-      context,
-          (address) {
-        // Handle the selected address
-        _selectAddress(address);
-        // The sheet will be closed automatically
-      },
-    );
+    AddressSelectionSheet.showAddressSelectionSheet(context, (address) {
+      // Handle the selected address
+      _selectAddress(address);
+      // The sheet will be closed automatically
+    });
   }
 
   void _selectAddress(String address) {
@@ -133,7 +133,9 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
   void dispose() {
     _drawerController.dispose();
     // Dispose all animation controllers
-    _selectionAnimControllers.forEach((key, controller) => controller.dispose());
+    _selectionAnimControllers.forEach(
+      (key, controller) => controller.dispose(),
+    );
     super.dispose();
   }
 
@@ -266,11 +268,12 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
 
   Future<bool> sendVendorNotification() async {
     try {
-      const String url = 'http://3.111.39.222/api/v1/notifisent/send-notification';
+      const String url =
+          'http://3.111.39.222/api/v1/notifisent/send-notification';
       Map<String, dynamic> payload = {
         "user_id": 1,
         "booking_order_id": 2,
-        "vendor_id": 1
+        "vendor_id": 1,
       };
 
       final response = await http.post(
@@ -284,7 +287,9 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
         print("Notification sent successfully: ${data['message']}");
         return true;
       } else {
-        print("Failed to send notification. Status code: ${response.statusCode}");
+        print(
+          "Failed to send notification. Status code: ${response.statusCode}",
+        );
         return false;
       }
     } catch (e) {
@@ -300,14 +305,15 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
           context: context,
           isScrollControlled: true,
           backgroundColor: Colors.transparent,
-          builder: (context) => DraggableScrollableSheet(
-            initialChildSize: 0.7,
-            minChildSize: 0.5,
-            maxChildSize: 0.95,
-            builder: (_, controller) {
-              return StandardGorillaCartBottomSheet();
-            },
-          ),
+          builder:
+              (context) => DraggableScrollableSheet(
+                initialChildSize: 0.7,
+                minChildSize: 0.5,
+                maxChildSize: 0.95,
+                builder: (_, controller) {
+                  return StandardGorillaCartBottomSheet();
+                },
+              ),
         );
         break;
       case 1:
@@ -315,14 +321,15 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
           context: context,
           isScrollControlled: true,
           backgroundColor: Colors.transparent,
-          builder: (context) => DraggableScrollableSheet(
-            initialChildSize: 0.7,
-            minChildSize: 0.5,
-            maxChildSize: 0.95,
-            builder: (_, controller) {
-              return FruitCartBottomSheet();
-            },
-          ),
+          builder:
+              (context) => DraggableScrollableSheet(
+                initialChildSize: 0.7,
+                minChildSize: 0.5,
+                maxChildSize: 0.95,
+                builder: (_, controller) {
+                  return FruitCartBottomSheet();
+                },
+              ),
         );
         break;
     }
@@ -337,6 +344,12 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
           MapScreen(
             containerHeight: MediaQuery.of(context).size.height,
             isEmbedded: false,
+            onLocationPinned: (lat, lng, address) {
+              // Optionally update UI or show a snackbar
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text('Pinned: $address')));
+            },
           ),
 
           // Top app bar with profile and menu - UPDATED
@@ -346,7 +359,7 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Colors.white.withOpacity(0.6),
                   borderRadius: BorderRadius.circular(36),
                   boxShadow: [
                     BoxShadow(
@@ -362,16 +375,16 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => ProfilePage()),
+                          MaterialPageRoute(
+                            builder: (context) => ProfilePage(),
+                          ),
                         );
                       },
                       child: CircleAvatar(
                         backgroundColor: Colors.red.shade400,
                         radius: 20,
-                        child: Icon(
-                          Icons.person,
-                          color: Colors.white,
-                          size: 24,
+                        foregroundImage: AssetImage(
+                          'assets/images/woman_avatar.png',
                         ),
                       ),
                     ),
@@ -383,7 +396,7 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            "Guest - Home",
+                            "Home",
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -402,20 +415,32 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
                                 overflow: TextOverflow.ellipsis,
                               );
                             },
-                          )
+                          ),
                         ],
                       ),
                     ),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.deepPurple,
-                        shape: BoxShape.circle,
-                      ),
-                      padding: EdgeInsets.all(10),
-                      child: Icon(
-                        Icons.my_location,
-                        color: Colors.white,
-                        size: 25,
+                    InkWell(
+                      onTap: () {
+                        mapKey.currentState?.enablePinMode();
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: RadialGradient(
+                            colors: [
+                              Color(0xFF3F2D7D), // #3F2D7D
+                              Color(0xFF4927BE), // #4927BE
+                            ],
+                            center: Alignment(0.0, 0.0), // center of the screen
+                            radius: 0.4,
+                          ),
+                        ),
+                        padding: EdgeInsets.all(10),
+                        child: Icon(
+                          Icons.my_location,
+                          color: Colors.white,
+                          size: 25,
+                        ),
                       ),
                     ),
                   ],
@@ -426,9 +451,9 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
 
           // Draggable bottom sheet with modified snap behavior
           DraggableScrollableSheet(
-            initialChildSize: 0.60,
+            initialChildSize: 0.66,
             minChildSize: 0.15,
-            maxChildSize: 0.60,
+            maxChildSize: 0.66,
             controller: _dragController,
             snap: true,
             snapSizes: [0.15, 0.60],
@@ -471,7 +496,7 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
                       // Promotional banner with updated gradient
                       Container(
                         width: double.infinity,
-                        height: 135,
+                        height: 140,
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
@@ -492,13 +517,25 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Text(
-                                    "Hey Nirmala",
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        "Hey ",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      Text(
+                                        name,
+                                        style: TextStyle(
+                                          color: Color.fromRGBO(241, 90, 37, 1),
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                   Text(
                                     "call your first cart",
@@ -510,16 +547,38 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
                                   ),
                                   SizedBox(height: 6),
                                   Container(
-                                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.amber,
-                                      borderRadius: BorderRadius.circular(20),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 4,
                                     ),
-                                    child: Text(
-                                      "25% off on your first bill",
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
+                                    decoration: BoxDecoration(
+                                      color: Colors.transparent,
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: Colors.white,
+                                        width: 0.8,
                                       ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          discountPercentage + "%",
+                                          style: TextStyle(
+                                            color: Colors.amber,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        Text(
+                                          " off on your first bill",
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
@@ -538,7 +597,10 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
 
                       // Veggies or Fruit section
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16,vertical: 8),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         child: Text(
                           "veggies or fruit?",
                           style: GoogleFonts.leagueSpartan(
@@ -551,7 +613,8 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
                       // Vegetable cart option
                       _buildCartOption(
                         index: 0,
-                        iconPath: 'assets/images/yellow_truck_2-removebg-preview (1).png',
+                        iconPath:
+                            'assets/images/yellow_truck_2-removebg-preview (1).png',
                         title: 'Z vegetable cart',
                         subtitle: 'includes 13 vegetables',
                         time: '7 min',
@@ -583,17 +646,31 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
 
                       // QR code and Call your cart buttons (UPDATED)
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 30, vertical: 16),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 30,
+                          vertical: 16,
+                        ),
                         child: Row(
                           children: [
                             // QR Code button with onTap handler for modal
                             GestureDetector(
-                              onTap: _showQRCodeModal, // Added QR modal function call
+                              onTap:
+                                  _showQRCodeModal, // Added QR modal function call
                               child: Container(
                                 width: 64,
                                 height: 64,
                                 decoration: BoxDecoration(
-                                  color: Colors.deepPurple,
+                                  gradient: RadialGradient(
+                                    colors: [
+                                      Color(0xFF3F2D7D), // #3F2D7D
+                                      Color(0xFF4927BE), // #4927BE
+                                    ],
+                                    center: Alignment(
+                                      0.0,
+                                      0.0,
+                                    ), // center of the screen
+                                    radius: 0.5,
+                                  ),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Center(
@@ -610,43 +687,52 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
                             // Call your cart button with more rounded right corners
                             Expanded(
                               child: GestureDetector(
-                                onTap: selectedRecommendedIndex != null ? () async {
+                                onTap:
+                                    selectedRecommendedIndex != null
+                                        ? () async {
+                                          _showAddressSelectionSheet();
+                                          // Show loading indicator
+                                          showDialog(
+                                            context: context,
+                                            barrierDismissible: false,
+                                            builder: (BuildContext context) {
+                                              return Center(
+                                                child:
+                                                    CircularProgressIndicator(),
+                                              );
+                                            },
+                                          );
 
-                                  _showAddressSelectionSheet();
-                                  // Show loading indicator
-                                  showDialog(
-                                    context: context,
-                                    barrierDismissible: false,
-                                    builder: (BuildContext context) {
-                                      return Center(child: CircularProgressIndicator());
-                                    },
-                                  );
+                                          // Make API call
+                                          // bool success = await sendVendorNotification();
 
-                                  // Make API call
-                                  // bool success = await sendVendorNotification();
-
-                                  // Close loading indicator
-                                  Navigator.pop(context);
-                                  if (_addressSelected) {
-                                    // Navigate to next page
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (context) =>
-                                          OrderPlacedPage()),
-                                    );
-                                  }
-                                } : null,
+                                          // Close loading indicator
+                                          Navigator.pop(context);
+                                          if (_addressSelected) {
+                                            // Navigate to next page
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (context) =>
+                                                        OrderPlacedPage(),
+                                              ),
+                                            );
+                                          }
+                                        }
+                                        : null,
                                 child: Container(
                                   height: 64,
                                   decoration: BoxDecoration(
-                                    color: selectedRecommendedIndex != null
-                                        ? Colors.orange
-                                        : Colors.grey[300],
+                                    color:
+                                        selectedRecommendedIndex != null
+                                            ? Colors.orange
+                                            : Colors.grey[300],
                                     borderRadius: BorderRadius.only(
                                       topLeft: Radius.circular(12),
                                       bottomLeft: Radius.circular(12),
-                                      topRight: Radius.circular(24),
-                                      bottomRight: Radius.circular(24),
+                                      topRight: Radius.circular(60),
+                                      bottomRight: Radius.circular(60),
                                     ),
                                   ),
                                   child: Row(
@@ -655,9 +741,10 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
                                       Icon(
                                         Icons.delivery_dining,
                                         size: 28,
-                                        color: selectedRecommendedIndex != null
-                                            ? Colors.white
-                                            : Colors.black,
+                                        color:
+                                            selectedRecommendedIndex != null
+                                                ? Colors.white
+                                                : Colors.black,
                                       ),
                                       SizedBox(width: 8),
                                       Text(
@@ -665,9 +752,10 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
                                         style: TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.w500,
-                                          color: selectedRecommendedIndex != null
-                                              ? Colors.white
-                                              : Colors.black,
+                                          color:
+                                              selectedRecommendedIndex != null
+                                                  ? Colors.white
+                                                  : Colors.black,
                                         ),
                                       ),
                                     ],
@@ -715,13 +803,18 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
     }
 
     // Start or reverse animation based on selection state
-    if (isSelected && !_selectionAnimControllers[index]!.isAnimating && _selectionAnimControllers[index]!.value == 0) {
+    if (isSelected &&
+        !_selectionAnimControllers[index]!.isAnimating &&
+        _selectionAnimControllers[index]!.value == 0) {
       _selectionAnimControllers[index]!.forward();
-    } else if (!isSelected && !_selectionAnimControllers[index]!.isAnimating && _selectionAnimControllers[index]!.value == 1) {
+    } else if (!isSelected &&
+        !_selectionAnimControllers[index]!.isAnimating &&
+        _selectionAnimControllers[index]!.value == 1) {
       _selectionAnimControllers[index]!.reverse();
     }
 
-    return Container(height: 74,
+    return Container(
+      height: 74,
       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 5),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -783,17 +876,14 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
                 }
               },
               child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12,vertical: 7),
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                 child: Row(
                   children: [
                     // Cart icon with color background
                     Container(
                       width: 60,
                       height: 74,
-                      child: Image.asset(
-                        iconPath,
-                        fit: BoxFit.contain,
-                      ),
+                      child: Image.asset(iconPath, fit: BoxFit.contain),
                     ),
                     SizedBox(width: 12),
 

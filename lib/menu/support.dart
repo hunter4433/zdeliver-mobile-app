@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SupportScreen extends StatelessWidget {
   const SupportScreen({Key? key}) : super(key: key);
@@ -43,7 +44,7 @@ class SupportScreen extends StatelessWidget {
           children: [
             // Call us Section
             Text(
-              "Our Story",
+              "Call us",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 6),
@@ -72,10 +73,21 @@ class SupportScreen extends StatelessWidget {
                 shape: StadiumBorder(),
                 padding: EdgeInsets.symmetric(vertical: 14),
               ),
-              icon: Icon(Icons.phone, size: 20),
-              label: Text("Call now", style: TextStyle(fontSize: 16)),
-              onPressed: () {
+              icon: Icon(Icons.phone, size: 20, color: Colors.white),
+              label: Text(
+                "Call now",
+                style: TextStyle(fontSize: 16, color: Colors.white),
+              ),
+              onPressed: () async {
                 // Handle call functionality
+                final Uri launchUri = Uri(scheme: 'tel', path: phoneNumber);
+                if (await canLaunchUrl(launchUri)) {
+                  await launchUrl(launchUri);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Could not launch phone app")),
+                  );
+                }
               },
             ),
             SizedBox(height: 10),
