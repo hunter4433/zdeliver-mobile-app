@@ -69,13 +69,13 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
     try {
       String? address = await _secureStorage.read(key: 'saved_address');
 
-      if (address == null || address.isEmpty) {
-        return 'No address saved';
-      }
+      // if (address == null || address.isEmpty) {
+      //   return 'No address saved';
+      // }
 
       // Optional: Format the address for better display
       // You can adjust the character limit as needed
-      if (address.length > 35) {
+      if (address!.length > 35) {
         return '${address.substring(0, 35)}...';
       }
 

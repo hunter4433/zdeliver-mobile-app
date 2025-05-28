@@ -92,7 +92,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.deepPurple,
         fontFamily: 'Roboto',
       ),
-       home: LoginScreen(),
+      home: LoginScreen(),
       //   home:  HomePageWithMap(),
 
     );

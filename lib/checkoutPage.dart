@@ -408,7 +408,7 @@ class _CheckoutPage extends State<CheckoutPage> {
                         child: ElevatedButton(
                           onPressed: () async {
                             if (_addressSelected) {
-                              placeOrder();
+                              // placeOrder();
 
                               showDialog(
                                 context: context,
@@ -420,19 +420,19 @@ class _CheckoutPage extends State<CheckoutPage> {
                               );
 
                               // Make API call
-                              bool success = await sendVendorNotification();
+                              // bool success = await sendVendorNotification();
 
                               // Close loading indicator
                               Navigator.pop(context);
 
-                              if (success) {
+                              // if (success) {
                                 // Navigate to next page
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
                                       builder: (context) => OrderPlacedPage()),
                                 );
-                              }
+                              // }
                             }else {
                               // Show address selection
                               _showAddressSelectionSheet();

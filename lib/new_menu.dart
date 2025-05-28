@@ -26,7 +26,9 @@ class ProfilePage extends StatelessWidget {
   // Method to retrieve stored phone number
   Future<String?> getPhoneNumber() async {
     try {
-      return await _secureStorage.read(key: 'phone_number');
+      String? number= await _secureStorage.read(key: 'phone_number');
+      String? modified_number="+91 $number";
+      return modified_number;
     } catch (e) {
       print('Error reading phone number: $e');
       return null;
@@ -271,17 +273,11 @@ class ProfilePage extends StatelessWidget {
                           style: TextStyle(fontSize: 16),
                         ),
                         onTap: () {
-
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) =>LoginScreen()),
-                          );
-                          // Implement logout functionality
+                          _showLogoutDialog(context);
                         },
                       ),
                       const Divider(height: 1, indent: 24, endIndent: 24),
-
-                      // Delete account option
+// Delete account option
                       ListTile(
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         title: const Text(
@@ -289,11 +285,7 @@ class ProfilePage extends StatelessWidget {
                           style: TextStyle(fontSize: 16),
                         ),
                         onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) =>LoginScreen()),
-                          );
-                          // Implement delete account functionality
+                          _showDeleteAccountDialog(context);
                         },
                       ),
 
@@ -317,6 +309,208 @@ class ProfilePage extends StatelessWidget {
           ),
         ),
       ),
+
+    );
+
+  }
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+
+          ),
+          child: Container(
+            width: MediaQuery.of(context).size.width * 0.85,
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.logout,
+                  size: 48,
+                  color: Colors.orange,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Logout',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Are you sure you want to logout from your account?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop(); // Close dialog
+                        },
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Cancel',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop(); // Close dialog
+                          // Implement logout functionality here
+                          _performLogout(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFF4527A0),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Logout',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showDeleteAccountDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            width: MediaQuery.of(context).size.width * 0.85,
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.warning_rounded,
+                  size: 48,
+                  color: Colors.red,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Delete Account',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently removed.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop(); // Close dialog
+                        },
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Cancel',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop(); // Close dialog
+                          // Implement delete account functionality here
+                          _performDeleteAccount(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Delete',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _performLogout(BuildContext context) {
+    // Add your logout logic here (clear user data, tokens, etc.)
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LoginScreen(),
+      ),
+          (route) => false,
+    );
+  }
+
+  void _performDeleteAccount(BuildContext context) {
+    // Add your delete account logic here (API call, clear data, etc.)
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LoginScreen(),
+      ),
+          (route) => false,
     );
   }
 
