@@ -88,8 +88,15 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                 children:
                     filters.map((filter) {
                       return CheckboxListTile(
+                        selectedTileColor: const Color(
+                          0xFF4527A0,
+                        ), // Deep purple color
+
                         controlAffinity: ListTileControlAffinity.leading,
-                        title: Text(filter),
+                        title: Text(
+                          filter,
+                          style: GoogleFonts.leagueSpartan(fontSize: 16),
+                        ),
                         value: selectedFilters.contains(filter),
                         onChanged: (val) {
                           setModalState(() {
@@ -209,8 +216,14 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                 children:
                     sortOptions.map((sort) {
                       return CheckboxListTile(
+                        selectedTileColor: const Color(
+                          0xFF4527A0,
+                        ), // Deep purple color
                         controlAffinity: ListTileControlAffinity.leading,
-                        title: Text(sort),
+                        title: Text(
+                          sort,
+                          style: GoogleFonts.leagueSpartan(fontSize: 16),
+                        ),
                         value: selectedSorts.contains(sort),
                         onChanged: (val) {
                           setModalState(() {
@@ -273,26 +286,29 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8.0),
-                        child: Text(
-                          'Filters',
-                          style: GoogleFonts.leagueSpartan(fontSize: 18),
+                  InkWell(
+                    onTap: _showFilterSheet,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            'Filters',
+                            style: GoogleFonts.leagueSpartan(fontSize: 18),
+                          ),
                         ),
-                      ),
-                      SizedBox(width: 5),
-                      IconButton(
-                        icon: Icon(
-                          Icons.filter_alt_outlined,
-                          color: Colors.black,
+                        SizedBox(width: 5),
+                        IconButton(
+                          icon: Icon(
+                            Icons.filter_alt_outlined,
+                            color: Colors.black,
+                          ),
+                          onPressed: _showFilterSheet,
                         ),
-                        onPressed: _showFilterSheet,
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   VerticalDivider(
                     color: Colors.grey[500],
@@ -301,22 +317,25 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                     endIndent: 2,
                     width: 24,
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8.0),
-                        child: Text(
-                          'Sort by',
-                          style: GoogleFonts.leagueSpartan(fontSize: 18),
+                  InkWell(
+                    onTap: _showSortSheet,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            'Sort by',
+                            style: GoogleFonts.leagueSpartan(fontSize: 18),
+                          ),
                         ),
-                      ),
-                      SizedBox(width: 5),
-                      IconButton(
-                        icon: Icon(Icons.filter_list, color: Colors.black),
-                        onPressed: _showSortSheet,
-                      ),
-                    ],
+                        SizedBox(width: 5),
+                        IconButton(
+                          icon: Icon(Icons.filter_list, color: Colors.black),
+                          onPressed: _showSortSheet,
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
