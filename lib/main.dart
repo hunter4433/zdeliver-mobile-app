@@ -71,7 +71,6 @@ void main() async {
     // Other initializations...
     String ACCESS_TOKEN = const String.fromEnvironment("ACCESS_TOKEN");
     mapbox.MapboxOptions.setAccessToken(ACCESS_TOKEN);
-
   } catch (e) {
     print("Error during initialization: $e");
   }
@@ -88,12 +87,14 @@ class MyApp extends StatelessWidget {
       title: 'mrs.Gorilla',
       debugShowCheckedModeBanner: false,
       navigatorKey: navigatorKey, // Used for navigation from notifications
+
       theme: ThemeData(
         primarySwatch: Colors.deepPurple,
         fontFamily: 'Roboto',
       ),
       home: LoginScreen(),
       //   home:  HomePageWithMap(),
+
 
     );
   }

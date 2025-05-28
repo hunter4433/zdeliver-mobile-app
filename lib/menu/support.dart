@@ -1,209 +1,128 @@
 import 'package:flutter/material.dart';
-import 'package:mrsgorilla/api/firebase.dart';
-import 'package:flutter/material.dart';
-import 'package:mrsgorilla/api/firebase.dart';
-// Add these imports
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class SupportScreen extends StatelessWidget {
   const SupportScreen({Key? key}) : super(key: key);
 
-
   @override
   Widget build(BuildContext context) {
+    final String phoneNumber = "+91-8275451335";
+
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          /// ✅ Top Section with Full-Screen Background Image
-          Stack(
-            children: [
-              /// ✅ Background Image Covering SafeArea + AppBar
-              Container(
-                height: 370,
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/supportblue.png'),  // ✅ Use your blue curved image here
-                    fit: BoxFit.cover,
-                  ),
+      appBar: AppBar(
+        backgroundColor: Colors.blueAccent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(30.0),
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 12.0, left: 15, top: 5),
+            child: Align(
+              alignment: Alignment.bottomLeft,
+              child: Text(
+                ' History',
+                style: GoogleFonts.leagueSpartan(
+                  color: Colors.white,
+                  fontSize: 26,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-
-
-              /// ✅ SafeArea + Back Button + Text
-              SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      /// ✅ Floating Back Button
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.arrow_back, color: Colors.white,size: 30,),
-                            onPressed: () => Navigator.of(context).pop(),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.more_vert, color: Colors.white,size: 30,),
-                            onPressed: () {},
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-
-
-                      /// ✅ Page Title and Subtitle
-                      const Text(
-                        'Support',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'New to mrs.Gorilla?\nLet us answer your questions',
-                        style: TextStyle(fontWeight: FontWeight.w600,
-                          fontSize: 20,
-                          color: Colors.white70,
-                        ),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          // Use the public method instead
-                          NotificationService().showTestNotification();
-                        },
-                        child: Text('Test Local Notification'),
-                      ),
-                    ],
-                  ),
+            ),
+          ),
+        ),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 18.0, horizontal: 20.0),
+        child: ListView(
+          children: [
+            // Call us Section
+            Text(
+              "Call us",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 6),
+            Text(
+              "Have questions? Talk to our representative and get all the answers you need. Shop with confidence on Z Deliver!",
+            ),
+            SizedBox(height: 16),
+            Row(
+              children: [
+                Text(phoneNumber, style: TextStyle(fontSize: 16)),
+                IconButton(
+                  icon: Icon(Icons.copy),
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: phoneNumber));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Phone number copied")),
+                    );
+                  },
                 ),
+              ],
+            ),
+            SizedBox(height: 10),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                shape: StadiumBorder(),
+                padding: EdgeInsets.symmetric(vertical: 14),
               ),
-            ],
-          ),
+              icon: Icon(Icons.phone, size: 20),
+              label: Text("Call now", style: TextStyle(fontSize: 16)),
+              onPressed: () {
+                // Handle call functionality
+              },
+            ),
+            SizedBox(height: 10),
+            Divider(color: Colors.grey.shade300, thickness: 1.5),
+            SizedBox(height: 10),
+            // FAQs Section
+            Text(
+              "FAQs",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 6),
+            Text(
+              "Find quick answers to common questions and shop confidently with Z Deliver.",
+            ),
+            SizedBox(height: 16),
 
-
-          const SizedBox(height: 20),
-
-
-          /// ✅ Card 1 - Chat with us
-          _buildSupportOption(
-            context,
-            icon: Icons.chat_bubble_outline,
-            title: 'Chat with us',
-            subtitle: 'Chat with our customer support',
-            onTap: () {
-              // TODO: Navigate to Chat Screen
-            },
-          ),
-          const SizedBox(height: 10),
-
-
-          /// ✅ Card 2 - Guide to mrs.Gorilla
-          _buildSupportOption(
-            context,
-            icon: Icons.help_outline,
-            title: 'Guide to mrs.Gorilla',
-            subtitle: 'How to use the app',
-            onTap: () {
-              // TODO: Navigate to Guide Page
-            },
-          ),
-          const SizedBox(height: 10),
-
-
-          /// ✅ Card 3 - Check out FAQs
-          _buildSupportOption(
-            context,
-            icon: Icons.question_answer_outlined,
-            title: 'Check out FAQs',
-            subtitle: 'Frequently asked questions',
-            onTap: () {
-              // TODO: Navigate to FAQ Page
-            },
-          ),
-        ],
+            // FAQ items
+            buildFaqItem(
+              "What is the Average time for cart to reach the address",
+            ),
+            buildFaqItem(
+              "What is the Average time for cart to reach the address",
+            ),
+            buildFaqItem(
+              "What is the Average time for cart to reach the address",
+            ),
+            buildFaqItem(
+              "What is the Average time for cart to reach the address",
+            ),
+          ],
+        ),
       ),
     );
   }
 
-
-  /// ✅ Reusable Support Option Card
-  Widget _buildSupportOption(
-      BuildContext context, {
-        required IconData icon,
-        required String title,
-        required String subtitle,
-        required VoidCallback onTap,
-      }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        margin: const EdgeInsets.symmetric(horizontal: 16),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 10,
-              offset: Offset(0, 4),
-            ),
-          ],
+  Widget buildFaqItem(String question) {
+    return ExpansionTile(
+      title: Text(question, style: TextStyle(fontSize: 16)),
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10.0),
+          child: Text(
+            "The average time for delivery is 30–45 minutes depending on location and order type.",
+            style: TextStyle(fontSize: 14, color: Colors.black87),
+          ),
         ),
-        child: Row(
-          children: [
-            /// ✅ Icon
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF0F8FF),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                icon,
-                color: Colors.deepPurple,
-                size: 28,
-              ),
-            ),
-            const SizedBox(width: 16),
-
-
-            /// ✅ Text
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.black54,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 }
-
