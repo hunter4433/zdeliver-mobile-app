@@ -53,6 +53,7 @@ Future<void> requestLocationPermission() async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+
   try {
     // Register background handler before initializing Firebase
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
@@ -80,6 +81,7 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
+
 
   @override
   Widget build(BuildContext context) {

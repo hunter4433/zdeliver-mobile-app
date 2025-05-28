@@ -9,7 +9,8 @@ import 'package:http/http.dart' as http;
 import 'package:mrsgorilla/new_menu.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mrsgorilla/address_selection_sheet.dart';
+// import 'package:mrsgorilla/address_selection_sheet.dart';
+import 'package:mrsgorilla/home_address_selection_modal.dart';
 
 class HomePageWithMap extends StatefulWidget {
   const HomePageWithMap({Key? key}) : super(key: key);
@@ -21,6 +22,8 @@ class HomePageWithMap extends StatefulWidget {
 class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderStateMixin {
   // Track which recommended item is selected
   int? selectedRecommendedIndex;
+  bool _addressSelected = false;
+
 
   // Animation controller for the menu drawer
   late AnimationController _drawerController;
@@ -29,7 +32,7 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
   bool _isDrawerOpen = false;
   bool _isCardExpanded = false;
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
-  bool _addressSelected = false;
+
   String _selectedAddress = "";
 
   // Drag controller
@@ -69,10 +72,6 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
     try {
       String? address = await _secureStorage.read(key: 'saved_address');
 
-      // if (address == null || address.isEmpty) {
-      //   return 'No address saved';
-      // }
-
       // Optional: Format the address for better display
       // You can adjust the character limit as needed
       if (address!.length > 35) {
@@ -82,7 +81,7 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
       return address;
     } catch (e) {
       print('Error reading saved_address: $e');
-      return 'Error loading address';
+      return 'loading address...';
     }
   }
 
@@ -99,25 +98,60 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
     }
   }
 
+  // Address Selection Sheet Methods
   void _showAddressSelectionSheet() {
-    // Use the static method from AddressSelectionSheet class
     AddressSelectionSheet.showAddressSelectionSheet(
       context,
           (address) {
-        // Handle the selected address
         _selectAddress(address);
-        // The sheet will be closed automatically
       },
     );
   }
 
-  void _selectAddress(String address) {
+  void _selectAddress(String address) async {
     setState(() {
       _addressSelected = true;
-      _selectedAddress = address;
+      _selectedAddress = address; // Store the selected address
     });
-    Navigator.pop(context); // Close the bottom sheet
+
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Center(child: CircularProgressIndicator());
+      },
+    );
+
+    try {
+      // Make API call here
+      // bool success = await sendVendorNotification();
+
+      // Simulate API call delay
+      await Future.delayed(Duration(seconds: 2));
+
+      // Close loading indicator
+      Navigator.pop(context);
+
+      // Navigate to next page
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => OrderPlacedPage()),
+      );
+    } catch (e) {
+      // Close loading indicator
+      Navigator.pop(context);
+
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to place order. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
+
 
   Future<void> _initializePage() async {
     // Retrieve saved address
@@ -528,7 +562,7 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
                             Expanded(
                               flex: 2,
                               child: Image.asset(
-                                'assets/images/homecustomizecart.png',
+                                'assets/images/meow meow 1.png',
                                 fit: BoxFit.contain,
                               ),
                             ),
@@ -577,7 +611,7 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
                         title: 'Z Customized cart',
                         subtitle: 'any 13 veggie & fruits',
                         time: '17 min',
-                        checkText: 'check here',
+                         checkText: '',
                         color: Colors.purple,
                       ),
 
@@ -613,28 +647,6 @@ class _HomePageWithMapState extends State<HomePageWithMap> with TickerProviderSt
                                 onTap: selectedRecommendedIndex != null ? () async {
 
                                   _showAddressSelectionSheet();
-                                  // Show loading indicator
-                                  showDialog(
-                                    context: context,
-                                    barrierDismissible: false,
-                                    builder: (BuildContext context) {
-                                      return Center(child: CircularProgressIndicator());
-                                    },
-                                  );
-
-                                  // Make API call
-                                  // bool success = await sendVendorNotification();
-
-                                  // Close loading indicator
-                                  Navigator.pop(context);
-                                  if (_addressSelected) {
-                                    // Navigate to next page
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (context) =>
-                                          OrderPlacedPage()),
-                                    );
-                                  }
                                 } : null,
                                 child: Container(
                                   height: 64,

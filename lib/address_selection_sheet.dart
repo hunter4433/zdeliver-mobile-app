@@ -5,10 +5,10 @@ import 'dart:convert';
 import 'package:mrsgorilla/address_selection.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-class AddressSelectionSheet extends StatefulWidget {
+class SavedAddressSelectionSheet extends StatefulWidget {
   final Function(String) onAddressSelected;
 
-  const AddressSelectionSheet({
+  const SavedAddressSelectionSheet({
     Key? key,
     required this.onAddressSelected,
   }) : super(key: key);
@@ -20,7 +20,7 @@ class AddressSelectionSheet extends StatefulWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        return AddressSelectionSheet(
+        return SavedAddressSelectionSheet(
           onAddressSelected: onAddressSelected,
         );
       },
@@ -31,7 +31,7 @@ class AddressSelectionSheet extends StatefulWidget {
   _AddressSelectionSheetState createState() => _AddressSelectionSheetState();
 }
 
-class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
+class _AddressSelectionSheetState extends State<SavedAddressSelectionSheet> {
   List<dynamic> _addresses = [];
   bool _isLoading = true;
   String _errorMessage = '';
