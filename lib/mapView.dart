@@ -46,6 +46,7 @@ class _MapScreenState extends State<MapScreen> {
   final GlobalKey _mapKey = GlobalKey();
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
+
   // Number of carts to place at warehouse
   final int numberOfCarts = 4;
 
@@ -296,6 +297,7 @@ void enablePinMode() {
       styleUri: mapbox.MapboxStyles.MAPBOX_STREETS,
       onMapCreated: _onMapCreated,
       onTapListener: _onMapTap,
+
     );
 
     return LayoutBuilder(
@@ -335,7 +337,7 @@ void enablePinMode() {
       print("Error: Map is null after creation");
       return;
     }
-
+   await mapboxMap.location.updateSettings(mapbox.LocationComponentSettings(enabled: true));
     await mapboxMap.gestures.updateSettings(
       mapbox.GesturesSettings(
         rotateEnabled: true,
