@@ -45,7 +45,10 @@ class SupportScreen extends StatelessWidget {
             // Call us Section
             Text(
               "Call us",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: GoogleFonts.leagueSpartan(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             SizedBox(height: 6),
             Text(
@@ -54,7 +57,10 @@ class SupportScreen extends StatelessWidget {
             SizedBox(height: 16),
             Row(
               children: [
-                Text(phoneNumber, style: TextStyle(fontSize: 16)),
+                Text(
+                  phoneNumber,
+                  style: GoogleFonts.leagueSpartan(fontSize: 16),
+                ),
                 IconButton(
                   icon: Icon(Icons.copy),
                   onPressed: () {
@@ -69,14 +75,17 @@ class SupportScreen extends StatelessWidget {
             SizedBox(height: 10),
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
+                backgroundColor: Color.fromRGBO(50, 134, 22, 1),
                 shape: StadiumBorder(),
                 padding: EdgeInsets.symmetric(vertical: 14),
               ),
               icon: Icon(Icons.phone, size: 20, color: Colors.white),
               label: Text(
                 "Call now",
-                style: TextStyle(fontSize: 16, color: Colors.white),
+                style: GoogleFonts.leagueSpartan(
+                  fontSize: 16,
+                  color: Colors.white,
+                ),
               ),
               onPressed: () async {
                 // Handle call functionality
@@ -96,11 +105,18 @@ class SupportScreen extends StatelessWidget {
             // FAQs Section
             Text(
               "FAQs",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: GoogleFonts.leagueSpartan(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             SizedBox(height: 6),
             Text(
               "Find quick answers to common questions and shop confidently with Z Deliver.",
+              style: GoogleFonts.leagueSpartan(
+                fontSize: 16,
+                fontWeight: FontWeight.w400,
+              ),
             ),
             SizedBox(height: 16),
 
@@ -125,13 +141,19 @@ class SupportScreen extends StatelessWidget {
 
   Widget buildFaqItem(String question) {
     return ExpansionTile(
-      title: Text(question, style: TextStyle(fontSize: 16)),
+      title: Text(
+        question,
+        style: GoogleFonts.leagueSpartan(
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
       children: [
         Padding(
-          padding: const EdgeInsets.only(bottom: 10.0),
+          padding: const EdgeInsets.only(bottom: 10.0, left: 20.0),
           child: Text(
             "The average time for delivery is 30–45 minutes depending on location and order type.",
-            style: TextStyle(fontSize: 14, color: Colors.black87),
+            style: GoogleFonts.leagueSpartan(fontSize: 16),
           ),
         ),
       ],

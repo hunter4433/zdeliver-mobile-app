@@ -275,11 +275,21 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text('Filters'),
-                      SizedBox(width: 10),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(
+                          'Filters',
+                          style: GoogleFonts.leagueSpartan(fontSize: 18),
+                        ),
+                      ),
+                      SizedBox(width: 5),
                       IconButton(
-                        icon: Icon(Icons.filter_list, color: Colors.grey[500]),
+                        icon: Icon(
+                          Icons.filter_alt_outlined,
+                          color: Colors.black,
+                        ),
                         onPressed: _showFilterSheet,
                       ),
                     ],
@@ -294,10 +304,16 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('Sort by'),
-                      SizedBox(width: 10),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(
+                          'Sort by',
+                          style: GoogleFonts.leagueSpartan(fontSize: 18),
+                        ),
+                      ),
+                      SizedBox(width: 5),
                       IconButton(
-                        icon: Icon(Icons.filter_list, color: Colors.grey[500]),
+                        icon: Icon(Icons.filter_list, color: Colors.black),
                         onPressed: _showSortSheet,
                       ),
                     ],
@@ -333,7 +349,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                       children: [
                         Text(
                           data["title"],
-                          style: TextStyle(
+                          style: GoogleFonts.leagueSpartan(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
                           ),
@@ -341,9 +357,14 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                         SizedBox(height: 4),
                         Text(
                           "cart delivered at",
-                          style: TextStyle(color: Colors.grey[700]),
+                          style: GoogleFonts.leagueSpartan(
+                            color: Colors.grey[700],
+                          ),
                         ),
-                        Text(data["address"], style: TextStyle(fontSize: 13)),
+                        Text(
+                          data["address"],
+                          style: GoogleFonts.leagueSpartan(fontSize: 13),
+                        ),
                         SizedBox(height: 10),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -352,18 +373,32 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                               children: [
                                 Text(
                                   "Time ",
-                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                  style: GoogleFonts.leagueSpartan(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                                Text(data["time"]),
+                                Text(
+                                  data["time"],
+                                  style: GoogleFonts.leagueSpartan(
+                                    fontSize: 13,
+                                  ),
+                                ),
                               ],
                             ),
                             Row(
                               children: [
                                 Text(
                                   "Date ",
-                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                  style: GoogleFonts.leagueSpartan(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                                Text(data["date"]),
+                                Text(
+                                  data["date"],
+                                  style: GoogleFonts.leagueSpartan(
+                                    fontSize: 13,
+                                  ),
+                                ),
                               ],
                             ),
                           ],
@@ -371,7 +406,10 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                         SizedBox(height: 5),
 
                         Divider(thickness: 1.5, color: Colors.grey[300]),
-                        Text("Items bought", style: TextStyle()),
+                        Text(
+                          "Items bought",
+                          style: GoogleFonts.leagueSpartan(),
+                        ),
 
                         SingleChildScrollView(
                           scrollDirection: Axis.horizontal,

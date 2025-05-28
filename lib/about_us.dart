@@ -63,12 +63,15 @@ class AboutUsScreen extends StatelessWidget {
             // Call us Section
             Text(
               "Our Story",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: GoogleFonts.leagueSpartan(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             SizedBox(height: 6),
             Text(
               "Would you trust a stranger to choose what your family eats every day? We wouldn’t. And we believe you shouldn’t have to.\n\nFresh vegetables are not a product — they are a responsibility. For generations, families handpicked every leaf, every tomato, every potato — because food is trust, not just a transaction.\n \nBut today, in a world that’s too busy to care, that trust is being lost. At PreetEnterprises, we’re bringing it back. \n\n We don’t just deliver vegetables. We deliver your choices. We deliver the care you would show if you were standing there yourself. We are building India’s first personalised mandi-on-wheels — fast, fresh, sustainable, and trustworthy.",
-              style: TextStyle(
+              style: GoogleFonts.leagueSpartan(
                 fontSize: 16,
                 color: Colors.black87,
                 height: 1.5,
@@ -78,7 +81,10 @@ class AboutUsScreen extends StatelessWidget {
             Center(
               child: Text(
                 "Why choose our services?",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: GoogleFonts.leagueSpartan(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
 
@@ -111,13 +117,19 @@ class AboutUsScreen extends StatelessWidget {
             SizedBox(height: 16),
             Text(
               data.title,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: GoogleFonts.leagueSpartan(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 8),
             Text(
               data.description,
-              style: TextStyle(fontSize: 14, color: Colors.black87),
+              style: GoogleFonts.leagueSpartan(
+                fontSize: 14,
+                color: Colors.black87,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
