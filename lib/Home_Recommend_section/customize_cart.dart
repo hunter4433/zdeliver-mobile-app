@@ -255,9 +255,11 @@ class _GroceryPageState extends State<customize_cart> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
+      canPop: true, // allow pop unless you want to block it
       onPopInvoked: (didPop) {
-        Navigator.pop(context, selectedProducts);
-        // Prevent default pop, since we already did it
+        if (!didPop) {
+          Navigator.pop(context, selectedProducts);
+        }
       },
       child: Scaffold(
         backgroundColor: Colors.white,
