@@ -1,46 +1,106 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+// Reuse the same model classes from the first code
+class BookingHistoryItem {
+  final Booking booking;
+  final List<OrderItem> items;
+
+  BookingHistoryItem({
+    required this.booking,
+    required this.items,
+  });
+
+  factory BookingHistoryItem.fromJson(Map<String, dynamic> json) {
+    return BookingHistoryItem(
+      booking: Booking.fromJson(json['booking'] ?? {}),
+      items: (json['items'] as List?)
+          ?.map((itemJson) => OrderItem.fromJson(itemJson))
+          .toList() ?? [],
+    );
+  }
+}
+
+class Booking {
+  final int id;
+  final int userId;
+  final String bookingType;
+  final double totalPrice;
+  final int? basketId;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final String? deliveryAddress;
+
+  Booking({
+    required this.id,
+    required this.userId,
+    required this.bookingType,
+    required this.totalPrice,
+    this.basketId,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deliveryAddress,
+  });
+
+  factory Booking.fromJson(Map<String, dynamic> json) {
+    return Booking(
+      id: json['id'] ?? 0,
+      userId: json['user_id'] ?? 0,
+      bookingType: json['booking_type'] ?? '',
+      totalPrice: double.tryParse(json['total_price']?.toString() ?? '0.0') ?? 0.0,
+      basketId: json['basket_id'],
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : DateTime.now(),
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'])
+          : DateTime.now(),
+      deliveryAddress: json['address'],
+    );
+  }
+}
+
+class OrderItem {
+  final int id;
+  final String name;
+  final String imageUrl;
+  final int quantity;
+
+  OrderItem({
+    required this.id,
+    required this.name,
+    required this.imageUrl,
+    required this.quantity,
+  });
+
+  factory OrderItem.fromJson(Map<String, dynamic> json) {
+    return OrderItem(
+      id: json['id'] ?? 0,
+      name: json['name'] ?? 'Unknown Item',
+      imageUrl: json['image_url'] ?? 'assets/images/placeholder.png',
+      quantity: int.tryParse(json['quantity']?.toString() ?? '0') ?? 0,
+    );
+  }
+}
 
 class OrderHistoryScreen extends StatefulWidget {
+  final String userId;
+
+  const OrderHistoryScreen({
+    Key? key,
+    required this.userId,
+  }) : super(key: key);
+
   @override
   State<OrderHistoryScreen> createState() => _OrderHistoryScreenState();
 }
 
 class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
-  final List<Map<String, dynamic>> historyData = [
-    {
-      "title": "Z vegetable cart",
-      "address": "Hs no. 15 shardanganagri ,mirajgaon road karhat",
-      "time": "11:00 AM",
-      "date": "11/03/2025",
-      "items": [
-        "https://img.icons8.com/emoji/48/cucumber.png",
-        "https://img.icons8.com/emoji/48/cucumber.png",
-        "https://img.icons8.com/emoji/48/cucumber.png",
-        "https://img.icons8.com/emoji/48/cucumber.png",
-        "https://img.icons8.com/emoji/48/cucumber.png",
-        "https://img.icons8.com/emoji/48/cucumber.png",
-        "https://img.icons8.com/emoji/48/cucumber.png",
-        "https://img.icons8.com/emoji/48/cucumber.png",
-      ],
-    },
-    {
-      "title": "Z fruit cart",
-      "address": "Hs no. 15 shardanganagri ,mirajgaon road karhat",
-      "time": "11:30 AM",
-      "date": "11/03/2025",
-      "items": [
-        "https://img.icons8.com/emoji/48/cucumber.png",
-        "https://img.icons8.com/emoji/48/cucumber.png",
-        "https://img.icons8.com/emoji/48/cucumber.png",
-        "https://img.icons8.com/emoji/48/cucumber.png",
-        "https://img.icons8.com/emoji/48/cucumber.png",
-        "https://img.icons8.com/emoji/48/cucumber.png",
-        "https://img.icons8.com/emoji/48/cucumber.png",
-        "https://img.icons8.com/emoji/48/cucumber.png",
-      ],
-    },
-  ];
+  List<BookingHistoryItem> _bookings = [];
+  bool _isLoading = true;
+  String _errorMessage = '';
 
   // Filter options
   final List<String> filters = [
@@ -53,26 +113,102 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   // Use a Set to store multiple selected filters
   Set<String> selectedFilters = {'Full history'};
 
-  List<Map<String, dynamic>> get filteredHistory {
-    // If "Full history" is selected or nothing is selected, show all
-    if (selectedFilters.contains('Full history') || selectedFilters.isEmpty) {
-      return historyData;
+  // Sort options
+  final List<String> sortOptions = [
+    'Date - ascending',
+    'Date - descending',
+    'Bill price - highest first',
+    'Bill price - lowest first',
+    'Earliest arrival first',
+    'Earliest arrival last',
+  ];
+
+  Set<String> selectedSorts = {};
+  Map<int, int> currentItemIndex = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchBookingHistory();
+  }
+
+  Future<void> _fetchBookingHistory() async {
+    try {
+      final url = Uri.parse('http://13.126.169.224/api/v1/book/user/${widget.userId}');
+      final response = await http.get(url);
+      print('Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+
+        if (jsonResponse['success'] == true) {
+          final List<dynamic> data = jsonResponse['data'] ?? [];
+          setState(() {
+            _bookings = data.map((item) => BookingHistoryItem.fromJson(item)).toList();
+            _isLoading = false;
+          });
+        } else {
+          setState(() {
+            _errorMessage = jsonResponse['message'] ?? 'Failed to load bookings';
+            _isLoading = false;
+          });
+        }
+      } else {
+        setState(() {
+          _errorMessage = 'Failed to load bookings. Status code: ${response.statusCode}';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'An error occurred: $e';
+        _isLoading = false;
+      });
     }
-    // Otherwise, filter by selected types
-    return historyData.where((d) {
-      final title = d['title'].toString().toLowerCase();
+  }
+
+  List<BookingHistoryItem> get filteredHistory {
+    if (selectedFilters.contains('Full history') || selectedFilters.isEmpty) {
+      return _bookings;
+    }
+
+    return _bookings.where((bookingItem) {
+      final bookingType = bookingItem.booking.bookingType.toLowerCase();
       bool match = false;
-      if (selectedFilters.contains('Z vegetable cart history') &&
-          title.contains('vegetable'))
+
+      if (selectedFilters.contains('Z vegetable cart history') && bookingType.contains('vegetable')) {
         match = true;
-      if (selectedFilters.contains('Z fruit cart history') &&
-          title.contains('fruit'))
+      }
+      if (selectedFilters.contains('Z fruit cart history') && bookingType.contains('fruit')) {
         match = true;
-      if (selectedFilters.contains('Z customized cart history') &&
-          title.contains('customized'))
+      }
+      if (selectedFilters.contains('Z customized cart history') && bookingType.contains('customized')) {
         match = true;
+      }
+
       return match;
     }).toList();
+  }
+
+  List<BookingHistoryItem> get sortedHistory {
+    List<BookingHistoryItem> list = List<BookingHistoryItem>.from(filteredHistory);
+
+    for (String sort in selectedSorts) {
+      if (sort == 'Date - ascending') {
+        list.sort((a, b) => a.booking.createdAt.compareTo(b.booking.createdAt));
+      } else if (sort == 'Date - descending') {
+        list.sort((a, b) => b.booking.createdAt.compareTo(a.booking.createdAt));
+      } else if (sort == 'Bill price - highest first') {
+        list.sort((a, b) => b.booking.totalPrice.compareTo(a.booking.totalPrice));
+      } else if (sort == 'Bill price - lowest first') {
+        list.sort((a, b) => a.booking.totalPrice.compareTo(b.booking.totalPrice));
+      } else if (sort == 'Earliest arrival first') {
+        list.sort((a, b) => a.booking.createdAt.compareTo(b.booking.createdAt));
+      } else if (sort == 'Earliest arrival last') {
+        list.sort((a, b) => b.booking.createdAt.compareTo(a.booking.createdAt));
+      }
+    }
+    return list;
   }
 
   void _showFilterSheet() {
@@ -85,115 +221,41 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
               padding: const EdgeInsets.all(20.0),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                children:
-                    filters.map((filter) {
-                      return CheckboxListTile(
-                        controlAffinity: ListTileControlAffinity.leading,
-                        title: Text(filter),
-                        value: selectedFilters.contains(filter),
-                        onChanged: (val) {
-                          setModalState(() {
-                            if (filter == 'Full history') {
-                              // If "Full history" is selected, clear others
-                              selectedFilters = {'Full history'};
-                            } else {
-                              selectedFilters.remove('Full history');
-                              if (val == true) {
-                                selectedFilters.add(filter);
-                              } else {
-                                selectedFilters.remove(filter);
-                              }
-                              // If none selected, default to "Full history"
-                              if (selectedFilters.isEmpty) {
-                                selectedFilters = {'Full history'};
-                              }
-                            }
-                          });
-                          setState(() {});
-                        },
-                      );
-                    }).toList(),
+                children: filters.map((filter) {
+                  return CheckboxListTile(
+                    selectedTileColor: const Color(0xFF4527A0),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    title: Text(
+                      filter,
+                      style: GoogleFonts.leagueSpartan(fontSize: 16),
+                    ),
+                    value: selectedFilters.contains(filter),
+                    onChanged: (val) {
+                      setModalState(() {
+                        if (filter == 'Full history') {
+                          selectedFilters = {'Full history'};
+                        } else {
+                          selectedFilters.remove('Full history');
+                          if (val == true) {
+                            selectedFilters.add(filter);
+                          } else {
+                            selectedFilters.remove(filter);
+                          }
+                          if (selectedFilters.isEmpty) {
+                            selectedFilters = {'Full history'};
+                          }
+                        }
+                      });
+                      setState(() {});
+                    },
+                  );
+                }).toList(),
               ),
             );
           },
         );
       },
     );
-  }
-
-  // Sort options
-  final List<String> sortOptions = [
-    'Date - ascending',
-    'Date - descending',
-    'Bill price - highest first',
-    'Bill price - lowest first',
-    'Earliest arrival first',
-    'Earliest arrival last',
-  ];
-
-  Set<String> selectedSorts = {};
-
-  // Dummy bill and arrival data for demonstration
-  // Add these fields to each historyData item in your real data
-  // "bill": 100, "arrival": "11:00 AM"
-  List<Map<String, dynamic>> get sortedHistory {
-    List<Map<String, dynamic>> list = List<Map<String, dynamic>>.from(
-      filteredHistory,
-    );
-
-    for (String sort in selectedSorts) {
-      if (sort == 'Date - ascending') {
-        list.sort(
-          (a, b) => _parseDate(a['date']).compareTo(_parseDate(b['date'])),
-        );
-      } else if (sort == 'Date - descending') {
-        list.sort(
-          (a, b) => _parseDate(b['date']).compareTo(_parseDate(a['date'])),
-        );
-      } else if (sort == 'Bill price - highest first') {
-        list.sort((a, b) => (b['bill'] ?? 0).compareTo(a['bill'] ?? 0));
-      } else if (sort == 'Bill price - lowest first') {
-        list.sort((a, b) => (a['bill'] ?? 0).compareTo(b['bill'] ?? 0));
-      } else if (sort == 'Earliest arrival first') {
-        list.sort(
-          (a, b) => _parseTime(
-            a['arrival'] ?? a['time'],
-          ).compareTo(_parseTime(b['arrival'] ?? b['time'])),
-        );
-      } else if (sort == 'Earliest arrival last') {
-        list.sort(
-          (a, b) => _parseTime(
-            b['arrival'] ?? b['time'],
-          ).compareTo(_parseTime(a['arrival'] ?? a['time'])),
-        );
-      }
-    }
-    return list;
-  }
-
-  DateTime _parseDate(String date) {
-    // Expects format "dd/MM/yyyy"
-    final parts = date.split('/');
-    return DateTime(
-      int.parse(parts[2]),
-      int.parse(parts[1]),
-      int.parse(parts[0]),
-    );
-  }
-
-  TimeOfDay _parseTime(String time) {
-    // Expects format "hh:mm AM/PM"
-    final format = RegExp(r'(\d+):(\d+) (\w{2})');
-    final match = format.firstMatch(time);
-    if (match != null) {
-      int hour = int.parse(match.group(1)!);
-      int minute = int.parse(match.group(2)!);
-      String period = match.group(3)!;
-      if (period == 'PM' && hour != 12) hour += 12;
-      if (period == 'AM' && hour == 12) hour = 0;
-      return TimeOfDay(hour: hour, minute: minute);
-    }
-    return TimeOfDay(hour: 0, minute: 0);
   }
 
   void _showSortSheet() {
@@ -206,24 +268,27 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
               padding: const EdgeInsets.all(20.0),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                children:
-                    sortOptions.map((sort) {
-                      return CheckboxListTile(
-                        controlAffinity: ListTileControlAffinity.leading,
-                        title: Text(sort),
-                        value: selectedSorts.contains(sort),
-                        onChanged: (val) {
-                          setModalState(() {
-                            if (val == true) {
-                              selectedSorts.add(sort);
-                            } else {
-                              selectedSorts.remove(sort);
-                            }
-                          });
-                          setState(() {});
-                        },
-                      );
-                    }).toList(),
+                children: sortOptions.map((sort) {
+                  return CheckboxListTile(
+                    selectedTileColor: const Color(0xFF4527A0),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    title: Text(
+                      sort,
+                      style: GoogleFonts.leagueSpartan(fontSize: 16),
+                    ),
+                    value: selectedSorts.contains(sort),
+                    onChanged: (val) {
+                      setModalState(() {
+                        if (val == true) {
+                          selectedSorts.add(sort);
+                        } else {
+                          selectedSorts.remove(sort);
+                        }
+                      });
+                      setState(() {});
+                    },
+                  );
+                }).toList(),
               ),
             );
           },
@@ -232,20 +297,25 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     );
   }
 
-  Map<int, int> currentItemIndex = {};
+  String _formatTime(DateTime dateTime) {
+    return '${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')} ${dateTime.hour >= 12 ? 'PM' : 'AM'}';
+  }
+
+  String _formatDate(DateTime dateTime) {
+    return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: const Color(0xFF4527A0),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
-
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(30.0),
           child: Padding(
@@ -264,7 +334,16 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
           ),
         ),
       ),
-      body: Column(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _errorMessage.isNotEmpty
+          ? Center(
+        child: Text(
+          _errorMessage,
+          style: const TextStyle(color: Colors.red),
+        ),
+      )
+          : Column(
         children: [
           Padding(
             padding: const EdgeInsets.all(8.0),
@@ -273,16 +352,29 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('Filters'),
-                      SizedBox(width: 10),
-                      IconButton(
-                        icon: Icon(Icons.filter_list, color: Colors.grey[500]),
-                        onPressed: _showFilterSheet,
-                      ),
-                    ],
+                  InkWell(
+                    onTap: _showFilterSheet,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            'Filters',
+                            style: GoogleFonts.leagueSpartan(fontSize: 18),
+                          ),
+                        ),
+                        SizedBox(width: 5),
+                        IconButton(
+                          icon: Icon(
+                            Icons.filter_alt_outlined,
+                            color: Colors.black,
+                          ),
+                          onPressed: _showFilterSheet,
+                        ),
+                      ],
+                    ),
                   ),
                   VerticalDivider(
                     color: Colors.grey[500],
@@ -291,297 +383,256 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                     endIndent: 2,
                     width: 24,
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('Sort by'),
-                      SizedBox(width: 10),
-                      IconButton(
-                        icon: Icon(Icons.filter_list, color: Colors.grey[500]),
-                        onPressed: _showSortSheet,
-                      ),
-                    ],
+                  InkWell(
+                    onTap: _showSortSheet,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            'Sort by',
+                            style: GoogleFonts.leagueSpartan(fontSize: 18),
+                          ),
+                        ),
+                        SizedBox(width: 5),
+                        IconButton(
+                          icon: Icon(Icons.filter_list, color: Colors.black),
+                          onPressed: _showSortSheet,
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
           ),
+          if (_bookings.isEmpty)
+            const Expanded(
+              child: Center(
+                child: Text(
+                  'No order history found',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
+            )
+          else
+            Expanded(
+              child: ListView.builder(
+                itemCount: sortedHistory.length,
+                padding: const EdgeInsets.all(12),
+                itemBuilder: (context, index) {
+                  final bookingItem = sortedHistory[index];
+                  final booking = bookingItem.booking;
+                  final items = bookingItem.items;
+                  final idx = currentItemIndex[index] ?? 0;
+                  final showArrow = items.length > 5 && (idx + 5) < items.length;
 
-          Expanded(
-            child: ListView.builder(
-              itemCount: sortedHistory.length,
-              padding: const EdgeInsets.all(12),
-              itemBuilder: (context, index) {
-                final data = sortedHistory[index];
-                final items = data["items"] as List;
-                final idx = currentItemIndex[index] ?? 0;
-                final showArrow = items.length > 5 && (idx + 5) < items.length;
-
-                return Card(
-                  color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    side: BorderSide(color: Colors.grey[300]!, width: 1.5),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-
-                  elevation: 0,
-                  margin: EdgeInsets.only(bottom: 16),
-                  child: Padding(
-                    padding: const EdgeInsets.all(14.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          data["title"],
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          "cart delivered at",
-                          style: TextStyle(color: Colors.grey[700]),
-                        ),
-                        Text(data["address"], style: TextStyle(fontSize: 13)),
-                        SizedBox(height: 10),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  "Time ",
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                Text(data["time"]),
-                              ],
+                  return Card(
+                    color: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      side: BorderSide(color: Colors.grey[300]!, width: 1.5),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                    margin: EdgeInsets.only(bottom: 16),
+                    child: Padding(
+                      padding: const EdgeInsets.all(14.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            booking.bookingType.isNotEmpty
+                                ? booking.bookingType
+                                : 'Order',
+                            style: GoogleFonts.leagueSpartan(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
                             ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            "cart delivered at",
+                            style: GoogleFonts.leagueSpartan(
+                              color: Colors.grey[700],
+                                fontSize: 16
+                            ),
+                          ),
+                          Text(
+                            booking.deliveryAddress ?? 'No address provided',
+                            style: GoogleFonts.leagueSpartan(fontSize: 16),
+                          ),
+                          SizedBox(height: 10),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    "Time ",
+                                    style: GoogleFonts.leagueSpartan(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  Text(
+                                    _formatTime(booking.createdAt),
+                                    style: GoogleFonts.leagueSpartan(
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Text(
+                                    "Date ",
+                                    style: GoogleFonts.leagueSpartan(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  Text(
+                                    _formatDate(booking.createdAt),
+                                    style: GoogleFonts.leagueSpartan(
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          if (booking.totalPrice > 0) ...[
+                            SizedBox(height: 5),
                             Row(
                               children: [
                                 Text(
-                                  "Date ",
-                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                  "Total: ",
+                                  style: GoogleFonts.leagueSpartan(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                                Text(data["date"]),
+                                Text(
+                                  "₹${booking.totalPrice.toStringAsFixed(2)}",
+                                  style: GoogleFonts.leagueSpartan(
+                                    fontSize: 13,
+                                    color: const Color(0xFF4527A0),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                               ],
                             ),
                           ],
-                        ),
-                        SizedBox(height: 5),
-
-                        Divider(thickness: 1.5, color: Colors.grey[300]),
-                        Text("Items bought", style: TextStyle()),
-
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: [
-                              ...List.generate(
-                                items.length < 5 ? items.length : 5,
-                                (i) {
-                                  int displayIdx = idx + i;
-                                  if (displayIdx >= items.length)
-                                    return SizedBox.shrink();
-                                  return Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 2.0,
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 5.0,
-                                      ),
-                                      child: CircleAvatar(
-                                        backgroundImage: NetworkImage(
-                                          items[displayIdx],
+                          SizedBox(height: 5),
+                          Divider(thickness: 1.5, color: Colors.grey[300]),
+                          Text(
+                            "Items bought (${items.length})",
+                            style: GoogleFonts.leagueSpartan(),
+                          ),
+                          if (items.isNotEmpty)
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: [
+                                  ...List.generate(
+                                    items.length < 5 ? items.length : 5,
+                                        (i) {
+                                      int displayIdx = idx + i;
+                                      if (displayIdx >= items.length)
+                                        return SizedBox.shrink();
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 2.0,
                                         ),
-                                        radius: 20,
-                                        backgroundColor: Colors.transparent,
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                              if (showArrow)
-                                Padding(
-                                  padding: const EdgeInsets.only(
-                                    left: 15.0,
-                                    right: 5.0,
-                                  ),
-                                  child: IconButton(
-                                    icon: Icon(
-                                      Icons.arrow_forward_ios_rounded,
-                                      size: 18,
-                                    ),
-                                    onPressed: () {
-                                      setState(() {
-                                        // Move window right, but don't overflow
-                                        if ((idx + 5) < items.length) {
-                                          currentItemIndex[index] = idx + 1;
-                                        }
-                                      });
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 5.0,
+                                          ),
+                                          child: Stack(
+                                            children: [
+                                              CircleAvatar(
+                                                backgroundImage: NetworkImage(
+                                                  items[displayIdx].imageUrl,
+                                                ),
+                                                radius: 20,
+                                                backgroundColor: Colors.transparent,
+                                                onBackgroundImageError: (exception, stackTrace) {
+                                                  // Handle image load error
+                                                },
+                                              ),
+                                              // if (items[displayIdx].quantity > 1)
+                                              //   Positioned(
+                                              //     top: 0,
+                                              //     right: 0,
+                                              //     child: Container(
+                                              //       padding: const EdgeInsets.all(2),
+                                              //       decoration: BoxDecoration(
+                                              //         color: Colors.red,
+                                              //         borderRadius: BorderRadius.circular(8),
+                                              //       ),
+                                              //       constraints: const BoxConstraints(
+                                              //         minWidth: 16,
+                                              //         minHeight: 16,
+                                              //       ),
+                                              //       child: Text(
+                                              //         '${items[displayIdx].quantity}',
+                                              //         style: const TextStyle(
+                                              //           color: Colors.white,
+                                              //           fontSize: 10,
+                                              //         ),
+                                              //         textAlign: TextAlign.center,
+                                              //       ),
+                                              //     ),
+                                              //   ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
                                     },
                                   ),
+                                  if (showArrow)
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                        left: 15.0,
+                                        right: 5.0,
+                                      ),
+                                      child: IconButton(
+                                        icon: Icon(
+                                          Icons.arrow_forward_ios_rounded,
+                                          size: 18,
+                                        ),
+                                        onPressed: () {
+                                          setState(() {
+                                            if ((idx + 5) < items.length) {
+                                              currentItemIndex[index] = idx + 1;
+                                            }
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            )
+                          else
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              child: Text(
+                                "No items found",
+                                style: GoogleFonts.leagueSpartan(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
                                 ),
-                            ],
-                          ),
-                        ),
-                      ],
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
         ],
       ),
     );
   }
 }
-
-// import 'package:flutter/material.dart';
-// import 'package:mrsgorilla/menu/cart_history.dart';
-// import 'package:google_fonts/google_fonts.dart';
-
-// class OrderHistoryScreen extends StatelessWidget {
-//   const OrderHistoryScreen({Key? key}) : super(key: key);
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       backgroundColor: Colors.white,
-//       appBar: AppBar(
-//         backgroundColor: Colors.blueAccent,
-//         elevation: 0,
-//         leading: IconButton(
-//           icon: const Icon(Icons.arrow_back, color: Colors.black),
-//           onPressed: () => Navigator.of(context).pop(),
-//         ),
-//         title: const Text(''),
-//       ),
-//       body: SingleChildScrollView(
-//         child: Padding(
-//           padding: const EdgeInsets.symmetric(horizontal: 16.0),
-//           child: Column(
-//             crossAxisAlignment: CrossAxisAlignment.start,
-//             children: [
-//               Text(
-//                 ' History',
-//                 style: GoogleFonts.leagueSpartan(
-//                   color: Colors.black,
-//                   fontSize: 26,
-//                   fontWeight: FontWeight.w600,
-//                 ),
-//               ),
-//               Text(
-//                 'Check all your past orders and cart history',
-//                 style: GoogleFonts.leagueSpartan(
-//                   fontWeight: FontWeight.w500,
-//                   color: Colors.black87,
-//                   fontSize: 18,
-//                 ),
-//               ),
-//               const SizedBox(height: 25),
-//               _buildHistoryItem(context, 'All orders', null),
-//               Padding(
-//                 padding: const EdgeInsets.fromLTRB(0, 18, 0, 0),
-//                 child: const Divider(
-//                   height: 1,
-//                   thickness: 1,
-//                   color: Color(0xFFEEEEEE),
-//                 ),
-//               ),
-//               const SizedBox(height: 16),
-//               _buildHistoryItem(
-//                 context,
-//                 'Standard Gorilla cart history',
-//                 'cart',
-//               ),
-//               Padding(
-//                 padding: const EdgeInsets.fromLTRB(0, 18, 0, 0),
-//                 child: const Divider(
-//                   height: 1,
-//                   thickness: 1,
-//                   color: Color(0xFFEEEEEE),
-//                 ),
-//               ),
-//               const SizedBox(height: 16),
-//               _buildHistoryItem(context, 'Gorilla fruit cart history', 'cart'),
-//               Padding(
-//                 padding: const EdgeInsets.fromLTRB(0, 18, 0, 0),
-//                 child: const Divider(
-//                   height: 1,
-//                   thickness: 1,
-//                   color: Color(0xFFEEEEEE),
-//                 ),
-//               ),
-//               const SizedBox(height: 16),
-//               _buildHistoryItem(context, 'Customized cart history', 'cart'),
-//               Padding(
-//                 padding: const EdgeInsets.fromLTRB(0, 18, 0, 0),
-//                 child: const Divider(
-//                   height: 1,
-//                   thickness: 1,
-//                   color: Color(0xFFEEEEEE),
-//                 ),
-//               ),
-//               const SizedBox(height: 16),
-//               _buildHistoryItem(context, 'Customized order history', 'order'),
-//               Padding(
-//                 padding: const EdgeInsets.symmetric(vertical: 18.0),
-//                 child: const Divider(
-//                   height: 2,
-//                   thickness: 1,
-//                   color: Color(0xFFEEEEEE),
-//                 ),
-//               ),
-//             ],
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-
-//   Widget _buildHistoryItem(BuildContext context, String title, String? type) {
-//     return GestureDetector(
-//       onTap: () {
-//         // TODO: Replace '123' with actual user ID
-//         Navigator.push(
-//           context,
-//           MaterialPageRoute(
-//             builder:
-//                 (context) => CartHistoryPage(
-//                   userId: '1', // Replace with actual user ID
-//                   historyType:
-//                       type ??
-//                       'all', // Use 'all' if no specific type is provided
-//                 ),
-//           ),
-//         );
-//       },
-//       child: Container(
-//         width: double.infinity,
-//         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-//         decoration: BoxDecoration(
-//           color: Color(0xFFF0F8FF),
-//           borderRadius: BorderRadius.circular(18),
-//           border: Border.all(color: const Color(0xFFFAFAFA), width: 2.5),
-//         ),
-//         child: Row(
-//           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//           children: [
-//             Text(
-//               title,
-//               style: GoogleFonts.leagueSpartan(
-//                 color: Colors.black,
-//                 fontSize: 19,
-//                 fontWeight: FontWeight.w600,
-//               ),
-//             ),
-//             const Icon(size: 30, Icons.arrow_forward, color: Colors.black),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }

@@ -542,7 +542,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
                       // Menu items
                       _buildMenuItem(Icons.headset_mic, "Support", SupportScreen()),
-                      _buildMenuItem(Icons.history, "My history", OrderHistoryScreen()),
+                      _buildMenuItem(Icons.history, "My history", OrderHistoryScreen(userId: '',)),
                       _buildMenuItem(Icons.shopping_basket_outlined, "My Baskets", BasketPage()),
                       _buildMenuItem(Icons.location_on_outlined, "Address book", AddressSelectionScreen()),
                       _buildMenuItem(Icons.eco_outlined, "Vegetables quality", OrderDetailsPage()),

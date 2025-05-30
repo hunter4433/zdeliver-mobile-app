@@ -8,6 +8,7 @@ import 'package:mrsgorilla/auth_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:mrsgorilla/api/firebase.dart';
+import 'package:mrsgorilla/splash.dart';
 import 'firebase_options.dart';
 // Add location permission imports
 import 'package:geolocator/geolocator.dart';
@@ -89,15 +90,23 @@ class MyApp extends StatelessWidget {
       title: 'mrs.Gorilla',
       debugShowCheckedModeBanner: false,
       navigatorKey: navigatorKey, // Used for navigation from notifications
+// <<<<<<< HEAD
+//
+//       theme: ThemeData(
+//         primarySwatch: Colors.deepPurple,
+//         fontFamily: 'Roboto',
+//       ),
+//       home: LoginScreen(),
+//       //   home:  HomePageWithMap(),
+//
+//
+// =======
+      theme: ThemeData(primarySwatch: Colors.deepPurple, fontFamily: 'Roboto'),
 
-      theme: ThemeData(
-        primarySwatch: Colors.deepPurple,
-        fontFamily: 'Roboto',
-      ),
-      home: LoginScreen(),
-      //   home:  HomePageWithMap(),
-
-
+      home: SplashScreen(),
+// >>>>>>> origin/aman1
     );
   }
+
+
 }

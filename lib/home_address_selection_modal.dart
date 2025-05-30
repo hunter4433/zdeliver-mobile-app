@@ -1,19 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-
+import 'package:google_fonts/google_fonts.dart';
 import 'address_selection_sheet.dart';
 import 'orderPlace.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 // Updated AddressSelectionSheet Class
 class AddressSelectionSheet extends StatefulWidget {
   final Function(String) onAddressSelected;
+  final int? selectedRecommendedIndex; // Added parameter
 
   const AddressSelectionSheet({
     Key? key,
     required this.onAddressSelected,
+    this.selectedRecommendedIndex, // Added parameter
   }) : super(key: key);
 
-  static void showAddressSelectionSheet(BuildContext context, Function(String) onAddressSelected) {
+  // Updated static method to accept selectedRecommendedIndex
+  static void showAddressSelectionSheet(
+      BuildContext context,
+      Function(String) onAddressSelected,
+      {int? selectedRecommendedIndex} // Added optional parameter
+      ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -27,6 +36,7 @@ class AddressSelectionSheet extends StatefulWidget {
       builder: (context) {
         return AddressSelectionSheet(
           onAddressSelected: onAddressSelected,
+          selectedRecommendedIndex: selectedRecommendedIndex, // Pass parameter
         );
       },
     );
@@ -64,26 +74,7 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
 
   Future<void> _navigateToSavedAddresses() async {
     _showAddressSelectionSheet();
-
-    // final result = await Navigator.push(
-    //   context,
-    //   MaterialPageRoute(
-    //     builder: (context) => SavedAddressSelectionSheet(
-    //       onAddressSelected: (selectedAddress) {
-    //         // Update the current address in secure storage
-    //         _secureStorage.write(key: 'saved_address', value: selectedAddress);
-    //         // Update the UI
-    //         setState(() {
-    //           _currentAddress = selectedAddress;
-    //         });
-    //         // Close the SavedAddressSelectionSheet
-    //         Navigator.pop(context);
-    //       },
-    //     ),
-    //   ),
-    // );
   }
-
 
   // Address Selection Sheet Methods
   void _showAddressSelectionSheet() {
@@ -138,6 +129,16 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
       );
     }
   }
+
+  // Helper method to determine booking type based on selectedRecommendedIndex
+  String _getBookingType() {
+    if (widget.selectedRecommendedIndex == 0) {
+      return "vegetable cart";
+    } else {
+      return "fruit cart";
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -169,11 +170,11 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
           const SizedBox(height: 24),
 
           // Title
-          const Text(
+          Text(
             "Select Address",
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
+            style: GoogleFonts.leagueSpartan(
+              fontSize: 22,
+              fontWeight: FontWeight.w500,
               color: Color(0xFF2D2D2D),
             ),
           ),
@@ -189,7 +190,7 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
+                  color: Colors.black.withOpacity(0.09),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -200,18 +201,18 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     "Change address",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
+                    style: GoogleFonts.leagueSpartan(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w400,
                       color: Color(0xFF2D2D2D),
                     ),
                   ),
                   Icon(
                     Icons.chevron_right,
                     color: const Color(0xFFF15A25),
-                    size: 28,
+                    size: 32,
                   ),
                 ],
               ),
@@ -286,10 +287,45 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
               width: double.infinity,
               height: 56,
               child: ElevatedButton(
-                onPressed: _currentAddress != null && _currentAddress!.isNotEmpty && _currentAddress != 'No address saved'
-                    ? () {
-                  widget.onAddressSelected(_currentAddress!);
+                onPressed: _currentAddress != null &&
+                    _currentAddress!.isNotEmpty &&
+                    _currentAddress != 'No address saved'
+                    ? () async {
+                  // Use the helper method to get the correct booking type
+                  final String bookingType = _getBookingType();
+
+                  final result = await CartBookingService.callCartAtAddress(
+                    userId: 1, // Replace with actual user ID
+                    bookingType: bookingType, // Use dynamic booking type
+                    cartType: widget.selectedRecommendedIndex == 0 ? "vegetable cart " : "fruit cart ",
+                    latitude: 30.73900000, // Replace with actual coordinates
+                    longitude: 76.79000000,
+                    items: [{"item_id": 7, "price_per_unit": 40.00},
+                      {"item_id": 8, "price_per_unit": 15.50},],
+                  );
+
+                  // if (result['success']) {
+                    // Success - show message and proceed
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(result['message']), backgroundColor: Colors.green),
+                    );
+                    widget.onAddressSelected(_currentAddress!);
+                  await Future.delayed(Duration(seconds: 2));
+
+                  // Close loading indicator
                   Navigator.pop(context);
+
+                  // Navigate to next page
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => OrderPlacedPage()),
+                  );
+                  // } else {
+                  //   // Error - show error message
+                  //   ScaffoldMessenger.of(context).showSnackBar(
+                  //     SnackBar(content: Text(result['message']), backgroundColor: Colors.red),
+                  //   );
+                  // }
                 }
                     : null,
                 style: ElevatedButton.styleFrom(
@@ -307,26 +343,25 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
-                      width: 24,
-                      height: 24,
+                      width: 32,
+                      height:32,
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Image.asset(
-                        'assets/images/Frame 540.jpg', // Replace with your asset path
-                        width: 16,
-                        height: 16,
-                        color: Colors.white,
+                        'assets/images/cartcall.png', // Replace with your asset path
+                        width: 32,
+                        height: 32,
+
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const Text(
+                    Text(
                       "Call cart at this address",
-                      style: TextStyle(
-                        fontSize: 16,
+                      style: GoogleFonts.leagueSpartan(
+                        fontSize: 19,
                         fontWeight: FontWeight.w600,
-                        fontFamily: 'League Spartan',
                       ),
                     ),
                   ],
@@ -337,5 +372,150 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
         ],
       ),
     );
+  }
+}
+
+
+
+class CartBookingService {
+  static const String baseUrl = 'http://13.126.169.224/api/v1';
+
+  // First API call - Create booking
+  static Future<Map<String, dynamic>?> createBooking({
+    required int userId,
+    required String bookingType,
+     required List<Map<String, dynamic>> items,
+  }) async {
+    try {
+      final url = Uri.parse('$baseUrl/book/create');
+
+      final body = {
+        "user_id": userId,
+        "booking_type": bookingType,
+         "items": items,
+      };
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        print('Booking created successfully: ${data['message']}');
+        return data;
+      } else {
+        print('Failed to create booking: ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('Error creating booking: $e');
+      return null;
+    }
+  }
+
+  // Second API call - Smart order request
+  static Future<Map<String, dynamic>?> createSmartOrder({
+    required int userId,
+    required int bookingId,
+    required String cartType,
+    required double latitude,
+    required double longitude,
+  }) async {
+    try {
+      final url = Uri.parse('$baseUrl/smartOrders/smart-order');
+
+      final body = {
+        "user_id": userId,
+        "booking_id": bookingId,
+        // "cart_type": cartType,
+        "latitude": latitude,
+        "longitude": longitude,
+      };
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print('Smart order created successfully: ${data['message']}');
+        return data;
+      } else {
+        print('Failed to create smart order: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('Error creating smart order: $e');
+      return null;
+    }
+  }
+
+  // Combined function to call both APIs sequentially
+  static Future<Map<String, dynamic>> callCartAtAddress({
+    required int userId,
+    required String bookingType,
+     required List<Map<String, dynamic>> items,
+    required String cartType,
+    required double latitude,
+    required double longitude,
+  }) async {
+    try {
+      // Step 1: Create booking
+      final bookingResult = await createBooking(
+        userId: userId,
+        bookingType: bookingType,
+        items: items,
+      );
+
+      if (bookingResult == null || !bookingResult['success']) {
+        return {
+          'success': false,
+          'message': 'Failed to create booking',
+        };
+      }
+
+      // Extract booking_id from the response
+      final bookingId = bookingResult['data']['booking_id'];
+
+      // Step 2: Create smart order using the booking_id
+      final smartOrderResult = await createSmartOrder(
+        userId: userId,
+        bookingId: bookingId,
+        cartType: cartType,
+        latitude: latitude,
+        longitude: longitude,
+      );
+
+      if (smartOrderResult == null || !smartOrderResult['success']) {
+        return {
+          'success': false,
+          'message': 'Booking created but failed to assign vendor',
+          'booking_id': bookingId,
+        };
+      }
+
+      return {
+        'success': true,
+        'message': 'Cart successfully called to your address!',
+        'booking_data': bookingResult['data'],
+        'smart_order_data': smartOrderResult['data'],
+        'estimated_time': smartOrderResult['data']['estimated_assignment_time'] ?? 'Unknown',
+      };
+
+    } catch (e) {
+      print('Error in callCartAtAddress: $e');
+      return {
+        'success': false,
+        'message': 'An error occurred while processing your request',
+      };
+    }
   }
 }
