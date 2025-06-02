@@ -57,6 +57,7 @@ Future<void> requestLocationPermission() async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+
   try {
     // Register background handler before initializing Firebase
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
@@ -85,15 +86,30 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'mrs.Gorilla',
       debugShowCheckedModeBanner: false,
       navigatorKey: navigatorKey, // Used for navigation from notifications
+// <<<<<<< HEAD
+//
+//       theme: ThemeData(
+//         primarySwatch: Colors.deepPurple,
+//         fontFamily: 'Roboto',
+//       ),
+//       home: LoginScreen(),
+//       //   home:  HomePageWithMap(),
+//
+//
+// =======
       theme: ThemeData(primarySwatch: Colors.deepPurple, fontFamily: 'Roboto'),
 
       home: SplashScreen(),
+// >>>>>>> origin/aman1
     );
   }
+
+
 }

@@ -430,7 +430,7 @@ class _newDmeo extends State<newDmeo> with SingleTickerProviderStateMixin {
 
                         // Menu items
                         _buildMenuItem('assets/images/menu1.png', "Support", SupportScreen()),
-                        _buildMenuItem('assets/images/menu2.png', "My history", OrderHistoryScreen()),
+                        _buildMenuItem('assets/images/menu2.png', "My history", OrderHistoryScreen(userId: '',)),
                         // _buildMenuItem('assets/images/menu3.png', "My Baskets", BasketPage()),
                         _buildMenuItem('assets/images/menu4.png', "Address book", AddressBookPage()),
                         _buildMenuItem('assets/images/menu5.png', "Vegetables quality", OrderDetailsPage()),
