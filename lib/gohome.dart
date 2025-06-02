@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:mrsgorilla/address_selection.dart';
 import 'package:mrsgorilla/mapView.dart';
 import 'package:mrsgorilla/Home_Recommend_section/standardGorillaCart.dart';
 import 'package:mrsgorilla/Home_Recommend_section/gorillaFruitcart.dart';
@@ -13,7 +15,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:mrsgorilla/home_address_selection_modal.dart';
 
 class HomePageWithMap extends StatefulWidget {
-  const HomePageWithMap({Key? key}) : super(key: key);
+  final String? address;
+  final Position? position;
+  const HomePageWithMap({Key? key, this.address, this.position})
+    : super(key: key);
 
   @override
   State<HomePageWithMap> createState() => _HomePageWithMapState();
@@ -52,7 +57,7 @@ class _HomePageWithMapState extends State<HomePageWithMap>
   @override
   void initState() {
     super.initState();
-    _initializePage();
+    // _selectedAddress = widget.address ?? 'No address selected';
 
     _drawerController = AnimationController(
       vsync: this,
@@ -69,6 +74,38 @@ class _HomePageWithMapState extends State<HomePageWithMap>
 
     // Add listener to the drag controller to implement snap behavior
     _dragController.addListener(_handleDragUpdate);
+  }
+
+  Future<Map<String, dynamic>?> getLatLngAddress() async {
+    try {
+      final storage = FlutterSecureStorage();
+      String? address = await storage.read(key: 'saved_address');
+      String? position = await storage.read(key: 'user_position');
+      if (address != null && position != null) {
+        final coords = position.split(',');
+        if (coords.length == 2) {
+          double lat = double.parse(coords[0]);
+          double lng = double.parse(coords[1]);
+          Position position = Position(
+            latitude: lat,
+            longitude: lng,
+            timestamp: DateTime.now(),
+            accuracy: 0.0,
+            altitude: 0.0,
+            heading: 0.0,
+            speed: 0.0,
+            speedAccuracy: 0.0,
+            altitudeAccuracy: 0.0,
+            headingAccuracy: 0.0,
+          );
+          return {'postion': position, 'address': address};
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Error reading lat/lng/address: $e');
+      return null;
+    }
   }
 
   Future<String?> getAddress() async {
@@ -166,16 +203,6 @@ class _HomePageWithMapState extends State<HomePageWithMap>
     }
   }
 
-
-  Future<void> _initializePage() async {
-    // Retrieve saved address
-    savedAddress = await _secureStorage.read(key: 'saved_address');
-    print('sav3ed address is $savedAddress ');
-
-    setState(() {
-      addressLoading = false;
-    });
-  }
 
   @override
   void dispose() {
@@ -392,12 +419,6 @@ class _HomePageWithMapState extends State<HomePageWithMap>
           MapScreen(
             containerHeight: MediaQuery.of(context).size.height,
             isEmbedded: false,
-            onLocationPinned: (lat, lng, address) {
-              // Optionally update UI or show a snackbar
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text('Pinned: $address')));
-            },
           ),
 
           // Top app bar with profile and menu - UPDATED
@@ -468,8 +489,18 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                       ),
                     ),
                     InkWell(
-                      onTap: () {
-                        mapKey.currentState?.enablePinMode();
+                      onTap: () async {
+                        final res = await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => SelectAddressPage(),
+                          ),
+                        );
+                        if (res != null && res is String) {
+                          setState(() {
+                            _selectedAddress = res;
+                            _addressSelected = true;
+                          });
+                        }
                       },
                       child: Container(
                         decoration: BoxDecoration(

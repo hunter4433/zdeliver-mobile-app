@@ -9,21 +9,25 @@ import 'package:google_fonts/google_fonts.dart';
 class SavedAddressSelectionSheet extends StatefulWidget {
   final Function(String) onAddressSelected;
 
-  const SavedAddressSelectionSheet({
-    Key? key,
-    required this.onAddressSelected,
-  }) : super(key: key);
+
+  const AddressSelectionSheet({Key? key, required this.onAddressSelected})
+    : super(key: key);
+
 
   // Static method to show the bottom sheet
-  static void showAddressSelectionSheet(BuildContext context, Function(String) onAddressSelected) {
+  static void showAddressSelectionSheet(
+    BuildContext context,
+    Function(String) onAddressSelected,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        return SavedAddressSelectionSheet(
-          onAddressSelected: onAddressSelected,
-        );
+
+        return AddressSelectionSheet(onAddressSelected: onAddressSelected);
+
+     
       },
     );
   }
@@ -66,16 +70,17 @@ class _AddressSelectionSheetState extends State<SavedAddressSelectionSheet> {
         final responseData = json.decode(response.body);
 
         setState(() {
-          _addresses = responseData['data'] ?? [];;
+          _addresses = responseData['data'] ?? [];
+          ;
 
           // Add saved address to the beginning of the list if it exists
           // if (savedAddress != null && savedAddress.isNotEmpty) {
-            _addresses.insert(0, {
-              'id': 'saved_location',
-              'full_address': savedAddress,
-              'type': 'Current Location',
-              'isCurrentLocation': true
-            });
+          _addresses.insert(0, {
+            'id': 'saved_location',
+            'full_address': savedAddress,
+            'type': 'Current Location',
+            'isCurrentLocation': true,
+          });
           // }
           print('mohit here');
           print(_addresses);
@@ -113,10 +118,12 @@ class _AddressSelectionSheetState extends State<SavedAddressSelectionSheet> {
           const SizedBox(height: 20),
            Text(
             "Select Address",
+
              style: GoogleFonts.leagueSpartan(
               fontSize: 22,
               fontWeight: FontWeight.w500,
             ),
+
           ),
           const SizedBox(height: 20),
 
@@ -213,16 +220,20 @@ class _AddressSelectionSheetState extends State<SavedAddressSelectionSheet> {
           //   ),
           // ),
 
+
            Padding(
+
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
                 "Saved addresses",
+
                 style: GoogleFonts.leagueSpartan(
                   fontSize: 21,
                   fontWeight: FontWeight.w500,
                 ),
+
               ),
             ),
           ),
@@ -236,6 +247,7 @@ class _AddressSelectionSheetState extends State<SavedAddressSelectionSheet> {
               border: Border.all(color: Colors.grey.shade300),
             ),
             child: ListTile(
+
               leading: const Icon(
                 Icons.add,
                 color: Colors.red,
@@ -246,16 +258,22 @@ class _AddressSelectionSheetState extends State<SavedAddressSelectionSheet> {
                 style: GoogleFonts.leagueSpartan(fontSize: 19,
                   fontWeight: FontWeight.w500,
                 ),
+
               ),
               trailing: const Icon(Icons.chevron_right, size: 30),
-              onTap: () {
+              onTap: () async {
                 // Handle add new address
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => SelectAddressPage()
-                    )
+                final res = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SelectAddressPage()),
                 );
+                if (res != null) {
+                  // set the selected address
+                  print('Selected address: $res');
+                  widget.onAddressSelected(res as String);
+                  // fetch addresses again after adding a new one
+                  await _fetchAddresses();
+                } // Refresh addresses after adding a new one
               },
             ),
           ),
@@ -266,34 +284,35 @@ class _AddressSelectionSheetState extends State<SavedAddressSelectionSheet> {
               : _errorMessage.isNotEmpty
               ? Center(child: Text(_errorMessage))
               : Expanded(
-            child: ListView.builder(
-              itemCount: _addresses.length,
-              itemBuilder: (context, index) {
-                final address = _addresses[index];
-                return _buildAddressItem(
-                  context,
-                  address['full_address'] ?? 'Unnamed Address',
-                  address['full_address'] ?? '',
-                  address['user_id'].toString(),
-                  onTap: () => widget.onAddressSelected(
-                    address['full_address'] ?? 'Unnamed Address',
-                  ),
-                );
-              },
-            ),
-          ),
+                child: ListView.builder(
+                  itemCount: _addresses.length,
+                  itemBuilder: (context, index) {
+                    final address = _addresses[index];
+                    return _buildAddressItem(
+                      context,
+                      address['full_address'] ?? 'Unnamed Address',
+                      address['full_address'] ?? '',
+                      address['user_id'].toString(),
+                      onTap:
+                          () => widget.onAddressSelected(
+                            address['full_address'] ?? 'Unnamed Address',
+                          ),
+                    );
+                  },
+                ),
+              ),
         ],
       ),
     );
   }
 
   Widget _buildAddressItem(
-      BuildContext context,
-      String title,
-      String address,
-      String phone, {
-        required Function() onTap,
-      }) {
+    BuildContext context,
+    String title,
+    String address,
+    String phone, {
+    required Function() onTap,
+  }) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
@@ -322,26 +341,17 @@ class _AddressSelectionSheetState extends State<SavedAddressSelectionSheet> {
                     const SizedBox(height: 4),
                     Text(
                       address,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
+                      style: const TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       "User ID: $phone",
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
+                      style: const TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                   ],
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.more_vert),
-                onPressed: () {},
-              ),
+              IconButton(icon: const Icon(Icons.more_vert), onPressed: () {}),
             ],
           ),
         ),

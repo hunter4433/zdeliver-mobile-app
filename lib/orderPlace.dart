@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:lottie/lottie.dart';
 import 'package:mrsgorilla/mapView.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:mrsgorilla/map_screen_checkout.dart';
 
 class OrderPlacedPage extends StatefulWidget {
   final String? address;
@@ -20,6 +22,8 @@ class _OrderPlacedPageState extends State<OrderPlacedPage>
   late Animation<double> _opacityAnimation;
   late Animation<Offset> _slideAnimation;
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+
+  String? etaText = '...';
 
   @override
   void initState() {
@@ -57,6 +61,38 @@ class _OrderPlacedPageState extends State<OrderPlacedPage>
     Future.delayed(const Duration(milliseconds: 300), () {
       _animationController.forward();
     });
+  }
+
+  Future<Map<String, dynamic>?> getLatLngAddress() async {
+    try {
+      final storage = FlutterSecureStorage();
+      String? address = await storage.read(key: 'saved_address');
+      String? position = await storage.read(key: 'user_position');
+      if (address != null && position != null) {
+        final coords = position.split(',');
+        if (coords.length == 2) {
+          double lat = double.parse(coords[0]);
+          double lng = double.parse(coords[1]);
+          Position position = Position(
+            latitude: lat,
+            longitude: lng,
+            timestamp: DateTime.now(),
+            accuracy: 0.0,
+            altitude: 0.0,
+            heading: 0.0,
+            speed: 0.0,
+            speedAccuracy: 0.0,
+            altitudeAccuracy: 0.0,
+            headingAccuracy: 0.0,
+          );
+          return {'postion': position, 'address': address};
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Error reading lat/lng/address: $e');
+      return null;
+    }
   }
 
   Future<String?> getAddress() async {
@@ -132,7 +168,7 @@ class _OrderPlacedPageState extends State<OrderPlacedPage>
 
                   // Centered subtitle
                   Text(
-                    'order will be arriving soon',
+                    'order will be arriving in $etaText',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.leagueSpartan(
                       fontWeight: FontWeight.w500,
@@ -152,7 +188,34 @@ class _OrderPlacedPageState extends State<OrderPlacedPage>
                 SizedBox(
                   height: 422,
                   width: MediaQuery.of(context).size.width,
-                  child: MapScreen(containerHeight: 422, isEmbedded: true),
+                  child: FutureBuilder<Map<String, dynamic>?>(
+                    future: getLatLngAddress(),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return const SizedBox(
+                          height: 422,
+                          child: Center(child: CircularProgressIndicator()),
+                        );
+                      }
+                      final position = snapshot.data!['postion'] as Position;
+                      final address = snapshot.data!['address'] as String;
+                      return SizedBox(
+                        height: 422,
+                        width: MediaQuery.of(context).size.width,
+                        child: MapScreenCheckout(
+                          containerHeight: 422,
+                          isEmbedded: true,
+                          initialPosition: position,
+                          initialAddress: address,
+                          onEtaCalculated: (eta) {
+                            setState(() {
+                              etaText = eta;
+                            });
+                          },
+                        ),
+                      );
+                    },
+                  ),
                 ),
 
                 // Centered animation circle
@@ -224,45 +287,45 @@ class _OrderPlacedPageState extends State<OrderPlacedPage>
                             ],
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 6,
-                            horizontal: 18,
-                          ),
-                          decoration: const BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomRight,
-                              colors: [Color(0xFF3F2E78), Color(0xFF745EBF)],
-                            ),
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(20),
-                              bottomLeft: Radius.circular(20),
-                              topRight: Radius.zero,
-                              bottomRight: Radius.zero,
-                            ),
-                          ),
-                          child: const Column(
-                            children: [
-                              Text(
-                                'see cart',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                  fontSize: 15,
-                                ),
-                              ),
-                              Text(
-                                'location',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                  fontSize: 15,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                        // Container(
+                        //   padding: const EdgeInsets.symmetric(
+                        //     vertical: 6,
+                        //     horizontal: 18,
+                        //   ),
+                        //   decoration: const BoxDecoration(
+                        //     gradient: LinearGradient(
+                        //       begin: Alignment.topCenter,
+                        //       end: Alignment.bottomRight,
+                        //       colors: [Color(0xFF3F2E78), Color(0xFF745EBF)],
+                        //     ),
+                        //     borderRadius: BorderRadius.only(
+                        //       topLeft: Radius.circular(20),
+                        //       bottomLeft: Radius.circular(20),
+                        //       topRight: Radius.zero,
+                        //       bottomRight: Radius.zero,
+                        //     ),
+                        //   ),
+                        //   child: const Column(
+                        //     children: [
+                        //       Text(
+                        //         'see cart',
+                        //         style: TextStyle(
+                        //           fontWeight: FontWeight.w600,
+                        //           color: Colors.white,
+                        //           fontSize: 15,
+                        //         ),
+                        //       ),
+                        //       Text(
+                        //         'location',
+                        //         style: TextStyle(
+                        //           fontWeight: FontWeight.w600,
+                        //           color: Colors.white,
+                        //           fontSize: 15,
+                        //         ),
+                        //       ),
+                        //     ],
+                        //   ),
+                        // ),
                       ],
                     ),
                   ),

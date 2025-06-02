@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mapbox;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:io' show Platform;
@@ -17,6 +18,7 @@ import 'gohome.dart';
 
 // Global navigator key for use in notification navigation
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 
 // Handler for background messages (must be a top-level function)
 @pragma('vm:entry-point')
@@ -45,6 +47,7 @@ Future<void> requestLocationPermission() async {
       print('Location permissions denied');
     } else {
       print('Location permission granted: $permission');
+    
     }
   } catch (e) {
     print('Error requesting location permission: $e');

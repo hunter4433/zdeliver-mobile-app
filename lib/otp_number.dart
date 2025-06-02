@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mrsgorilla/profilesetup.dart';
 import 'gohome.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -50,7 +51,6 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         final phone_number = responseData['phone_number']?.toString();
         await _secureStorage.write(key: 'phone_number', value: phone_number!);
         await _secureStorage.write(key: 'userId', value: userId!);
-        
 
         return {
           'success': true,
@@ -313,7 +313,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                   Navigator.pushAndRemoveUntil(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => HomePageWithMap(),
+                                      builder: (context) => ProfileSetupPage(),
                                     ),
                                     (route) => false,
                                   );

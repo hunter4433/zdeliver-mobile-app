@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mrsgorilla/about_us.dart';
+import 'package:mrsgorilla/address_selection.dart';
 import 'package:mrsgorilla/mapView.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -15,11 +16,26 @@ import 'menu/support.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 // import ''
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);
 
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+
   // Method to retrieve stored user ID
+  Future<String?> getUserName() async {
+    try {
+      return await _secureStorage.read(key: 'user_name') ?? 'Hey Guest ';
+    } catch (e) {
+      print('Error reading user_name: $e');
+      return null;
+    }
+  }
+
   Future<String?> getAddress() async {
     try {
       return await _secureStorage.read(key: 'saved_address');
@@ -114,12 +130,21 @@ class ProfilePage extends StatelessWidget {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                 Text(
-                                  'Hey Guest',
-                                   style: GoogleFonts.leagueSpartan(                                    color: Colors.white,
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+
+                                FutureBuilder<String?>(
+                                  future:
+                                      getUserName(), // Use your authService instance
+                                  builder: (context, snapshot) {
+                                    return Text(
+                                      snapshot.data ?? 'Loading...',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    );
+                                  },
+
                                 ),
                                 const SizedBox(height: 2),
                                 FutureBuilder<String?>(
@@ -193,26 +218,16 @@ class ProfilePage extends StatelessWidget {
                     OutlinedButton(
                       onPressed: () async {
                         // Navigate to change address page
-                        await Navigator.of(context).push(
+                        final res = await Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder:
-                                (context) => MapScreen(
-                              isEmbedded: false,
-                              startInPinMode:
-                              true, // <-- Enable pin mode on open
-                              onLocationPinned: (lat, lng, address) {
-                                // Handle the pinned address here
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'Address pinned: $address',
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
+
+                            builder: (context) => SelectAddressPage(),
+
                           ),
                         );
+                        if (res != null) {
+                          setState(() {});
+                        }
                       },
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Colors.white),
