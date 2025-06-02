@@ -537,9 +537,7 @@ class _CheckoutPage extends State<CheckoutPage> {
                   onTap: () async {
                     // Check if address is selected
                     if (_addressSelected) {
-                      // Place order
-                      placeOrder();
-
+                      print('placing order');
                       // Show loading indicator
                       showDialog(
                         context: context,
@@ -548,19 +546,43 @@ class _CheckoutPage extends State<CheckoutPage> {
                           return Center(child: CircularProgressIndicator());
                         },
                       );
+                      // Place order
+                      // var placeOrder = await _placeOrder();
+                      // print('placeOrder: $placeOrder');
+                      // if (placeOrder == false) {
+                      //   // Show error message
+                      //   ScaffoldMessenger.of(context).showSnackBar(
+                      //     SnackBar(content: Text('Failed to place order')),
+                      //   );
+                      //   return;
+                      // }
 
                       // Make API call to send notification
-                      bool success = await sendVendorNotification();
+                      // bool success = await sendVendorNotification();
+                      // if (!success) {
+                      //   // Show error message
+                      //   ScaffoldMessenger.of(context).showSnackBar(
+                      //     SnackBar(
+                      //       content: Text('Failed to send notification'),
+                      //     ),
+                      //   );
+                      //   return;
+                      // }
 
                       // Close loading indicator
                       Navigator.pop(context);
 
-                      if (success) {
+                      if (
+                      // success && placeOrder != false
+                      true) {
+                        // Show success message
+
                         // Navigate to next page
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => OrderPlacedPage(),
+                            builder:
+                                (context) => OrderPlacedPage(address: null),
                           ),
                         );
                       }
@@ -604,29 +626,25 @@ class _CheckoutPage extends State<CheckoutPage> {
     );
   }
 
-  void placeOrder() async {
+  Future _placeOrder() async {
     String? ordertype;
     // Check if we have selected products to order
     if (widget.selectedProducts.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No items selected for order')),
       );
-      return;
+      return false;
     }
 
-    // Show loading indicator
-    setState(() {
-      isLoading = true;
-    });
-
     try {
+      print(widget.selectedProducts);
       // Format items as required by API
       final List<Map<String, dynamic>> formattedItems =
           widget.selectedProducts.map((product) {
             return {
               "item_id": product['id'], // Assuming your product has an id field
               "quantity": product['quantity'],
-              "price_per_unit": product['price'],
+              "price_per_unit": product['price_per_unit'],
             };
           }).toList();
       print(formattedItems);
@@ -641,7 +659,7 @@ class _CheckoutPage extends State<CheckoutPage> {
       // Prepare request body
       final Map<String, dynamic> requestBody = {
         "user_id": 1, // Changed to 1 as shown in the Postman screenshot
-        "booking_type": ordertype,
+        "booking_type": "order",
         "order_address": _selectedAddress,
         "items": formattedItems,
       };
@@ -649,7 +667,7 @@ class _CheckoutPage extends State<CheckoutPage> {
       // Make API call
       final response = await http.post(
         Uri.parse(
-          'http://3.111.39.222/api/v1/book/create',
+          'http://13.126.169.224/api/v1/book/create',
         ), // Updated URL from screenshot
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(requestBody),
@@ -665,21 +683,14 @@ class _CheckoutPage extends State<CheckoutPage> {
         String address = responseData['data']['order_address'];
         print(address);
 
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              responseData['message'] ?? 'Order created successfully',
-            ),
-          ),
-        );
+        return {true, address};
 
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => OrderPlacedPage(address: address),
-          ),
-        );
+        // Navigator.push(
+        //   context,
+        //   MaterialPageRoute(
+        //     builder: (context) => OrderPlacedPage(address: address),
+        //   ),
+        // );
       } else {
         // Handle error
         throw Exception(
@@ -691,19 +702,16 @@ class _CheckoutPage extends State<CheckoutPage> {
       // ScaffoldMessenger.of(context).showSnackBar(
       //   SnackBar(content: Text('Error placing order: ${e.toString()}')),
       // );
-    } finally {
-      // Hide loading indicator
-      setState(() {
-        isLoading = false;
-      });
+      return false; // Return false to indicate failure
     }
   }
 
   Future<bool> sendVendorNotification() async {
     try {
+      print('sending notification');
       // API endpoint from your Postman example
       const String url =
-          'http://3.111.39.222/api/v1/notifisent/send-notification';
+          'http://13.126.169.224/api/v1/notifisent/send-notification';
 
       // Request payload based on your Postman example
       Map<String, dynamic> payload = {

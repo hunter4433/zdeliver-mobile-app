@@ -17,35 +17,35 @@ Future<void> setupMapbox() async {
   mapbox.MapboxOptions.setAccessToken(ACCESS_TOKEN);
 }
 
-class MapScreen extends StatefulWidget {
+class MapScreenCheckout extends StatefulWidget {
   final double containerHeight;
   final bool isEmbedded;
-  // final Function(double, double, String)? onLocationPinned; // Add this
-  final Function(double lat, double lng, String address)?
-  onCenterChanged; // <-- Add this
-  // final bool startInPinMode;
-  const MapScreen({
+  final Position initialPosition;
+  final String initialAddress;
+  final void Function(String)? onEtaCalculated;
+
+  const MapScreenCheckout({
     Key? key,
     this.containerHeight = double.infinity,
     this.isEmbedded = false,
-    // this.onLocationPinned,
-    // this.startInPinMode = false,
-    this.onCenterChanged,
+    required this.initialPosition,
+    required this.initialAddress,
+    this.onEtaCalculated,
   }) : super(key: key);
 
   @override
-  MapScreenState createState() => MapScreenState();
+  _MapScreenCheckoutState createState() => _MapScreenCheckoutState();
 }
 
-final GlobalKey<MapScreenState> mapKey = GlobalKey<MapScreenState>();
+final GlobalKey<_MapScreenCheckoutState> mapKey =
+    GlobalKey<_MapScreenCheckoutState>();
 
-class MapScreenState extends State<MapScreen> {
+class _MapScreenCheckoutState extends State<MapScreenCheckout> {
   mapbox.MapboxMap? mapboxMap;
   mapbox.PointAnnotationManager? userLocationManager;
   mapbox.PointAnnotationManager? warehouseManager;
   mapbox.PointAnnotationManager? cartAnnotationManager;
   mapbox.PolylineAnnotationManager? routeLineManager;
-  mapbox.PointAnnotation? draggablePin;
   bool mapInitialized = false;
   bool hasLocationPermission = false;
   String? currentAddress;
@@ -54,6 +54,7 @@ class MapScreenState extends State<MapScreen> {
 
   // Number of carts to place at warehouse
   final int numberOfCarts = 4;
+  String arrivaltime = "...";
 
   // Image data for markers
   Uint8List? locationIconData;
@@ -64,143 +65,12 @@ class MapScreenState extends State<MapScreen> {
   Position? userPosition;
   CoordinatePair? warehousePosition;
 
-  bool pinMode = false;
-  double? pinnedLat;
-  double? pinnedLng;
-  String? pinnedAddress;
-
-  // void enablePinMode() async {
-  //   setState(() {
-  //     pinMode = true;
-  //     pinnedLat = userPosition?.latitude;
-  //     pinnedLng = userPosition?.longitude;
-  //     pinnedAddress = null;
-  //   });
-  //   if (userPosition != null &&
-  //       userLocationManager != null &&
-  //       locationIconData != null) {
-  //     // Remove previous pin if any
-  //     if (draggablePin != null) {
-  //       await userLocationManager!.delete(draggablePin!);
-  //       draggablePin = null;
-  //     }
-  //     final options = mapbox.PointAnnotationOptions(
-  //       geometry: mapbox.Point(
-  //         coordinates: mapbox.Position(
-  //           userPosition!.longitude,
-  //           userPosition!.latitude,
-  //         ),
-  //       ),
-  //       image: locationIconData!,
-  //       iconSize: 2,
-  //     );
-  //     draggablePin = await userLocationManager!.create(options);
-
-  //     // Optionally move camera to pin
-  //     await mapboxMap?.flyTo(
-  //       mapbox.CameraOptions(
-  //         center: mapbox.Point(
-  //           coordinates: mapbox.Position(
-  //             userPosition!.longitude,
-  //             userPosition!.latitude,
-  //           ),
-  //         ),
-  //         zoom: 16.0,
-  //       ),
-  //       mapbox.MapAnimationOptions(duration: 1000),
-  //     );
-  //   }
-  // }
-
-  void moveCameraTo(double lat, double lng) {
-    mapboxMap?.flyTo(
-      mapbox.CameraOptions(
-        center: mapbox.Point(coordinates: mapbox.Position(lng, lat)),
-        zoom: 16.0,
-      ),
-      mapbox.MapAnimationOptions(duration: 1000),
-    );
-  }
-
-  void _onCameraIdle() async {
-    final cameraState = await mapboxMap?.getCameraState();
-    if (cameraState != null && widget.onCenterChanged != null) {
-      double lat = cameraState.center.coordinates.lat.toDouble();
-      double lng = cameraState.center.coordinates.lng.toDouble();
-      String address = await _getAddressFromCoordinates(lat, lng);
-      widget.onCenterChanged!(lat, lng, address);
-    }
-  }
-  // void setAddressAndInitialisation() async {
-  //   var userposition;
-  //   setState(() {
-  //     isLoading = true;
-  //   });
-  //   await _secureStorage.read(key: 'userposition').then((value) {
-  //     if (value != null) {
-  //       List<String> coords = value.split(',');
-  //       if (coords.length == 2) {
-  //         Position position = Position(
-  //           latitude: double.parse(coords[0]),
-  //           longitude: double.parse(coords[1]),
-  //           timestamp: DateTime.now(),
-  //           accuracy: 0,
-  //           altitude: 0,
-  //           speed: 0,
-  //           speedAccuracy: 0,
-  //           heading: 0,
-  //           altitudeAccuracy: 0,
-  //           headingAccuracy: 0,
-  //         );
-
-  //         userposition = position;
-  //       }
-  //     }
-  //   });
-  //   await _secureStorage.read(key: 'saved_address').then((value) {
-  //     setState(() {
-  //       currentAddress = value;
-  //       userPosition = userposition;
-  //     });
-  //   });
-  //   print('Current address: $currentAddress');
-  //   print('User position: $userPosition');
-  //   if (currentAddress == null || userPosition == null) {
-  //     // If address or position is not set, initialize them
-  //     print('Address or position not set, initializing location features');
-  //     await _initializeLocationFeatures();
-  //   } else {
-  //     if (mapboxMap == null) return;
-  //     // If address and position are already set,
-  //     // check whether location service is on or off
-  //     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-  //     if (!serviceEnabled) {
-  //       print('LOCATION SERVICES DISABLED');
-  //       _showLocationServiceDisabledDialog();
-  //       return;
-  //     }
-
-  //     await mapboxMap!.location.updateSettings(
-  //       mapbox.LocationComponentSettings(enabled: true),
-  //     );
-
-  //     // Rest of the method remains the same...
-  //     await _initializeAnnotationManagers();
-  //     await _createWarehouseAndRoute();
-  //   }
-  //   setState(() {
-  //     isLoading = false;
-  //   });
-  // }
-
   @override
   void initState() {
     super.initState();
+    userPosition = widget.initialPosition;
+    currentAddress = widget.initialAddress;
     _loadMarkerImages();
-    _checkAndRequestLocationPermission();
-    // if (widget.startInPinMode) {
-    //   enablePinMode();
-    // }
   }
 
   Future<String> _getAddressFromCoordinates(
@@ -228,11 +98,18 @@ class MapScreenState extends State<MapScreen> {
       print(data);
 
       if (data != null && data['display_name'] != null) {
+        await _secureStorage.write(
+          key: 'saved_address',
+          value: data['display_name']!,
+        );
+        String? savedAddress = await _secureStorage.read(key: 'saved_address');
+        print('changdan hee');
+        print(savedAddress);
         // Return the formatted address
         return data['display_name'] as String;
       } else {
         // If no results found, return the raw coordinates
-        return 'Unknown location: $latitude, $longitude';
+        return '$latitude, $longitude';
       }
     } catch (error) {
       print('Error converting coordinates to address: $error');
@@ -240,42 +117,6 @@ class MapScreenState extends State<MapScreen> {
       return '$latitude, $longitude';
     }
   }
-
-  // Method to convert coordinates to address using Mapbox Geocoding API
-  // Future<String?> _getAddressFromCoordinates(double latitude, double longitude) async {
-  //   String ACCESS_TOKEN = const String.fromEnvironment("ACCESS_TOKEN");
-  //   final url = 'https://api.mapbox.com/geocoding/v5/mapbox.places/'
-  //       '$longitude,$latitude.json?access_token=$ACCESS_TOKEN';
-  //
-  //   try {
-  //     final response = await http.get(Uri.parse(url));
-  //     if (response.statusCode == 200) {
-  //       final data = json.decode(response.body);
-  //
-  //       // Check if features exist and are not empty
-  //       if (data['features'] != null && data['features'].isNotEmpty) {
-  //         // You can customize the address format as needed
-  //         // This example uses the most complete place name
-  //         final placeNames = data['features'].map((feature) =>
-  //         feature['place_name'] as String
-  //         ).toList();
-  //
-  //        String? _currentAddress = placeNames.isNotEmpty ? placeNames.first : null;
-  //
-  //         await _secureStorage.write(
-  //             key: 'saved_address',
-  //             value: _currentAddress!
-  //         );
-  //
-  //         return placeNames.isNotEmpty ? placeNames.first : null;
-  //       }
-  //     }
-  //     return null;
-  //   } catch (e) {
-  //     print('Error fetching address: $e');
-  //     return null;
-  //   }
-  // }
 
   // Add this method to fetch directions
   // In your _getDirections method, update the coordinate handling:
@@ -298,6 +139,14 @@ class MapScreenState extends State<MapScreen> {
         // Extract coordinates from the route
         final List<dynamic> coordinates =
             data['routes'][0]['geometry']['coordinates'];
+        final double durationSeconds = data['routes'][0]['duration'] ?? 0;
+        setState(() {
+           arrivaltime = '${(durationSeconds / 60).toStringAsFixed(0)} minutes';
+        });
+        if(widget.onEtaCalculated != null) {
+          widget.onEtaCalculated!(arrivaltime);
+        }
+        print('Route duration: ${durationSeconds / 60} minutes');
         return coordinates
             .map<List<double>>(
               (coord) => [coord[0].toDouble(), coord[1].toDouble()],
@@ -346,59 +195,10 @@ class MapScreenState extends State<MapScreen> {
     }
   }
 
-  // Future<void> _checkLocationPermission() async {
-  //   final permission = await Geolocator.checkPermission();
-
-  //   bool newPermissionStatus =
-  //       permission == LocationPermission.whileInUse ||
-  //       permission == LocationPermission.always;
-
-  //   if (mounted && newPermissionStatus != hasLocationPermission) {
-  //     setState(() {
-  //       hasLocationPermission = newPermissionStatus;
-  //     });
-
-  //     if (hasLocationPermission) {
-  //       print('Location permission granted, initializing location features');
-  //       // _initializeLocationFeatures();
-  //       // Stop monitoring
-  //     } else {
-  //       print('Location permission not available');
-  //     }
-  //   }
-  // }
-
-  //
-  Future<void> _checkAndRequestLocationPermission() async {
-    final permission = await Geolocator.checkPermission();
-
-    if (mounted) {
-      setState(() {
-        hasLocationPermission =
-            permission == LocationPermission.whileInUse ||
-            permission == LocationPermission.always;
-      });
-    }
-
-    if (hasLocationPermission) {
-      print('Initializing location features');
-      // Get the user's current position and set userPosition
-      _initializeLocationFeatures();
-    } else {
-      print('No location permission yet, will initialize when granted');
-      _requestLocationPermission();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    // Show loading spinner while userPosition is null
-    // if (userPosition == null) {
-    //   return const Center(child: CircularProgressIndicator());
-    // }
-
-    final double initialLat = userPosition?.latitude ?? 26.50;
-    final double initialLng = userPosition?.longitude ?? 80.56;
+    final double initialLat = widget.initialPosition.latitude;
+    final double initialLng = widget.initialPosition.longitude;
     final mapbox.CameraOptions camera = mapbox.CameraOptions(
       center: mapbox.Point(
         coordinates: mapbox.Position(initialLng, initialLat),
@@ -419,10 +219,7 @@ class MapScreenState extends State<MapScreen> {
       cameraOptions: camera,
       styleUri: mapbox.MapboxStyles.MAPBOX_STREETS,
       onMapCreated: _onMapCreated,
-      // onTapListener: _onMapTap,
-      onMapIdleListener: (mapIdleEventData) {
-        _onCameraIdle();
-      },
+      onTapListener: _onMapTap,
     );
 
     return LayoutBuilder(
@@ -482,103 +279,8 @@ class MapScreenState extends State<MapScreen> {
         mapInitialized = true;
       });
     }
-
-    if (hasLocationPermission) {
-      _initializeLocationFeatures();
-    }
-  }
-
-  Future<void> _initializeLocationFeatures() async {
-    if (mapboxMap == null) return;
-
-    try {
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        print('LOCATION SERVICES DISABLED');
-        _showLocationServiceDisabledDialog();
-        return;
-      }
-      print('checking location is saved or not');
-      //check if user position is already saved
-      String? savedPosition = await _secureStorage.read(key: 'user_position');
-      if (savedPosition != null) {
-        print('USING SAVED POSITION');
-
-        List<String> coords = savedPosition.split(',');
-
-        var userposition = Position(
-          latitude: double.parse(coords[0]),
-          longitude: double.parse(coords[1]),
-          timestamp: DateTime.now(),
-          accuracy: 0,
-          altitude: 0,
-          speed: 0,
-          speedAccuracy: 0,
-          heading: 0,
-          altitudeAccuracy: 0,
-          headingAccuracy: 0,
-        );
-        print('USING SAVED POSITION: $userPosition');
-
-        String? savedAddress = await _secureStorage.read(key: 'saved_address');
-        if (savedAddress != null) {
-          setState(() {
-            currentAddress = savedAddress;
-            userPosition = userposition;
-          });
-        }
-        print('Current address: $currentAddress');
-      }
-
-      if (savedPosition == null) {
-        print('GETTING CURRENT LOCATION...');
-        Position geoPosition = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high,
-          timeLimit: Duration(seconds: 10),
-        );
-        print(
-          'CURRENT LOCATION: ${geoPosition.latitude}, ${geoPosition.longitude}',
-        );
-
-        // Save user position for later use
-        await _secureStorage.write(
-          key: 'user_position',
-          value: '${geoPosition.latitude},${geoPosition.longitude}',
-        );
-
-        // Fetch address for the current location
-        String? address = await _getAddressFromCoordinates(
-          geoPosition.latitude,
-          geoPosition.longitude,
-        );
-        await _secureStorage.write(
-          key: 'saved_address',
-          value: address ?? 'Address not found',
-        );
-        // Update the address in the state
-        if (mounted) {
-          setState(() {
-            currentAddress = address ?? 'Address not found';
-            userPosition = geoPosition;
-          });
-        }
-      }
-      await mapboxMap!.location.updateSettings(
-        mapbox.LocationComponentSettings(enabled: true),
-      );
-
-      // Rest of the method remains the same...
-      await _initializeAnnotationManagers();
-      await _createWarehouseAndRoute();
-    } catch (e) {
-      print("Error in location handling: $e");
-      if (mounted) {
-        _showErrorDialog(
-          "Location Error",
-          "Could not access your location. Please check your settings.",
-        );
-      }
-    }
+    await _initializeAnnotationManagers();
+    await _createWarehouseAndRoute();
   }
 
   Future<void> _initializeAnnotationManagers() async {
@@ -635,6 +337,9 @@ class MapScreenState extends State<MapScreen> {
             iconSize: 1, // Make it smaller like in the Uber app
           );
       await userLocationManager!.create(userLocationOptions);
+
+      // User location from the Api
+      // warehousePosition = await _getCartCoordinates();
 
       // Create warehouse at a sensible distance (1-3km away)
       warehousePosition = _getRandomLocationWithinDistance(
@@ -921,157 +626,24 @@ class MapScreenState extends State<MapScreen> {
     return degrees * math.pi / 180;
   }
 
-  // void _onMapTap(mapbox.MapContentGestureContext context) async {
-  //   if (mapboxMap == null || userLocationManager == null) return;
-
-  //   mapbox.Point mapPoint = context.point;
-  //   mapbox.Position coordinates = mapPoint.coordinates;
-  //   double lat = coordinates.lat.toDouble();
-  //   double lng = coordinates.lng.toDouble();
-
-  //   // Remove previous pin if any
-  //   if (draggablePin != null) {
-  //     await userLocationManager!.delete(draggablePin!);
-  //     draggablePin = null;
-  //   }
-
-  //   // Add new pin at tapped location
-  //   final options = mapbox.PointAnnotationOptions(
-  //     geometry: mapbox.Point(coordinates: mapbox.Position(lng, lat)),
-  //     image: locationIconData!,
-  //     iconSize: 2,
-  //   );
-  //   draggablePin = await userLocationManager!.create(options);
-
-  //   // Get address for new location
-  //   String address = await _getAddressFromCoordinates(lat, lng);
-
-  //   setState(() {
-  //     pinnedLat = lat;
-  //     pinnedLng = lng;
-  //     pinnedAddress = address;
-  //     pinMode = false;
-  //   });
-
-  //   if (widget.onLocationPinned != null) {
-  //     widget.onLocationPinned!(lat, lng, address);
-  //   }
-  // }
-
-  Future<void> _requestLocationPermission() async {
-    print('REQUESTING LOCATION PERMISSION');
+  void _onMapTap(mapbox.MapContentGestureContext context) async {
+    if (mapboxMap == null) return;
 
     try {
-      if (Platform.isAndroid || Platform.isIOS) {
-        LocationPermission geolocatorPermission =
-            await Geolocator.requestPermission();
-        print('GEOLOCATOR PERMISSION RESULT: $geolocatorPermission');
-
-        if (geolocatorPermission == LocationPermission.denied) {
-          _showPermissionDeniedDialog();
-          return;
-        } else if (geolocatorPermission == LocationPermission.deniedForever) {
-          _showPermissionPermanentlyDeniedDialog();
-          return;
-        }
-
-        if (mounted) {
-          setState(() {
-            hasLocationPermission = true;
-          });
-        }
-
-        if (mapInitialized) {
-          _initializeLocationFeatures();
-        }
-      }
-    } catch (e) {
-      print("Error requesting location permission: $e");
-      _showErrorDialog(
-        "Permission Error",
-        "Failed to request location permission. Please try again.",
+      mapbox.Point mapPoint = context.point;
+      mapbox.Position coordinates = mapPoint.coordinates;
+      // double lat = coordinates.lat.toDouble();
+      // double lng = coordinates.lng.toDouble();
+      // // Get the address for the tapped coordinates
+      // String address = await _getAddressFromCoordinates(lat, lng);
+      print(
+        'MAP TAPPED AT: ${mapPoint.coordinates.lat}, ${mapPoint.coordinates.lng}',
       );
+
+      // You could use this for selecting destinations or other interactive features
+    } catch (e) {
+      print("Error handling map tap: $e");
     }
-  }
-
-  void _showPermissionDeniedDialog() {
-    if (!mounted) return;
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Location Permission Required"),
-          content: Text(
-            "This app needs location permission to show your position on the map.",
-          ),
-          actions: [
-            TextButton(
-              child: Text("Cancel"),
-              onPressed: () => Navigator.pop(context),
-            ),
-            TextButton(
-              child: Text("Try Again"),
-              onPressed: () {
-                Navigator.pop(context);
-                _requestLocationPermission();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showPermissionPermanentlyDeniedDialog() {
-    if (!mounted) return;
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Location Permission Denied"),
-          content: Text(
-            "Location permission is permanently denied. Please enable it in app settings.",
-          ),
-          actions: [
-            TextButton(
-              child: Text("Cancel"),
-              onPressed: () => Navigator.pop(context),
-            ),
-            TextButton(
-              child: Text("Open Settings"),
-              onPressed: () {
-                Navigator.pop(context);
-                openAppSettings();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showLocationServiceDisabledDialog() {
-    if (!mounted) return;
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Location Services Disabled"),
-          content: Text(
-            "Please enable location services in your device settings.",
-          ),
-          actions: [
-            TextButton(
-              child: Text("OK"),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   void _showErrorDialog(String title, String message) {
@@ -1093,34 +665,6 @@ class MapScreenState extends State<MapScreen> {
       },
     );
   }
-
-  Future<CurrentLocationResult?> getCurrentLocation() async {
-    try {
-      // Get device location
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
-
-      // Optionally, reverse geocode to get address
-      String address = await _getAddressFromCoordinates(
-        position.latitude,
-        position.longitude,
-      );
-
-      return CurrentLocationResult(
-        latitude: position.latitude,
-        longitude: position.longitude,
-        address: address,
-      );
-    } catch (e) {
-      print('Error getting current location: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to get current location: $e')),
-      );
-
-      return null;
-    }
-  }
 }
 
 // Helper class for latitude and longitude pairs
@@ -1137,15 +681,4 @@ class Pair<A, B> {
   final B second;
 
   Pair(this.first, this.second);
-}
-
-class CurrentLocationResult {
-  final double latitude;
-  final double longitude;
-  final String address;
-  CurrentLocationResult({
-    required this.latitude,
-    required this.longitude,
-    required this.address,
-  });
 }
