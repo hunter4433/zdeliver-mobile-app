@@ -16,8 +16,13 @@ import 'package:mrsgorilla/address_selection_sheet.dart';
 class HomePageWithMap extends StatefulWidget {
   final String? address;
   final Position? position;
-  const HomePageWithMap({Key? key, this.address, this.position})
-    : super(key: key);
+  final dynamic warehousePosition;
+  const HomePageWithMap({
+    Key? key,
+    this.address,
+    this.position,
+    this.warehousePosition,
+  }) : super(key: key);
 
   @override
   State<HomePageWithMap> createState() => _HomePageWithMapState();
@@ -371,6 +376,7 @@ class _HomePageWithMapState extends State<HomePageWithMap>
           MapScreen(
             containerHeight: MediaQuery.of(context).size.height,
             isEmbedded: false,
+            wareHouseLatLng: widget.warehousePosition,
           ),
 
           // Top app bar with profile and menu - UPDATED

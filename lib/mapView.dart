@@ -20,6 +20,7 @@ Future<void> setupMapbox() async {
 class MapScreen extends StatefulWidget {
   final double containerHeight;
   final bool isEmbedded;
+  final wareHouseLatLng;
   // final Function(double, double, String)? onLocationPinned; // Add this
   final Function(double lat, double lng, String address)?
   onCenterChanged; // <-- Add this
@@ -31,6 +32,7 @@ class MapScreen extends StatefulWidget {
     // this.onLocationPinned,
     // this.startInPinMode = false,
     this.onCenterChanged,
+    this.wareHouseLatLng,
   }) : super(key: key);
 
   @override
@@ -636,13 +638,21 @@ class MapScreenState extends State<MapScreen> {
           );
       await userLocationManager!.create(userLocationOptions);
 
-      // Create warehouse at a sensible distance (1-3km away)
-      warehousePosition = _getRandomLocationWithinDistance(
-        userPosition!.latitude,
-        userPosition!.longitude,
-        minDistanceKm: 0.5,
-        maxDistanceKm: 1.5,
-      );
+      // If warehouse position is already provided, use it
+      if (widget.wareHouseLatLng is Map) {
+        warehousePosition = CoordinatePair(
+          widget.wareHouseLatLng['position'].latitude,
+          widget.wareHouseLatLng['position'].longitude,
+        );
+      } else {
+        // Create warehouse at a sensible distance (1-3km away)
+        warehousePosition = _getRandomLocationWithinDistance(
+          userPosition!.latitude,
+          userPosition!.longitude,
+          minDistanceKm: 0.5,
+          maxDistanceKm: 1.5,
+        );
+      }
 
       // Create warehouse annotation
       mapbox.PointAnnotationOptions warehouseOptions =
