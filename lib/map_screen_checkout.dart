@@ -23,7 +23,7 @@ class MapScreenCheckout extends StatefulWidget {
   final Position initialPosition;
   final String initialAddress;
   final void Function(String)? onEtaCalculated;
-
+  final Position? warehousePosition;
   const MapScreenCheckout({
     Key? key,
     this.containerHeight = double.infinity,
@@ -31,6 +31,7 @@ class MapScreenCheckout extends StatefulWidget {
     required this.initialPosition,
     required this.initialAddress,
     this.onEtaCalculated,
+    this.warehousePosition,
   }) : super(key: key);
 
   @override
@@ -141,9 +142,9 @@ class _MapScreenCheckoutState extends State<MapScreenCheckout> {
             data['routes'][0]['geometry']['coordinates'];
         final double durationSeconds = data['routes'][0]['duration'] ?? 0;
         setState(() {
-           arrivaltime = '${(durationSeconds / 60).toStringAsFixed(0)} minutes';
+          arrivaltime = '${(durationSeconds / 60).toStringAsFixed(0)} minutes';
         });
-        if(widget.onEtaCalculated != null) {
+        if (widget.onEtaCalculated != null) {
           widget.onEtaCalculated!(arrivaltime);
         }
         print('Route duration: ${durationSeconds / 60} minutes');
@@ -339,16 +340,22 @@ class _MapScreenCheckoutState extends State<MapScreenCheckout> {
       await userLocationManager!.create(userLocationOptions);
 
       // User location from the Api
-      // warehousePosition = await _getCartCoordinates();
-
-      // Create warehouse at a sensible distance (1-3km away)
-      warehousePosition = _getRandomLocationWithinDistance(
-        userPosition!.latitude,
-        userPosition!.longitude,
-        minDistanceKm: 0.5,
-        maxDistanceKm: 1.5,
-      );
-
+      if (widget.warehousePosition != null) {
+        warehousePosition = CoordinatePair(
+          widget.warehousePosition!.latitude,
+          widget.warehousePosition!.longitude,
+        );
+      }
+      // If no warehouse position provided, generate a random one
+      else {
+        // Create warehouse at a sensible distance (1-3km away)
+        warehousePosition = _getRandomLocationWithinDistance(
+          userPosition!.latitude,
+          userPosition!.longitude,
+          minDistanceKm: 0.5,
+          maxDistanceKm: 1.5,
+        );
+      }
       // Create warehouse annotation
       mapbox.PointAnnotationOptions warehouseOptions =
           mapbox.PointAnnotationOptions(
