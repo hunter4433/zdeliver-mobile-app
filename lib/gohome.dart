@@ -399,13 +399,16 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                 child: Row(
                   children: [
                     GestureDetector(
-                      onTap: () {
-                        Navigator.push(
+                      onTap: () async {
+                        await Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => ProfilePage(),
                           ),
                         );
+                        setState(() {
+                          // Refresh the state after returning from ProfilePage
+                        });
                       },
                       child: CircleAvatar(
                         backgroundColor: Colors.red.shade400,
