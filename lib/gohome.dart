@@ -11,7 +11,8 @@ import 'package:http/http.dart' as http;
 import 'package:mrsgorilla/new_menu.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mrsgorilla/address_selection_sheet.dart';
+// import 'package:mrsgorilla/address_selection_sheet.dart';
+import 'package:mrsgorilla/home_address_selection_modal.dart';
 
 class HomePageWithMap extends StatefulWidget {
   final String? address;
@@ -32,6 +33,8 @@ class _HomePageWithMapState extends State<HomePageWithMap>
     with TickerProviderStateMixin {
   // Track which recommended item is selected
   int? selectedRecommendedIndex;
+  bool _addressSelected = false;
+
 
   // Animation controller for the menu drawer
   late AnimationController _drawerController;
@@ -40,7 +43,7 @@ class _HomePageWithMapState extends State<HomePageWithMap>
   bool _isDrawerOpen = false;
   bool _isCardExpanded = false;
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
-  bool _addressSelected = false;
+
   String _selectedAddress = "";
   String name = "Nirmala";
   String discountPercentage = "25";
@@ -114,20 +117,16 @@ class _HomePageWithMapState extends State<HomePageWithMap>
     try {
       String? address = await _secureStorage.read(key: 'saved_address');
 
-      if (address == null || address.isEmpty) {
-        return 'No address saved';
-      }
-
       // Optional: Format the address for better display
       // You can adjust the character limit as needed
-      if (address.length > 35) {
+      if (address!.length > 35) {
         return '${address.substring(0, 35)}...';
       }
 
       return address;
     } catch (e) {
       print('Error reading saved_address: $e');
-      return 'Error loading address';
+      return 'loading address...';
     }
   }
 
@@ -144,22 +143,71 @@ class _HomePageWithMapState extends State<HomePageWithMap>
     }
   }
 
-  void _showAddressSelectionSheet() {
-    // Use the static method from AddressSelectionSheet class
-    AddressSelectionSheet.showAddressSelectionSheet(context, (address) {
-      // Handle the selected address
-      _selectAddress(address);
-      // The sheet will be closed automatically
-    });
+  // Address Selection Sheet Methods
+  // Updated function call example
+  void showAddressSelectionSheet(int? selectedRecommendedIndex) {
+    AddressSelectionSheet.showAddressSelectionSheet(
+      context,
+          (address) {
+        _selectAddress(address);
+      },
+      selectedRecommendedIndex: selectedRecommendedIndex, // Pass the parameter
+    );
   }
+// =======
+//     // Use the static method from AddressSelectionSheet class
+//     AddressSelectionSheet.showAddressSelectionSheet(context, (address) {
+//       // Handle the selected address
+//       _selectAddress(address);
+//       // The sheet will be closed automatically
+//     });
+// >>>>>>> origin/aman1
 
-  void _selectAddress(String address) {
+
+  void _selectAddress(String address) async {
     setState(() {
       _addressSelected = true;
-      _selectedAddress = address;
+      _selectedAddress = address; // Store the selected address
     });
-    Navigator.pop(context); // Close the bottom sheet
+
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Center(child: CircularProgressIndicator());
+      },
+    );
+
+    try {
+      // Make API call here
+      // bool success = await sendVendorNotification();
+
+      // Simulate API call delay
+      await Future.delayed(Duration(seconds: 2));
+
+      // Close loading indicator
+      Navigator.pop(context);
+
+      // Navigate to next page
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => OrderPlacedPage()),
+      );
+    } catch (e) {
+      // Close loading indicator
+      Navigator.pop(context);
+
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to place order. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
+
 
   @override
   void dispose() {
@@ -627,7 +675,7 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                             Expanded(
                               flex: 2,
                               child: Image.asset(
-                                'assets/images/homecustomizecart.png',
+                                'assets/images/meow meow 1.png',
                                 fit: BoxFit.contain,
                               ),
                             ),
@@ -680,7 +728,7 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                         title: 'Z Customized cart',
                         subtitle: 'any 13 veggie & fruits',
                         time: '17 min',
-                        checkText: 'check here',
+                         checkText: '',
                         color: Colors.purple,
                       ),
 
@@ -730,43 +778,48 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                                 onTap:
                                     selectedRecommendedIndex != null
                                         ? () async {
-                                          _showAddressSelectionSheet();
+                                          showAddressSelectionSheet(selectedRecommendedIndex);
                                           // Show loading indicator
-                                          showDialog(
-                                            context: context,
-                                            barrierDismissible: false,
-                                            builder: (BuildContext context) {
-                                              return Center(
-                                                child:
-                                                    CircularProgressIndicator(),
-                                              );
-                                            },
-                                          );
+                                          // showDialog(
+                                          //   context: context,
+                                          //   barrierDismissible: false,
+                                          //   builder: (BuildContext context) {
+                                          //     return Center(
+                                          //       child:
+                                          //           CircularProgressIndicator(),
+                                          //     );
+                                          //   },
+                                          // );
 
-                                          // Make API call
-                                          // bool success = await sendVendorNotification();
+// <<<<<<< HEAD
 
-                                          // Close loading indicator
-                                          Navigator.pop(context);
-                                          if (_addressSelected) {
-                                            // Navigate to next page
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder:
-                                                    (context) =>
-                                                        OrderPlacedPage(),
-                                              ),
-                                            );
-                                          }
-                                        }
-                                        : null,
+                                } : null,
+// =======
+//                                           // Make API call
+//                                           // bool success = await sendVendorNotification();
+//
+//                                           // Close loading indicator
+//                                           Navigator.pop(context);
+//                                           if (_addressSelected) {
+//                                             // Navigate to next page
+//                                             Navigator.push(
+//                                               context,
+//                                               MaterialPageRoute(
+//                                                 builder:
+//                                                     (context) =>
+//                                                         OrderPlacedPage(),
+//                                               ),
+//                                             );
+//                                           }
+//                                         }
+//                                         : null,
+// >>>>>>> origin/aman1
                                 child: Container(
                                   height: 64,
                                   decoration: BoxDecoration(
                                     color:
                                         selectedRecommendedIndex != null
-                                            ? Colors.orange
+                                            ? Color(0xFFF15A25)
                                             : Colors.grey[300],
                                     borderRadius: BorderRadius.only(
                                       topLeft: Radius.circular(12),
@@ -778,19 +831,16 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Icon(
-                                        Icons.delivery_dining,
-                                        size: 28,
-                                        color:
-                                            selectedRecommendedIndex != null
-                                                ? Colors.white
-                                                : Colors.black,
+                                      Image.asset(
+                                        'assets/images/cartcall.png', // Replace with your image path
+                                        width: 38,
+                                        height: 38,
                                       ),
                                       SizedBox(width: 8),
                                       Text(
                                         "Call your cart now",
-                                        style: TextStyle(
-                                          fontSize: 18,
+                                        style: GoogleFonts.leagueSpartan(
+                                          fontSize: 21,
                                           fontWeight: FontWeight.w500,
                                           color:
                                               selectedRecommendedIndex != null

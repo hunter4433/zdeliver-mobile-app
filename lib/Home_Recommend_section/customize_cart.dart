@@ -539,6 +539,7 @@ class ProductCard extends StatelessWidget {
     required this.isAdded,
   });
 
+  // SOLUTION 1: Add Expanded to flexible content
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -549,15 +550,19 @@ class ProductCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          // Fixed size image section
           Stack(
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
-                child: Image.network(imageUrl, height: 100, fit: BoxFit.cover),
+                child: Image.network(
+                    imageUrl,
+                    height: 100,
+                    fit: BoxFit.cover
+                ),
               ),
               Positioned(
                 top: 2,
-                // right: 20,
                 left: 0,
                 child: CircleAvatar(
                   radius: 15,
@@ -572,48 +577,68 @@ class ProductCard extends StatelessWidget {
             ],
           ),
 
-          Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                name,
-                style: GoogleFonts.leagueSpartan(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                ),
-              ),
-              Text(
-                'Rs ' + price + '/Kg',
-                style: GoogleFonts.leagueSpartan(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                  color: Colors.green,
-                ),
-              ),
-            ],
-          ),
-
-          ElevatedButton(
-            onPressed: () {
-              toggleProductAdded(name); // Call the toggle function
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor:
-                  isAdded ? Color(0xFF3F2E78) : Color.fromRGBO(47, 47, 47, 1),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
-              ),
-            ),
+          // Flexible content section
+          Expanded(
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-              child: Text(
-                isAdded ? 'Added' : 'Add',
-                style: GoogleFonts.leagueSpartan(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 18,
-                  color: Colors.white,
-                ),
+              padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Text content with flexible space
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          name,
+                          style: GoogleFonts.leagueSpartan(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14, // Reduced to fit better
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'Rs ' + price + '/Kg',
+                          style: GoogleFonts.leagueSpartan(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12, // Reduced to fit better
+                            color: Colors.green,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Fixed size button at bottom
+                  SizedBox(
+                    width: double.infinity,
+                    height: 30, // Fixed smaller height
+                    child: ElevatedButton(
+                      onPressed: () {
+                        toggleProductAdded(name);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isAdded ? Color(0xFF3F2E78) : Color
+                            .fromRGBO(47, 47, 47, 1),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 0),
+                      ),
+                      child: Text(
+                        isAdded ? 'Added' : 'Add',
+                        style: GoogleFonts.leagueSpartan(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14, // Reduced from 18
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

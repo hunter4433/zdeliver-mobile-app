@@ -3,9 +3,12 @@ import 'package:mrsgorilla/about_us.dart';
 import 'package:mrsgorilla/address_selection.dart';
 import 'package:mrsgorilla/mapView.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'address_book.dart';
+import 'address_selection.dart';
 import 'auth_page.dart';
+import 'locationselectionMapview.dart';
 import 'menu/Addreass.dart';
 import 'menu/notifications.dart';
 import 'menu/order_history.dart';
@@ -45,7 +48,9 @@ class _ProfilePageState extends State<ProfilePage> {
   // Method to retrieve stored phone number
   Future<String?> getPhoneNumber() async {
     try {
-      return await _secureStorage.read(key: 'phone_number');
+      String? number= await _secureStorage.read(key: 'phone_number');
+      String? modified_number="+91 $number";
+      return modified_number;
     } catch (e) {
       print('Error reading phone number: $e');
       return null;
@@ -56,7 +61,16 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        color: const Color(0xFF4527A0), // Deep purple color
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF3F2E78), // Upper part color
+              Color(0xFF5421FF), // Lower part color
+            ],
+          ),
+        ),
         child: SafeArea(
           child: Column(
             children: [
@@ -85,21 +99,38 @@ class _ProfilePageState extends State<ProfilePage> {
                       children: [
                         Row(
                           children: [
-                            // Profile image placeholder
+                            // Profile image
                             Container(
                               width: 50,
                               height: 50,
                               decoration: const BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Colors.grey, // Placeholder color
+                                color: Colors.grey, // Fallback color
                               ),
-                              // Replace this with your image when available
-                              // child: Image.network('YOUR_IMAGE_URL'),
+                              child: ClipOval(
+                                child: Image.asset(
+                                  'assets/images/woman_avatar.png', // Replace with your image path
+                                  width: 50,
+                                  height: 50,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      width: 50,
+                                      height: 50,
+                                      decoration: const BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.grey,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
                             ),
                             const SizedBox(width: 12),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+
                                 FutureBuilder<String?>(
                                   future:
                                       getUserName(), // Use your authService instance
@@ -113,17 +144,18 @@ class _ProfilePageState extends State<ProfilePage> {
                                       ),
                                     );
                                   },
+
                                 ),
                                 const SizedBox(height: 2),
                                 FutureBuilder<String?>(
                                   future:
-                                      getPhoneNumber(), // Use your authService instance
+                                  getPhoneNumber(), // Use your authService instance
                                   builder: (context, snapshot) {
                                     return Text(
                                       snapshot.data ?? 'Loading...',
-                                      style: const TextStyle(
+                                      style: GoogleFonts.leagueSpartan(
                                         color: Colors.white,
-                                        fontSize: 14,
+                                        fontSize: 18,
                                       ),
                                     );
                                   },
@@ -136,21 +168,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                     const Spacer(),
                     // Shine effect/star in top right
-                    Container(
-                      width: 20,
-                      height: 20,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.8),
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.white.withOpacity(0.5),
-                            spreadRadius: 5,
-                            blurRadius: 10,
-                          ),
-                        ],
-                      ),
-                    ),
+
                   ],
                 ),
               ),
@@ -167,18 +185,18 @@ class _ProfilePageState extends State<ProfilePage> {
               // Address section
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
+                  horizontal: 28,
                   vertical: 12,
                 ),
                 width: double.infinity,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                     Text(
                       'Address',
-                      style: TextStyle(
+                       style: GoogleFonts.leagueSpartan(
                         color: Colors.white,
-                        fontSize: 18,
+                        fontSize: 19,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -188,9 +206,9 @@ class _ProfilePageState extends State<ProfilePage> {
                       builder: (context, snapshot) {
                         return Text(
                           snapshot.data ?? 'Loading...',
-                          style: const TextStyle(
+                          style: GoogleFonts.leagueSpartan(
                             color: Colors.white,
-                            fontSize: 14,
+                            fontSize: 16,
                           ),
                         );
                       },
@@ -202,7 +220,9 @@ class _ProfilePageState extends State<ProfilePage> {
                         // Navigate to change address page
                         final res = await Navigator.of(context).push(
                           MaterialPageRoute(
+
                             builder: (context) => SelectAddressPage(),
+
                           ),
                         );
                         if (res != null) {
@@ -215,20 +235,39 @@ class _ProfilePageState extends State<ProfilePage> {
                           borderRadius: BorderRadius.circular(20),
                         ),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: const [
-                          Icon(
-                            Icons.location_on_outlined,
-                            color: Colors.white,
-                            size: 18,
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => SelectAddressPage(),
+                            ),
+                          );
+
+                          // Add your onTap functionality here
+                          print('Change address tapped');
+                        },
+                        borderRadius: BorderRadius.circular(8), // Optional: adds rounded ripple
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0), // Optional: adds padding for better touch area
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.my_location,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Change address',
+                                style: GoogleFonts.leagueSpartan(
+                                    color: Colors.white,
+                                    fontSize: 16
+                                ),
+                              ),
+                            ],
                           ),
-                          SizedBox(width: 8),
-                          Text(
-                            'Change address',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ],
@@ -236,13 +275,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
 
               // Divider
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 28,
-                  vertical: 12,
-                ),
-                child: Divider(color: Colors.white24, height: 1),
-              ),
+
 
               // Settings menu (white background)
               Expanded(
@@ -253,72 +286,72 @@ class _ProfilePageState extends State<ProfilePage> {
                       // Support option
                       _buildMenuOption(
                         context: context,
-                        icon: Icons.headset_mic_outlined, // Placeholder icon
+                        imagePath: 'assets/images/menu1.png', // Replace with your image path
                         title: 'Support',
                         onTap:
                             () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => SupportScreen(),
-                              ),
-                            ),
+                          MaterialPageRoute(
+                            builder: (context) => SupportScreen(),
+                          ),
+                        ),
                       ),
-                      const Divider(height: 1, indent: 28, endIndent: 28),
+                      const Divider(height: 1, indent: 28, endIndent: 28,color: Color(0xFFEEEEEE),),
 
                       // My history option
                       _buildMenuOption(
                         context: context,
-                        icon: Icons.history_outlined, // Placeholder icon
+                        imagePath: 'assets/images/menu2.png', // Replace with your image path
                         title: 'My history',
                         onTap:
                             () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => OrderHistoryScreen(),
-                              ),
-                            ),
+                          MaterialPageRoute(
+                            builder: (context) => OrderHistoryScreen(userId: '1',),
+                          ),
+                        ),
                       ),
-                      const Divider(height: 1, indent: 28, endIndent: 28),
+                      const Divider(height: 1, indent: 28, endIndent: 28,color: Color(0xFFEEEEEE),),
 
                       // Address book option
                       _buildMenuOption(
                         context: context,
-                        icon: Icons.book_outlined, // Placeholder icon
+                        imagePath: 'assets/images/menu4.png', // Replace with your image path
                         title: 'Address book',
                         onTap:
                             () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => AddressBookPage(),
-                              ),
-                            ),
+                          MaterialPageRoute(
+                            builder: (context) => AddressBookPage(),
+                          ),
+                        ),
                       ),
-                      const Divider(height: 1, indent: 28, endIndent: 28),
+                      const Divider(height: 1, indent: 28, endIndent: 28,color: Color(0xFFEEEEEE),),
 
                       // Favourites option
                       // _buildMenuOption(
                       //   context: context,
-                      //   icon: Icons.favorite_border, // Placeholder icon
+                      //   imagePath: 'assets/images/favourites_icon.png', // Replace with your image path
                       //   title: 'Favourites',
                       //   onTap: () => _navigateToPage(context, 'FavouritesPage'),
                       // ),
-                      const Divider(height: 1, indent: 28, endIndent: 28),
+                      const Divider(height: 1, indent: 28, endIndent: 28,color: Color(0xFFEEEEEE),),
 
                       // Notifications option
                       _buildMenuOption(
                         context: context,
-                        icon: Icons.notifications_outlined, // Placeholder icon
+                        imagePath: 'assets/images/menu6.png', // Replace with your image path
                         title: 'Notifications',
                         onTap:
                             () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => NotificationsScreen(),
-                              ),
-                            ),
+                          MaterialPageRoute(
+                            builder: (context) => NotificationsScreen(),
+                          ),
+                        ),
                       ),
-                      const Divider(height: 1, indent: 28, endIndent: 28),
+                      const Divider(height: 1, indent: 28, endIndent: 28,color: Color(0xFFEEEEEE),),
 
                       // Share app option
                       _buildMenuOption(
                         context: context,
-                        icon: Icons.share_outlined, // Placeholder icon
+                        imagePath: 'assets/images/menu7.png', // Replace with your image path
                         title: 'Share app',
                         onTap: () async {
                           print('Share app tapped');
@@ -326,28 +359,28 @@ class _ProfilePageState extends State<ProfilePage> {
                           await SharePlus.instance.share(
                             ShareParams(
                               text:
-                                  'Check out this amazing app!\n link: https://www.example.com',
+                              'Check out this amazing app!\n link: https://www.example.com',
                               subject: 'Z Deliver App',
                               // uri: Uri.parse('https://www.youtube.com/'),
                             ),
                           );
                         },
                       ),
-                      const Divider(height: 1, indent: 28, endIndent: 28),
+                      const Divider(height: 1, indent: 28, endIndent: 28,color: Color(0xFFEEEEEE),),
 
                       // About us option
                       _buildMenuOption(
                         context: context,
-                        icon: Icons.people_outline, // Placeholder icon
+                        imagePath: 'assets/images/menu8.png', // Replace with your image path
                         title: 'About us',
                         onTap:
                             () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => AboutUsScreen(),
-                              ),
-                            ),
+                          MaterialPageRoute(
+                            builder: (context) => AboutUsScreen(),
+                          ),
+                        ),
                       ),
-                      const Divider(height: 1, indent: 28, endIndent: 28),
+                      const Divider(height: 1, indent: 28, endIndent: 28,color: Color(0xFFEEEEEE),),
 
                       // Logout option
                       ListTile(
@@ -359,41 +392,32 @@ class _ProfilePageState extends State<ProfilePage> {
                           'Logout',
                           style: TextStyle(fontSize: 16),
                         ),
+
                         onTap: () async {
                           // Clear secure storage
                           await _secureStorage.deleteAll();
 
-                          // Navigate to login screen
+                          _showLogoutDialog(context);
 
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => LoginScreen(),
-                            ),
-                          );
                           // Implement logout functionality
                         },
                       ),
-                      const Divider(height: 1, indent: 24, endIndent: 24),
-
-                      // Delete account option
+                      const Divider(height: 1, indent: 24, endIndent: 24,color: Color(0xFFEEEEEE),),
+// Delete account option
                       ListTile(
                         contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
+                          horizontal: 26,
                           vertical: 8,
                         ),
                         title: const Text(
                           'Delete account',
                           style: TextStyle(fontSize: 16),
                         ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => LoginScreen(),
-                            ),
-                          );
-                          // Implement delete account functionality
+                        onTap: () async {
+                          await _secureStorage.deleteAll();
+
+                          _showDeleteAccountDialog(context);
+
                         },
                       ),
 
@@ -401,9 +425,9 @@ class _ProfilePageState extends State<ProfilePage> {
                       Container(
                         alignment: Alignment.center,
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        child: const Text(
+                        child:  Text(
                           'terms of services & privacy policy',
-                          style: TextStyle(color: Colors.grey, fontSize: 12),
+                          style: GoogleFonts.leagueSpartan(color: Colors.grey, fontSize: 16),
                         ),
                       ),
                     ],
@@ -414,32 +438,247 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
       ),
+
+    );
+
+  }
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+
+          ),
+          child: Container(
+            width: MediaQuery.of(context).size.width * 0.85,
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.logout,
+                  size: 48,
+                  color: Colors.orange,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Logout',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Are you sure you want to logout from your account?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop(); // Close dialog
+                        },
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Cancel',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop(); // Close dialog
+                          // Implement logout functionality here
+                          _performLogout(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFF4527A0),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Logout',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
-  // Helper method to build menu options
+  void _showDeleteAccountDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            width: MediaQuery.of(context).size.width * 0.85,
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.warning_rounded,
+                  size: 48,
+                  color: Colors.red,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Delete Account',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently removed.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop(); // Close dialog
+                        },
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Cancel',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop(); // Close dialog
+                          // Implement delete account functionality here
+                          _performDeleteAccount(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Delete',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _performLogout(BuildContext context) {
+    // Add your logout logic here (clear user data, tokens, etc.)
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LoginScreen(),
+      ),
+          (route) => false,
+    );
+  }
+
+  void _performDeleteAccount(BuildContext context) {
+    // Add your delete account logic here (API call, clear data, etc.)
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LoginScreen(),
+      ),
+          (route) => false,
+    );
+  }
+
+  // Helper method to build menu options with images
   Widget _buildMenuOption({
     required BuildContext context,
-    required IconData icon,
+    required String imagePath,
     required String title,
     required VoidCallback onTap,
   }) {
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 26, vertical: 8),
       leading: Container(
-        width: 40,
-        height: 40,
+        width: 33,
+        height: 33,
         decoration: BoxDecoration(
-          color: const Color(0xFFF0EAF9), // Light purple background for icons
+         // Light purple background for icons
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(
-          icon,
-          color: const Color(0xFF4527A0), // Deep purple color for icons
-          size: 24,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Image.asset(
+            imagePath,
+            width: 35,
+            height: 35,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              // Fallback to icon if image fails to load
+              return Icon(
+                Icons.error,
+                color: const Color(0xFF4527A0),
+                size: 24,
+              );
+            },
+          ),
         ),
       ),
-      title: Text(title, style: const TextStyle(fontSize: 16)),
+      title: Text(title,
+          style: GoogleFonts.leagueSpartan(fontSize: 18)),
       onTap: onTap,
     );
   }

@@ -4,12 +4,15 @@ import 'package:http/http.dart' as _secureStorage;
 import 'dart:convert';
 import 'package:mrsgorilla/address_selection.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-class AddressSelectionSheet extends StatefulWidget {
+class SavedAddressSelectionSheet extends StatefulWidget {
   final Function(String) onAddressSelected;
+
 
   const AddressSelectionSheet({Key? key, required this.onAddressSelected})
     : super(key: key);
+
 
   // Static method to show the bottom sheet
   static void showAddressSelectionSheet(
@@ -21,7 +24,10 @@ class AddressSelectionSheet extends StatefulWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
+
         return AddressSelectionSheet(onAddressSelected: onAddressSelected);
+
+     
       },
     );
   }
@@ -30,7 +36,7 @@ class AddressSelectionSheet extends StatefulWidget {
   _AddressSelectionSheetState createState() => _AddressSelectionSheetState();
 }
 
-class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
+class _AddressSelectionSheetState extends State<SavedAddressSelectionSheet> {
   List<dynamic> _addresses = [];
   bool _isLoading = true;
   String _errorMessage = '';
@@ -99,9 +105,9 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: MediaQuery.of(context).size.height * 0.45,
+      height: MediaQuery.of(context).size.height * 0.48,
       decoration: const BoxDecoration(
-        color: Color(0xFFF0F8FF),
+        color: Color(0xFFFFFFFF),
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(24),
           topRight: Radius.circular(24),
@@ -110,9 +116,14 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
       child: Column(
         children: [
           const SizedBox(height: 20),
-          const Text(
+           Text(
             "Select Address",
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+
+             style: GoogleFonts.leagueSpartan(
+              fontSize: 22,
+              fontWeight: FontWeight.w500,
+            ),
+
           ),
           const SizedBox(height: 20),
 
@@ -208,13 +219,21 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
           //     ],
           //   ),
           // ),
-          const Padding(
+
+
+           Padding(
+
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
                 "Saved addresses",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+
+                style: GoogleFonts.leagueSpartan(
+                  fontSize: 21,
+                  fontWeight: FontWeight.w500,
+                ),
+
               ),
             ),
           ),
@@ -228,10 +247,18 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
               border: Border.all(color: Colors.grey.shade300),
             ),
             child: ListTile(
-              leading: const Icon(Icons.add, color: Colors.red, size: 34),
-              title: const Text(
+
+              leading: const Icon(
+                Icons.add,
+                color: Colors.red,
+                size: 34,
+              ),
+              title:  Text(
                 "Add new address",
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: GoogleFonts.leagueSpartan(fontSize: 19,
+                  fontWeight: FontWeight.w500,
+                ),
+
               ),
               trailing: const Icon(Icons.chevron_right, size: 30),
               onTap: () async {
