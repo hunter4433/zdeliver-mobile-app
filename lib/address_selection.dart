@@ -462,7 +462,7 @@ class _SelectAddressPageState extends State<SelectAddressPage> {
                     80, // Adjust this value to place it just above your bottom bar
                 child: LinearProgressIndicator(
                   minHeight: 4,
-                  
+
                   backgroundColor: Colors.orange.shade100,
                 ),
               ),

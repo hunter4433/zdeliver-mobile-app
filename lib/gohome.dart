@@ -5,6 +5,7 @@ import 'package:mrsgorilla/mapView.dart';
 import 'package:mrsgorilla/Home_Recommend_section/standardGorillaCart.dart';
 import 'package:mrsgorilla/Home_Recommend_section/gorillaFruitcart.dart';
 import 'package:mrsgorilla/Home_Recommend_section/customize_cart.dart';
+import 'package:mrsgorilla/map_screen_checkout.dart';
 import 'package:mrsgorilla/orderPlace.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -16,9 +17,16 @@ import 'package:mrsgorilla/home_address_selection_modal.dart';
 
 class HomePageWithMap extends StatefulWidget {
   final String? address;
-  final Position? position;
-  const HomePageWithMap({Key? key, this.address, this.position})
-    : super(key: key);
+  final Position? userPosition;
+  final Position? warehousePosition;
+  final bool isWarehouseAvailable;
+  const HomePageWithMap({
+    Key? key,
+    this.address,
+    this.userPosition,
+    this.warehousePosition,
+    this.isWarehouseAvailable = true,
+  }) : super(key: key);
 
   @override
   State<HomePageWithMap> createState() => _HomePageWithMapState();
@@ -29,7 +37,6 @@ class _HomePageWithMapState extends State<HomePageWithMap>
   // Track which recommended item is selected
   int? selectedRecommendedIndex;
   bool _addressSelected = false;
-
 
   // Animation controller for the menu drawer
   late AnimationController _drawerController;
@@ -58,6 +65,11 @@ class _HomePageWithMapState extends State<HomePageWithMap>
   void initState() {
     super.initState();
     // _selectedAddress = widget.address ?? 'No address selected';
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!widget.isWarehouseAvailable) {
+        _showNotAvailableDialog();
+      }
+    });
 
     _drawerController = AnimationController(
       vsync: this,
@@ -74,6 +86,60 @@ class _HomePageWithMapState extends State<HomePageWithMap>
 
     // Add listener to the drag controller to implement snap behavior
     _dragController.addListener(_handleDragUpdate);
+  }
+
+  void _showNotAvailableDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+            title: Text(
+              "Oops! , Sorry ",
+              style: GoogleFonts.leagueSpartan(
+                color: Color.fromRGBO(63, 46, 120, 1),
+                fontWeight: FontWeight.w500,
+                fontSize: 18,
+              ),
+            ),
+            content: Text(
+              'Right now we are not available in your city.',
+              style: GoogleFonts.leagueSpartan(
+                fontWeight: FontWeight.w400,
+                fontSize: 16,
+                color: Color.fromRGBO(67, 67, 67, 1),
+              ),
+            ),
+            actions: [
+              Center(
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: Size(double.infinity, 50),
+                    backgroundColor: Color.fromRGBO(72, 72, 72, 1),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    child: Text(
+                      'Continue anyway',
+                      style: GoogleFonts.leagueSpartan(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+    );
   }
 
   Future<Map<String, dynamic>?> getLatLngAddress() async {
@@ -110,14 +176,16 @@ class _HomePageWithMapState extends State<HomePageWithMap>
 
   Future<String?> getAddress() async {
     try {
-      String? address = await _secureStorage.read(key: 'saved_address');
+      String? address =
+          await _secureStorage.read(key: 'saved_address') ?? 'No saved address';
 
       // Optional: Format the address for better display
       // You can adjust the character limit as needed
-      if (address!.length > 35) {
+      if (address.length > 35) {
         return '${address.substring(0, 35)}...';
       }
-
+      _selectedAddress = address; // Store the selected address
+      _addressSelected = true; // Set address selected to true
       return address;
     } catch (e) {
       print('Error reading saved_address: $e');
@@ -143,21 +211,20 @@ class _HomePageWithMapState extends State<HomePageWithMap>
   void showAddressSelectionSheet(int? selectedRecommendedIndex) {
     AddressSelectionSheet.showAddressSelectionSheet(
       context,
-          (address) {
+      (address) {
         _selectAddress(address);
       },
       selectedRecommendedIndex: selectedRecommendedIndex, // Pass the parameter
     );
   }
-// =======
-//     // Use the static method from AddressSelectionSheet class
-//     AddressSelectionSheet.showAddressSelectionSheet(context, (address) {
-//       // Handle the selected address
-//       _selectAddress(address);
-//       // The sheet will be closed automatically
-//     });
-// >>>>>>> origin/aman1
-
+  // =======
+  //     // Use the static method from AddressSelectionSheet class
+  //     AddressSelectionSheet.showAddressSelectionSheet(context, (address) {
+  //       // Handle the selected address
+  //       _selectAddress(address);
+  //       // The sheet will be closed automatically
+  //     });
+  // >>>>>>> origin/aman1
 
   void _selectAddress(String address) async {
     setState(() {
@@ -202,7 +269,6 @@ class _HomePageWithMapState extends State<HomePageWithMap>
       );
     }
   }
-
 
   @override
   void dispose() {
@@ -416,9 +482,12 @@ class _HomePageWithMapState extends State<HomePageWithMap>
       body: Stack(
         children: [
           // Map as full-screen background
-          MapScreen(
+          MapScreenCheckout(
             containerHeight: MediaQuery.of(context).size.height,
             isEmbedded: false,
+            warehousePosition: widget.warehousePosition,
+            initialPosition: widget.userPosition!,
+            initialAddress: widget.address ?? 'No address selected',
           ),
 
           // Top app bar with profile and menu - UPDATED
@@ -441,13 +510,16 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                 child: Row(
                   children: [
                     GestureDetector(
-                      onTap: () {
-                        Navigator.push(
+                      onTap: () async {
+                        await Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => ProfilePage(),
                           ),
                         );
+                        setState(() {
+                          // Refresh the state after returning from ProfilePage
+                        });
                       },
                       child: CircleAvatar(
                         backgroundColor: Colors.red.shade400,
@@ -719,7 +791,7 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                         title: 'Z Customized cart',
                         subtitle: 'any 13 veggie & fruits',
                         time: '17 min',
-                         checkText: '',
+                        checkText: '',
                         color: Colors.purple,
                       ),
 
@@ -769,7 +841,9 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                                 onTap:
                                     selectedRecommendedIndex != null
                                         ? () async {
-                                          showAddressSelectionSheet(selectedRecommendedIndex);
+                                          showAddressSelectionSheet(
+                                            selectedRecommendedIndex,
+                                          );
                                           // Show loading indicator
                                           // showDialog(
                                           //   context: context,
@@ -782,29 +856,29 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                                           //   },
                                           // );
 
-// <<<<<<< HEAD
-
-                                } : null,
-// =======
-//                                           // Make API call
-//                                           // bool success = await sendVendorNotification();
-//
-//                                           // Close loading indicator
-//                                           Navigator.pop(context);
-//                                           if (_addressSelected) {
-//                                             // Navigate to next page
-//                                             Navigator.push(
-//                                               context,
-//                                               MaterialPageRoute(
-//                                                 builder:
-//                                                     (context) =>
-//                                                         OrderPlacedPage(),
-//                                               ),
-//                                             );
-//                                           }
-//                                         }
-//                                         : null,
-// >>>>>>> origin/aman1
+                                          // <<<<<<< HEAD
+                                        }
+                                        : null,
+                                // =======
+                                //                                           // Make API call
+                                //                                           // bool success = await sendVendorNotification();
+                                //
+                                //                                           // Close loading indicator
+                                //                                           Navigator.pop(context);
+                                //                                           if (_addressSelected) {
+                                //                                             // Navigate to next page
+                                //                                             Navigator.push(
+                                //                                               context,
+                                //                                               MaterialPageRoute(
+                                //                                                 builder:
+                                //                                                     (context) =>
+                                //                                                         OrderPlacedPage(),
+                                //                                               ),
+                                //                                             );
+                                //                                           }
+                                //                                         }
+                                //                                         : null,
+                                // >>>>>>> origin/aman1
                                 child: Container(
                                   height: 64,
                                   decoration: BoxDecoration(
