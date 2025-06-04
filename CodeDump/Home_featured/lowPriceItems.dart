@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
-import "package:mrsgorilla/checkoutPage.dart";
+import "package:Zdeliver/checkoutPage.dart";
 import 'package:google_fonts/google_fonts.dart';
 
 class LowPriceItemsPage extends StatefulWidget {

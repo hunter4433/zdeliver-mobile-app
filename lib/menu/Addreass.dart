@@ -49,7 +49,9 @@ class _AddressSelectionScreenState extends State<AddressSelectionScreen> {
                       color: Colors.black,
                       size: 28,
                     ),
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
                   ),
                   const SizedBox(width: 8),
                   const Text(
@@ -196,7 +198,7 @@ class _AddressSelectionScreenState extends State<AddressSelectionScreen> {
                                 .coordinates
                                 .lat;
                         print('lat: $lat, lng: $lng');
-                        
+
                         if (lat != null &&
                             lng != null &&
                             widget.onAddressSelected != null) {

@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:mrsgorilla/profilesetup.dart';
+import 'package:Zdeliver/profilesetup.dart';
 import 'gohome.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
