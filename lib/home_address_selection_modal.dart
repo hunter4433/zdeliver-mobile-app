@@ -49,6 +49,7 @@ class AddressSelectionSheet extends StatefulWidget {
 class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
   String? _currentAddress;
   bool _isLoading = true;
+  String? selectedAddress;
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
   @override
@@ -57,16 +58,26 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
     _loadCurrentAddress();
   }
 
+  Future<String?> getUserId() async {
+    try {
+      return await _secureStorage.read(key: 'userId');
+    } catch (e) {
+      print('Error reading userId: $e');
+      return null;
+    }
+  }
+
+
   Future<void> _loadCurrentAddress() async {
     try {
       String? savedAddress = await _secureStorage.read(key: 'saved_address');
       setState(() {
-        _currentAddress = savedAddress ?? 'No address saved';
+        selectedAddress = savedAddress ?? 'No address saved';
         _isLoading = false;
       });
     } catch (e) {
       setState(() {
-        _currentAddress = 'Error loading address';
+        selectedAddress = 'Error loading address';
         _isLoading = false;
       });
     }
@@ -88,8 +99,8 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
 
   void _selectAddress(String address) async {
     setState(() {
-      // _addressSelected = true;
-      // _selectedAddress = address; // Store the selected address
+     //  _addressSelected = true;
+       selectedAddress = address; // Store the selected address
     });
 
     // Show loading indicator
@@ -265,7 +276,7 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
 
                     // Full address
                     Text(
-                      _currentAddress ?? 'No address available',
+                      selectedAddress ?? 'No address available',
                       style: const TextStyle(
                         fontSize: 16,
                         color: Color(0xFF6B6B6B),
@@ -287,21 +298,22 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
               width: double.infinity,
               height: 56,
               child: ElevatedButton(
-                onPressed: _currentAddress != null &&
-                    _currentAddress!.isNotEmpty &&
-                    _currentAddress != 'No address saved'
+                onPressed: selectedAddress != null &&
+                    selectedAddress!.isNotEmpty &&
+                    selectedAddress != 'No address saved'
                     ? () async {
-                  // Use the helper method to get the correct booking type
-                  final String bookingType = _getBookingType();
+
+
+                  String? userIdString = await _secureStorage.read(key: 'userId');
+                  int? userId = userIdString != null ? int.tryParse(userIdString) : null;
+
 
                   final result = await CartBookingService.callCartAtAddress(
-                    userId: 1, // Replace with actual user ID
-                    bookingType: bookingType, // Use dynamic booking type
-                    cartType: widget.selectedRecommendedIndex == 0 ? "vegetable cart " : "fruit cart ",
+                    userId: userId!, // Replace with actual user ID
+                    address : selectedAddress!,
+                    cartType: widget.selectedRecommendedIndex == 0 ? "Z vegetable cart" : "Z fruit cart",
                     latitude: 30.73900000, // Replace with actual coordinates
                     longitude: 76.79000000,
-                    items: [{"item_id": 7, "price_per_unit": 40.00},
-                      {"item_id": 8, "price_per_unit": 15.50},],
                   );
 
                   // if (result['success']) {
@@ -309,7 +321,7 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text(result['message']), backgroundColor: Colors.green),
                     );
-                    widget.onAddressSelected(_currentAddress!);
+                    widget.onAddressSelected(selectedAddress!);
                   await Future.delayed(Duration(seconds: 2));
 
                   // Close loading indicator
@@ -329,7 +341,7 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
                 }
                     : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _currentAddress != null && _currentAddress!.isNotEmpty && _currentAddress != 'No address saved'
+                  backgroundColor: selectedAddress != null && selectedAddress!.isNotEmpty && selectedAddress != 'No address saved'
                       ? const Color(0xFFF15A25)
                       : const Color(0xFFCCCCCC),
                   foregroundColor: Colors.white,
@@ -383,16 +395,16 @@ class CartBookingService {
   // First API call - Create booking
   static Future<Map<String, dynamic>?> createBooking({
     required int userId,
-    required String bookingType,
-     required List<Map<String, dynamic>> items,
+    required String cartType,
+     required String address,
   }) async {
     try {
-      final url = Uri.parse('$baseUrl/book/create');
+      final url = Uri.parse('$baseUrl/book/create-cart');
 
       final body = {
         "user_id": userId,
-        "booking_type": bookingType,
-         "items": items,
+        "cart_type": cartType,
+         "address": address,
       };
 
       final response = await http.post(
@@ -431,7 +443,7 @@ class CartBookingService {
       final body = {
         "user_id": userId,
         "booking_id": bookingId,
-        // "cart_type": cartType,
+        "cart_type": cartType,
         "latitude": latitude,
         "longitude": longitude,
       };
@@ -449,7 +461,7 @@ class CartBookingService {
         print('Smart order created successfully: ${data['message']}');
         return data;
       } else {
-        print('Failed to create smart order: ${response.statusCode}');
+        print('Failed to create smart order: ${response.body}');
         return null;
       }
     } catch (e) {
@@ -461,8 +473,7 @@ class CartBookingService {
   // Combined function to call both APIs sequentially
   static Future<Map<String, dynamic>> callCartAtAddress({
     required int userId,
-    required String bookingType,
-     required List<Map<String, dynamic>> items,
+    required String address,
     required String cartType,
     required double latitude,
     required double longitude,
@@ -471,8 +482,8 @@ class CartBookingService {
       // Step 1: Create booking
       final bookingResult = await createBooking(
         userId: userId,
-        bookingType: bookingType,
-        items: items,
+        cartType: cartType,
+        address: address,
       );
 
       if (bookingResult == null || !bookingResult['success']) {

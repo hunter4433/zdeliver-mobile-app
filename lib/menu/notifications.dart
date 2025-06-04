@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 
 class NotificationsScreen extends StatefulWidget {
@@ -38,17 +39,17 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                 Text(
                   'Notifications',
-                  style: TextStyle(
+                   style: GoogleFonts.leagueSpartan(
                     fontSize: 24,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     color: Colors.black,
                   ),
                 ),
-                const Text(
+                 Text(
                   'Choose your preferences',
-                  style: TextStyle(
+                   style: GoogleFonts.leagueSpartan(
                     fontSize: 17,
                     color: Colors.black87,
                   ),
@@ -82,16 +83,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
+                         Text(
                           'All notifications',
-                          style: TextStyle(fontWeight: FontWeight.w700,
-                            fontSize: 17,
+                           style: GoogleFonts.leagueSpartan(fontWeight: FontWeight.w600,
+                            fontSize: 18,
                             color: Colors.black,
                           ),
                         ),
                         Switch(
                           value: allNotifications,
-                          activeColor: Colors.black,
+                          activeColor: Colors.green,
                           inactiveTrackColor: Colors.black26,
                           onChanged: (value) {
                             setState(() {
@@ -123,16 +124,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
+                         Text(
                           'Promos and Offer',
-                          style: TextStyle(fontWeight: FontWeight.w700,
-                            fontSize: 17,
+                           style: GoogleFonts.leagueSpartan(fontWeight: FontWeight.w600,
+                            fontSize: 18,
                             color: Colors.black,
                           ),
                         ),
                         Switch(
                           value: promosAndOffers,
-                          activeColor: Colors.black,
+                          activeColor: Colors.green,
                           inactiveTrackColor: Colors.black26,
                           onChanged: (value) {
                             setState(() {

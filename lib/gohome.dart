@@ -76,6 +76,37 @@ class _HomePageWithMapState extends State<HomePageWithMap>
     _dragController.addListener(_handleDragUpdate);
   }
 
+
+
+  // Updated getGender method
+  Future<String?> getGender() async {
+    try {
+      String? gender = await _secureStorage.read(key: 'gender');
+      return gender;
+    } catch (e) {
+      print('Error reading gender: $e');
+      return null; // Return null instead of loading text
+    }
+  }
+
+// Method to get avatar image path based on gender
+  String getAvatarImagePath(String? gender) {
+    if (gender == null) {
+      return 'assets/images/default_avatar.png'; // Default avatar
+    }
+
+    switch (gender.toLowerCase()) {
+      case 'male':
+      case 'm':
+        return 'assets/images/man_avatar.png';
+      case 'female':
+      case 'f':
+        return 'assets/images/woman_avatar.png';
+      default:
+        return 'assets/images/default_avatar.png'; // Default for unknown gender
+    }
+  }
+
   Future<Map<String, dynamic>?> getLatLngAddress() async {
     try {
       final storage = FlutterSecureStorage();
@@ -108,6 +139,7 @@ class _HomePageWithMapState extends State<HomePageWithMap>
     }
   }
 
+
   Future<String?> getAddress() async {
     try {
       String? address = await _secureStorage.read(key: 'saved_address');
@@ -122,6 +154,24 @@ class _HomePageWithMapState extends State<HomePageWithMap>
     } catch (e) {
       print('Error reading saved_address: $e');
       return 'loading address...';
+    }
+  }
+
+
+
+  Future<String?> getUserName() async {
+    try {
+      String? fullName = await _secureStorage.read(key: 'user_name');
+
+      if (fullName?.trim().isEmpty ?? true) {
+        return 'Hey Guest';
+      }
+
+      return fullName!.trim().split(' ').last;
+
+    } catch (e) {
+      print('Error reading user_name: $e');
+      return 'Hey Guest';
     }
   }
 
@@ -149,14 +199,7 @@ class _HomePageWithMapState extends State<HomePageWithMap>
       selectedRecommendedIndex: selectedRecommendedIndex, // Pass the parameter
     );
   }
-// =======
-//     // Use the static method from AddressSelectionSheet class
-//     AddressSelectionSheet.showAddressSelectionSheet(context, (address) {
-//       // Handle the selected address
-//       _selectAddress(address);
-//       // The sheet will be closed automatically
-//     });
-// >>>>>>> origin/aman1
+
 
 
   void _selectAddress(String address) async {
@@ -164,6 +207,8 @@ class _HomePageWithMapState extends State<HomePageWithMap>
       _addressSelected = true;
       _selectedAddress = address; // Store the selected address
     });
+
+
 
     // Show loading indicator
     showDialog(
@@ -541,8 +586,8 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(32),
-                    topRight: Radius.circular(32),
+                    topLeft: Radius.circular(MediaQuery.of(context).size.width * 0.08), // Responsive border radius
+                    topRight: Radius.circular(MediaQuery.of(context).size.width * 0.08),
                   ),
                   boxShadow: [
                     BoxShadow(
@@ -562,20 +607,19 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                       // Handle
                       Center(
                         child: Container(
-                          margin: EdgeInsets.only(top: 0),
-                          width: double.infinity,
-                          height: 4,
+                          margin: EdgeInsets.only(top: MediaQuery.of(context).size.height * 0.0), // Responsive top margin
+                          width: MediaQuery.of(context).size.width * 0.12, // Responsive width for handle
+                          height: MediaQuery.of(context).size.height * 0.001, // Responsive height
                           decoration: BoxDecoration(
                             color: Colors.grey[300],
-                            borderRadius: BorderRadius.circular(32),
+                            borderRadius: BorderRadius.circular(MediaQuery.of(context).size.width * 0.08), // Responsive border radius
                           ),
                         ),
                       ),
-
                       // Promotional banner with updated gradient
                       Container(
                         width: double.infinity,
-                        height: 140,
+                        height: MediaQuery.of(context).size.height * 0.17, // Responsive height
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
@@ -583,11 +627,11 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                             colors: [Color(0xFF3F2E78), Color(0xFF5421FF)],
                           ),
                           borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(32),
-                            topRight: Radius.circular(32),
+                            topLeft: Radius.circular(MediaQuery.of(context).size.width * 0.08), // Responsive border radius
+                            topRight: Radius.circular(MediaQuery.of(context).size.width * 0.08),
                           ),
                         ),
-                        padding: EdgeInsets.all(16),
+                        padding: EdgeInsets.all(MediaQuery.of(context).size.width * 0.04), // Responsive padding
                         child: Row(
                           children: [
                             Expanded(
@@ -602,17 +646,24 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                                         "Hey ",
                                         style: TextStyle(
                                           color: Colors.white,
-                                          fontSize: 22,
+                                          fontSize: MediaQuery.of(context).size.width * 0.055, // Responsive font size
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                      Text(
-                                        name,
-                                        style: TextStyle(
-                                          color: Color.fromRGBO(241, 90, 37, 1),
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                      FutureBuilder<String?>(
+                                        future: getUserName(),
+                                        builder: (context, snapshot) {
+                                          return Text(
+                                            snapshot.data ?? 'Loading...',
+                                            style: const TextStyle(
+                                              color: Color.fromRGBO(241, 90, 37, 1),
+                                              fontSize: 24,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          );
+                                        },
                                       ),
                                     ],
                                   ),
@@ -620,19 +671,19 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                                     "call your first cart",
                                     style: TextStyle(
                                       color: Colors.white,
-                                      fontSize: 24,
+                                      fontSize: MediaQuery.of(context).size.width * 0.06, // Responsive font size
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  SizedBox(height: 6),
+                                  SizedBox(height: MediaQuery.of(context).size.height * 0.007), // Responsive spacing
                                   Container(
                                     padding: EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 4,
+                                      horizontal: MediaQuery.of(context).size.width * 0.03, // Responsive horizontal padding
+                                      vertical: MediaQuery.of(context).size.height * 0.005, // Responsive vertical padding
                                     ),
                                     decoration: BoxDecoration(
                                       color: Colors.transparent,
-                                      borderRadius: BorderRadius.circular(20),
+                                      borderRadius: BorderRadius.circular(MediaQuery.of(context).size.width * 0.05), // Responsive border radius
                                       border: Border.all(
                                         color: Colors.white,
                                         width: 0.8,
@@ -640,13 +691,13 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                                     ),
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
+                                      mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
                                         Text(
                                           discountPercentage + "%",
                                           style: TextStyle(
                                             color: Colors.amber,
+                                            fontSize: MediaQuery.of(context).size.width * 0.035, // Responsive font size
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
@@ -654,6 +705,7 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                                           " off on your first bill",
                                           style: TextStyle(
                                             color: Colors.white,
+                                            fontSize: MediaQuery.of(context).size.width * 0.035, // Responsive font size
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
@@ -673,7 +725,6 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                           ],
                         ),
                       ),
-
                       // Veggies or Fruit section
                       Padding(
                         padding: EdgeInsets.symmetric(
@@ -695,7 +746,7 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                         iconPath:
                             'assets/images/yellow_truck_2-removebg-preview (1).png',
                         title: 'Z vegetable cart',
-                        subtitle: 'includes 13 vegetables',
+                        subtitle: 'includes 13 veggie',
                         time: '7 min',
                         checkText: 'check here',
                         color: Colors.yellow,
@@ -770,41 +821,8 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                                     selectedRecommendedIndex != null
                                         ? () async {
                                           showAddressSelectionSheet(selectedRecommendedIndex);
-                                          // Show loading indicator
-                                          // showDialog(
-                                          //   context: context,
-                                          //   barrierDismissible: false,
-                                          //   builder: (BuildContext context) {
-                                          //     return Center(
-                                          //       child:
-                                          //           CircularProgressIndicator(),
-                                          //     );
-                                          //   },
-                                          // );
-
-// <<<<<<< HEAD
 
                                 } : null,
-// =======
-//                                           // Make API call
-//                                           // bool success = await sendVendorNotification();
-//
-//                                           // Close loading indicator
-//                                           Navigator.pop(context);
-//                                           if (_addressSelected) {
-//                                             // Navigate to next page
-//                                             Navigator.push(
-//                                               context,
-//                                               MaterialPageRoute(
-//                                                 builder:
-//                                                     (context) =>
-//                                                         OrderPlacedPage(),
-//                                               ),
-//                                             );
-//                                           }
-//                                         }
-//                                         : null,
-// >>>>>>> origin/aman1
                                 child: Container(
                                   height: 64,
                                   decoration: BoxDecoration(
