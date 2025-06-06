@@ -10,19 +10,24 @@ import 'package:http/http.dart' as http;
 class AddressSelectionSheet extends StatefulWidget {
   final Function(String) onAddressSelected;
   final int? selectedRecommendedIndex; // Added parameter
+  final String currentAddress; // Default value
 
   const AddressSelectionSheet({
     Key? key,
+
     required this.onAddressSelected,
-    this.selectedRecommendedIndex, // Added parameter
+    this.selectedRecommendedIndex,
+    required this.currentAddress, // Added parameter
   }) : super(key: key);
 
   // Updated static method to accept selectedRecommendedIndex
   static void showAddressSelectionSheet(
-      BuildContext context,
-      Function(String) onAddressSelected,
-      {int? selectedRecommendedIndex} // Added optional parameter
-      ) {
+    BuildContext context,
+    Function(String) onAddressSelected, {
+    int? selectedRecommendedIndex, // Added optional parameter
+    String currentAddress =
+        'No address saved', // Default value for currentAddress
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -36,7 +41,8 @@ class AddressSelectionSheet extends StatefulWidget {
       builder: (context) {
         return AddressSelectionSheet(
           onAddressSelected: onAddressSelected,
-          selectedRecommendedIndex: selectedRecommendedIndex, // Pass parameter
+          selectedRecommendedIndex: selectedRecommendedIndex,
+          currentAddress: currentAddress, // Pass parameter
         );
       },
     );
@@ -48,29 +54,30 @@ class AddressSelectionSheet extends StatefulWidget {
 
 class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
   String? _currentAddress;
-  bool _isLoading = true;
+  // bool _isLoading = true;
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
   @override
   void initState() {
     super.initState();
-    _loadCurrentAddress();
+    // _loadCurrentAddress();
+    _currentAddress = widget.currentAddress; // Initialize with passed value
   }
 
-  Future<void> _loadCurrentAddress() async {
-    try {
-      String? savedAddress = await _secureStorage.read(key: 'saved_address');
-      setState(() {
-        _currentAddress = savedAddress ?? 'No address saved';
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _currentAddress = 'Error loading address';
-        _isLoading = false;
-      });
-    }
-  }
+  // Future<void> _loadCurrentAddress() async {
+  //   try {
+  //     String? savedAddress = await _secureStorage.read(key: 'saved_address');
+  //     setState(() {
+  //       _currentAddress = savedAddress ?? 'No address saved';
+  //       _isLoading = false;
+  //     });
+  //   } catch (e) {
+  //     setState(() {
+  //       _currentAddress = 'Error loading address';
+  //       _isLoading = false;
+  //     });
+  //   }
+  // }
 
   Future<void> _navigateToSavedAddresses() async {
     _showAddressSelectionSheet();
@@ -78,56 +85,16 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
 
   // Address Selection Sheet Methods
   void _showAddressSelectionSheet() {
-    SavedAddressSelectionSheet.showAddressSelectionSheet(
-      context,
-          (address) {
-        _selectAddress(address);
-      },
-    );
+    SavedAddressSelectionSheet.showAddressSelectionSheet(context, (address) {
+      _selectAddress(address);
+    });
   }
 
   void _selectAddress(String address) async {
     setState(() {
-      // _addressSelected = true;
-      // _selectedAddress = address; // Store the selected address
+      _currentAddress = address; // Store the selected address
     });
-
-    // Show loading indicator
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return Center(child: CircularProgressIndicator());
-      },
-    );
-
-    try {
-      // Make API call here
-      // bool success = await sendVendorNotification();
-
-      // Simulate API call delay
-      await Future.delayed(Duration(seconds: 2));
-
-      // Close loading indicator
-      Navigator.pop(context);
-
-      // Navigate to next page
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => OrderPlacedPage()),
-      );
-    } catch (e) {
-      // Close loading indicator
-      Navigator.pop(context);
-
-      // Show error message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to place order. Please try again.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
+    widget.onAddressSelected(address); // Notify the parent widget
   }
 
   // Helper method to determine booking type based on selectedRecommendedIndex
@@ -223,23 +190,24 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
 
           // Current Address Display
           Flexible(
-            child: _isLoading
-                ? const Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFF15A25)),
-              ),
-            )
-                : Container(
+            child:
+            // _isLoading
+            //     ? const Center(
+            //       child: CircularProgressIndicator(
+            //         valueColor: AlwaysStoppedAnimation<Color>(
+            //           Color(0xFFF15A25),
+            //         ),
+            //       ),
+            //     )
+            //     :
+            Container(
               margin: const EdgeInsets.symmetric(horizontal: 20),
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: const Color(0xFFF15A25),
-                    width: 2,
-                  ),
+                  border: Border.all(color: const Color(0xFFF15A25), width: 2),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.04),
@@ -287,51 +255,54 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
               width: double.infinity,
               height: 56,
               child: ElevatedButton(
-                onPressed: _currentAddress != null &&
-                    _currentAddress!.isNotEmpty &&
-                    _currentAddress != 'No address saved'
-                    ? () async {
-                  // Use the helper method to get the correct booking type
-                  final String bookingType = _getBookingType();
+                onPressed:
+                // _currentAddress != null &&
+                // _currentAddress!.isNotEmpty &&
+                // _currentAddress != 'No address saved'
+                () async {
+                  // // Use the helper method to get the correct booking type
+                  // final String bookingType = _getBookingType();
 
-                  final result = await CartBookingService.callCartAtAddress(
-                    userId: 1, // Replace with actual user ID
-                    bookingType: bookingType, // Use dynamic booking type
-                    cartType: widget.selectedRecommendedIndex == 0 ? "vegetable cart " : "fruit cart ",
-                    latitude: 30.73900000, // Replace with actual coordinates
-                    longitude: 76.79000000,
-                    items: [{"item_id": 7, "price_per_unit": 40.00},
-                      {"item_id": 8, "price_per_unit": 15.50},],
-                  );
+                  // final result = await CartBookingService.callCartAtAddress(
+                  //   userId: 1, // Replace with actual user ID
+                  //   bookingType: bookingType, // Use dynamic booking type
+                  //   cartType: widget.selectedRecommendedIndex == 0 ? "vegetable cart " : "fruit cart ",
+                  //   latitude: 30.73900000, // Replace with actual coordinates
+                  //   longitude: 76.79000000,
+                  //   items: [{"item_id": 7, "price_per_unit": 40.00},
+                  //     {"item_id": 8, "price_per_unit": 15.50},],
+                  // );
 
-                  // if (result['success']) {
-                    // Success - show message and proceed
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(result['message']), backgroundColor: Colors.green),
-                    );
-                    widget.onAddressSelected(_currentAddress!);
-                  await Future.delayed(Duration(seconds: 2));
+                  // // if (result['success']) {
+                  //   // Success - show message and proceed
+                  //   ScaffoldMessenger.of(context).showSnackBar(
+                  //     SnackBar(content: Text(result['message']), backgroundColor: Colors.green),
+                  //   );
+                  widget.onAddressSelected(_currentAddress!);
 
                   // Close loading indicator
-                  Navigator.pop(context);
+                  // Navigator.pop(context);
 
-                  // Navigate to next page
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => OrderPlacedPage()),
-                  );
+                  // // Navigate to next page
+                  // Navigator.push(
+                  //   context,
+                  //   MaterialPageRoute(builder: (context) => OrderPlacedPage()),
+                  // );
                   // } else {
                   //   // Error - show error message
                   //   ScaffoldMessenger.of(context).showSnackBar(
                   //     SnackBar(content: Text(result['message']), backgroundColor: Colors.red),
                   //   );
                   // }
-                }
-                    : null,
+                },
+
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _currentAddress != null && _currentAddress!.isNotEmpty && _currentAddress != 'No address saved'
-                      ? const Color(0xFFF15A25)
-                      : const Color(0xFFCCCCCC),
+                  backgroundColor:
+                      _currentAddress != null &&
+                              _currentAddress!.isNotEmpty &&
+                              _currentAddress != 'No address saved'
+                          ? const Color(0xFFF15A25)
+                          : const Color(0xFFCCCCCC),
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(28),
@@ -344,7 +315,7 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
                   children: [
                     Container(
                       width: 32,
-                      height:32,
+                      height: 32,
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(4),
@@ -353,7 +324,6 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
                         'assets/images/cartcall.png', // Replace with your asset path
                         width: 32,
                         height: 32,
-
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -375,8 +345,6 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
   }
 }
 
-
-
 class CartBookingService {
   static const String baseUrl = 'http://13.126.169.224/api/v1';
 
@@ -384,7 +352,7 @@ class CartBookingService {
   static Future<Map<String, dynamic>?> createBooking({
     required int userId,
     required String bookingType,
-     required List<Map<String, dynamic>> items,
+    required List<Map<String, dynamic>> items,
   }) async {
     try {
       final url = Uri.parse('$baseUrl/book/create');
@@ -392,14 +360,12 @@ class CartBookingService {
       final body = {
         "user_id": userId,
         "booking_type": bookingType,
-         "items": items,
+        "items": items,
       };
 
       final response = await http.post(
         url,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json'},
         body: jsonEncode(body),
       );
 
@@ -438,9 +404,7 @@ class CartBookingService {
 
       final response = await http.post(
         url,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json'},
         body: jsonEncode(body),
       );
 
@@ -462,7 +426,7 @@ class CartBookingService {
   static Future<Map<String, dynamic>> callCartAtAddress({
     required int userId,
     required String bookingType,
-     required List<Map<String, dynamic>> items,
+    required List<Map<String, dynamic>> items,
     required String cartType,
     required double latitude,
     required double longitude,
@@ -476,10 +440,7 @@ class CartBookingService {
       );
 
       if (bookingResult == null || !bookingResult['success']) {
-        return {
-          'success': false,
-          'message': 'Failed to create booking',
-        };
+        return {'success': false, 'message': 'Failed to create booking'};
       }
 
       // Extract booking_id from the response
@@ -507,9 +468,9 @@ class CartBookingService {
         'message': 'Cart successfully called to your address!',
         'booking_data': bookingResult['data'],
         'smart_order_data': smartOrderResult['data'],
-        'estimated_time': smartOrderResult['data']['estimated_assignment_time'] ?? 'Unknown',
+        'estimated_time':
+            smartOrderResult['data']['estimated_assignment_time'] ?? 'Unknown',
       };
-
     } catch (e) {
       print('Error in callCartAtAddress: $e');
       return {
