@@ -4,12 +4,12 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mapbox;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:io' show Platform;
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:mrsgorilla/auth_page.dart';
+import 'package:Zdeliver/auth_page.dart';
 // Add Firebase imports
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:mrsgorilla/api/firebase.dart';
-import 'package:mrsgorilla/splash.dart';
+import 'package:Zdeliver/api/firebase.dart';
+import 'package:Zdeliver/splash.dart';
 import 'firebase_options.dart';
 // Add location permission imports
 import 'package:geolocator/geolocator.dart';
@@ -90,7 +90,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'mrs.Gorilla',
+      title: 'Zdeliver',
       debugShowCheckedModeBanner: false,
       navigatorKey: navigatorKey, // Used for navigation from notifications
 // <<<<<<< HEAD

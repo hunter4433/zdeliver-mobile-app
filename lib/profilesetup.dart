@@ -32,6 +32,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
     }
     setState(() => isSaving = true);
     await _storage.write(key: 'user_name', value: name);
+    await _storage.write(key: 'gender', value:_selectedGender );
     setState(() => isSaving = false);
     Navigator.pushAndRemoveUntil(
       context,

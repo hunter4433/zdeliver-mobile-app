@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
- import 'package:mrsgorilla/mapView.dart';
-import 'package:mrsgorilla/Home_Recommend_section/standardGorillaCart.dart';
-import 'package:mrsgorilla/Home_Recommend_section/gorillaFruitcart.dart';
-import 'package:mrsgorilla/Home_Recommend_section/customize_cart.dart';
+ import 'package:Zdeliver/mapView.dart';
+import 'package:Zdeliver/Home_Recommend_section/standardGorillaCart.dart';
+import 'package:Zdeliver/Home_Recommend_section/gorillaFruitcart.dart';
+import 'package:Zdeliver/Home_Recommend_section/customize_cart.dart';
 
 import 'dart:convert';
 import '../lib/menu/support.dart';
@@ -10,19 +10,19 @@ import 'Home_Meal_Section/Breakfast.dart';
 import 'Home_Meal_Section/Lunch.dart';
 import 'Home_Meal_Section/dinner.dart';
 import "basket.dart";
-import "package:mrsgorilla/menu/Addreass.dart";
-import "package:mrsgorilla/menu/order_details.dart";
-import 'package:mrsgorilla/menu/order_history.dart';
-import 'package:mrsgorilla/menu/notifications.dart';
-import 'package:mrsgorilla/menu/cart_history.dart';
-// import 'package:mrsgorilla/Home_Incart_Section/FreshVegetable.dart';
-// import 'package:mrsgorilla/Home_Incart_Section/herbsPage.dart';
-// import 'package:mrsgorilla/Home_Incart_Section/staplePage.dart';
-// import 'package:mrsgorilla/Home_Meal_Section/Breakfast_Details.dart';
-import 'package:mrsgorilla/searchResult.dart';
-// import 'package:mrsgorilla/Home_Meal_Section/Breakfast.dart';
-// import 'package:mrsgorilla/Home_Meal_Section/Lunch.dart';
-// import 'package:mrsgorilla/Home_Meal_Section/dinner.dart';
+import "package:Zdeliver/menu/Addreass.dart";
+import "package:Zdeliver/menu/order_details.dart";
+import 'package:Zdeliver/menu/order_history.dart';
+import 'package:Zdeliver/menu/notifications.dart';
+import 'package:Zdeliver/menu/cart_history.dart';
+// import 'package:Zdeliver/Home_Incart_Section/FreshVegetable.dart';
+// import 'package:Zdeliver/Home_Incart_Section/herbsPage.dart';
+// import 'package:Zdeliver/Home_Incart_Section/staplePage.dart';
+// import 'package:Zdeliver/Home_Meal_Section/Breakfast_Details.dart';
+import 'package:Zdeliver/searchResult.dart';
+// import 'package:Zdeliver/Home_Meal_Section/Breakfast.dart';
+// import 'package:Zdeliver/Home_Meal_Section/Lunch.dart';
+// import 'package:Zdeliver/Home_Meal_Section/dinner.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);

@@ -4,8 +4,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
-import 'package:mrsgorilla/auth_page.dart';
-import 'package:mrsgorilla/gohome.dart';
+import 'package:Zdeliver/auth_page.dart';
+import 'package:Zdeliver/gohome.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 

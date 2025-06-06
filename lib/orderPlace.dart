@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:lottie/lottie.dart';
-import 'package:mrsgorilla/mapView.dart';
+import 'package:Zdeliver/mapView.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:mrsgorilla/map_screen_checkout.dart';
+import 'package:Zdeliver/map_screen_checkout.dart';
 
 class OrderPlacedPage extends StatefulWidget {
   final String? address;

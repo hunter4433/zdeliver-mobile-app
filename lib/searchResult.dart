@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:mrsgorilla/checkoutPage.dart';
-import 'package:mrsgorilla/Home_Recommend_section/customize_cart.dart';
+import 'package:Zdeliver/checkoutPage.dart';
+import 'package:Zdeliver/Home_Recommend_section/customize_cart.dart';
 
 class Product {
   final String name;

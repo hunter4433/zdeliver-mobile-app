@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:mrsgorilla/checkoutPage.dart';
+import 'package:Zdeliver/checkoutPage.dart';
 
 class StaplePage extends StatefulWidget {
   const StaplePage({Key? key}) : super(key: key);

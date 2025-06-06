@@ -7,7 +7,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../main.dart'; // Import to use navigatorKey
-import 'package:mrsgorilla/menu/notifications.dart';
+import 'package:Zdeliver/menu/notifications.dart';
 
 class NotificationService {
   // Singleton pattern

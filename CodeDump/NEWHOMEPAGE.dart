@@ -1,28 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:mrsgorilla/mapView.dart';
-import 'package:mrsgorilla/Home_Recommend_section/standardGorillaCart.dart';
-import 'package:mrsgorilla/Home_Recommend_section/gorillaFruitcart.dart';
-import 'package:mrsgorilla/Home_Recommend_section/customize_cart.dart';
+import 'package:Zdeliver/mapView.dart';
+import 'package:Zdeliver/Home_Recommend_section/standardGorillaCart.dart';
+import 'package:Zdeliver/Home_Recommend_section/gorillaFruitcart.dart';
+import 'package:Zdeliver/Home_Recommend_section/customize_cart.dart';
 
 import 'dart:convert';
 import '../lib/menu/support.dart';
-import "package:mrsgorilla/menu/Addreass.dart";
-import "package:mrsgorilla/address_book.dart";
-import "package:mrsgorilla/menu/order_details.dart";
-import 'package:mrsgorilla/menu/order_history.dart';
-import 'package:mrsgorilla/menu/notifications.dart';
-import 'package:mrsgorilla/menu/cart_history.dart';
-import 'package:mrsgorilla/searchResult.dart';
+import "package:Zdeliver/menu/Addreass.dart";
+import "package:Zdeliver/address_book.dart";
+import "package:Zdeliver/menu/order_details.dart";
+import 'package:Zdeliver/menu/order_history.dart';
+import 'package:Zdeliver/menu/notifications.dart';
+import 'package:Zdeliver/menu/cart_history.dart';
+import 'package:Zdeliver/searchResult.dart';
 import 'package:http/http.dart' as http;
 // import '../CodeDump/basket.dart';
 import 'package:flutter/material.dart';
-import 'package:mrsgorilla/orderPlace.dart';
-import 'package:mrsgorilla/searchPage.dart';
+import 'package:Zdeliver/orderPlace.dart';
+import 'package:Zdeliver/searchPage.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:mrsgorilla/checkoutPage.dart';
-import 'package:mrsgorilla/address_selection.dart';
-import 'package:mrsgorilla/address_selection_sheet.dart';
-import 'package:mrsgorilla/auth_page.dart';
+import 'package:Zdeliver/checkoutPage.dart';
+import 'package:Zdeliver/address_selection.dart';
+import 'package:Zdeliver/address_selection_sheet.dart';
+import 'package:Zdeliver/auth_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 
