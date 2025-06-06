@@ -5,6 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'gohome.dart';
 
 class ProfileSetupPage extends StatefulWidget {
+  final userPoistion;
+  const ProfileSetupPage({Key? key, this.userPoistion}) : super(key: key);
   @override
   _ProfileSetupPageState createState() => _ProfileSetupPageState();
 }
@@ -34,7 +36,13 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
     setState(() => isSaving = false);
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (context) => HomePageWithMap()),
+      MaterialPageRoute(
+        builder:
+            (context) => HomePageWithMap(
+              userPosition: widget.userPoistion['user_position'],
+              address: widget.userPoistion['address'],
+            ),
+      ),
       (route) => false,
     );
   }

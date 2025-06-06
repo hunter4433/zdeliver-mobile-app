@@ -281,10 +281,26 @@ class _AddressSelectionSheetState extends State<SavedAddressSelectionSheet> {
                       address['full_address'] ?? 'Unnamed Address',
                       address['full_address'] ?? '',
                       address['user_id'].toString(),
-                      onTap:
-                          () => widget.onAddressSelected(
-                            address['full_address'] ?? 'Unnamed Address',
-                          ),
+                      onTap: () async {
+                        print (address);
+                        widget.onAddressSelected(
+                          address['full_address'] ?? 'Unnamed Address',
+                        );
+                        await _secureStorage.write(
+                          key: 'saved_address',
+                          value:
+                              _addresses[index]['full_address'] ??
+                              'Unnamed Address',
+                        );
+                        // Optionally, you can also save other details like latitude, longitude, etc.
+                        // await _secureStorage.write(
+                        //   key: 'user_position',
+                        //   value: '$_latitude,$_longitude',
+                        // );
+                        Navigator.pop(
+                          context,
+                        ); // This will close the bottom sheet
+                      },
                     );
                   },
                 ),

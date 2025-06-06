@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -81,6 +82,76 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       }
     } catch (e) {
       return {'success': false, 'message': 'Error verifying OTP: $e'};
+    }
+  }
+
+  Future getUserLocation() async {
+    try {
+      print('GETTING CURRENT LOCATION...');
+      Position geoPosition = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: Duration(seconds: 10),
+      );
+      print(
+        'CURRENT LOCATION: ${geoPosition.latitude}, ${geoPosition.longitude}',
+      );
+
+      // Save user position for later use
+      await _secureStorage.write(
+        key: 'user_position',
+        value: '${geoPosition.latitude},${geoPosition.longitude}',
+      );
+
+      // Fetch address for the current location
+      String? address = await _getAddressFromCoordinates(
+        geoPosition.latitude,
+        geoPosition.longitude,
+      );
+      await _secureStorage.write(
+        key: 'saved_address',
+        value: address ?? 'Address not found',
+      );
+      return {'user_postion': geoPosition, 'address': address};
+    } catch (e) {
+      print('Error getting user location: $e');
+    }
+  }
+
+  Future<String> _getAddressFromCoordinates(
+    double latitude,
+    double longitude,
+  ) async {
+    try {
+      // Use Nominatim OpenStreetMap API for reverse geocoding (coords to address)
+      final response = await http.get(
+        Uri.parse(
+          'https://nominatim.openstreetmap.org/reverse?format=json&lat=$latitude&lon=$longitude&zoom=18&addressdetails=1',
+        ),
+        headers: {
+          'Accept-Language': 'en', // Ensure English results
+          'User-Agent':
+              'LocationPickerComponent/1.0', // Required by Nominatim usage policy
+        },
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Network response was not ok (${response.statusCode})');
+      }
+
+      final data = json.decode(response.body);
+      print(data);
+
+      if (data != null && data['display_name'] != null) {
+        // Return the formatted address
+        return data['display_name'] as String;
+      } else {
+        // If no results found, return the raw coordinates
+        return 'Unknown location: $latitude, $longitude';
+      }
+    } catch (error) {
+      print('Error converting coordinates to address: $error');
+      // Return raw coordinates if geocoding fails
+      return '$latitude, $longitude';
     }
   }
 
@@ -299,6 +370,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                 widget.phoneNumber,
                                 otp,
                               );
+                              // Get user location
+                              var userLocation = await getUserLocation();
 
                               // Show message in SnackBar
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -313,7 +386,10 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                   Navigator.pushAndRemoveUntil(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => ProfileSetupPage(),
+                                      builder:
+                                          (context) => ProfileSetupPage(
+                                            userPoistion: userLocation,
+                                          ),
                                     ),
                                     (route) => false,
                                   );
@@ -323,7 +399,12 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                   Navigator.pushAndRemoveUntil(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => HomePageWithMap(),
+                                      builder:
+                                          (context) => HomePageWithMap(
+                                            userPosition:
+                                                userLocation['user_postion'],
+                                            address: userLocation['address'],
+                                          ),
                                     ),
                                     (route) => false,
                                   );

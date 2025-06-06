@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:mapbox_search/mapbox_search.dart';
 // import 'package:gorilla/AddressSelectionScreen.dart';
 import 'package:Zdeliver/menu/Addreass.dart';
@@ -7,6 +10,8 @@ import 'package:Zdeliver/mapView.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+
+import 'package:permission_handler/permission_handler.dart';
 
 class SelectAddressPage extends StatefulWidget {
   const SelectAddressPage({Key? key}) : super(key: key);
@@ -42,6 +47,285 @@ class _SelectAddressPageState extends State<SelectAddressPage> {
     _secureStorage = const FlutterSecureStorage();
     _placesSearch = SearchBoxAPI(apiKey: ACCESS_TOKEN, limit: 5);
     _initializePage();
+  }
+
+  bool hasLocationPermission = false;
+  Future<void> _checkAndRequestLocationPermission() async {
+    final permission = await Geolocator.checkPermission();
+
+    if (mounted) {
+      setState(() {
+        hasLocationPermission =
+            permission == LocationPermission.whileInUse ||
+            permission == LocationPermission.always;
+      });
+    }
+
+    if (hasLocationPermission) {
+      print('Initializing location features');
+      // Get the user's current position and set userPosition
+      _initializeLocationFeatures();
+    } else {
+      print('No location permission yet, will initialize when granted');
+      _requestLocationPermission();
+    }
+  }
+
+  Future _initializeLocationFeatures() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        print('LOCATION SERVICES DISABLED');
+        _showLocationServiceDisabledDialog();
+        return;
+      }
+      print('checking location is saved or not');
+
+      //check if user position is already saved
+      String? savedPosition = await _secureStorage.read(key: 'user_position');
+      Position? userPosition;
+      if (savedPosition != null) {
+        print('USING SAVED POSITION');
+
+        List<String> coords = savedPosition.split(',');
+
+        userPosition = Position(
+          latitude: double.parse(coords[0]),
+          longitude: double.parse(coords[1]),
+          timestamp: DateTime.now(),
+          accuracy: 0,
+          altitude: 0,
+          speed: 0,
+          speedAccuracy: 0,
+          heading: 0,
+          altitudeAccuracy: 0,
+          headingAccuracy: 0,
+        );
+        ;
+
+        String? savedAddress = await _secureStorage.read(key: 'saved_address');
+        if (savedAddress != null) {
+          setState(() {
+            _selectedAddress = savedAddress;
+          });
+        }
+        print('Current address: $_selectedAddress');
+      }
+
+      if (savedPosition == null) {
+        print('GETTING CURRENT LOCATION...');
+        Position geoPosition = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 10),
+        );
+        print(
+          'CURRENT LOCATION: ${geoPosition.latitude}, ${geoPosition.longitude}',
+        );
+
+        // Save user position for later use
+        await _secureStorage.write(
+          key: 'user_position',
+          value: '${geoPosition.latitude},${geoPosition.longitude}',
+        );
+
+        // Fetch address for the current location
+        String? address = await _getAddressFromCoordinates(
+          geoPosition.latitude,
+          geoPosition.longitude,
+        );
+        await _secureStorage.write(
+          key: 'saved_address',
+          value: address ?? 'Address not found',
+        );
+        // Update the address in the state
+        if (mounted) {
+          setState(() {
+            _selectedAddress = address ?? 'Address not found';
+          });
+        }
+      }
+      return {'userPosition': userPosition, 'address': _selectedAddress};
+    } catch (e) {
+      print("Error in location handling: $e");
+      if (mounted) {
+        _showErrorDialog(
+          "Location Error",
+          "Could not access your location. Please check your settings.",
+        );
+      }
+    }
+  }
+
+  Future<String> _getAddressFromCoordinates(
+    double latitude,
+    double longitude,
+  ) async {
+    try {
+      // Use Nominatim OpenStreetMap API for reverse geocoding (coords to address)
+      final response = await http.get(
+        Uri.parse(
+          'https://nominatim.openstreetmap.org/reverse?format=json&lat=$latitude&lon=$longitude&zoom=18&addressdetails=1',
+        ),
+        headers: {
+          'Accept-Language': 'en', // Ensure English results
+          'User-Agent':
+              'LocationPickerComponent/1.0', // Required by Nominatim usage policy
+        },
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Network response was not ok (${response.statusCode})');
+      }
+
+      final data = json.decode(response.body);
+      print(data);
+
+      if (data != null && data['display_name'] != null) {
+        // Return the formatted address
+        return data['display_name'] as String;
+      } else {
+        // If no results found, return the raw coordinates
+        return 'Unknown location: $latitude, $longitude';
+      }
+    } catch (error) {
+      print('Error converting coordinates to address: $error');
+      // Return raw coordinates if geocoding fails
+      return '$latitude, $longitude';
+    }
+  }
+
+  Future<void> _requestLocationPermission() async {
+    print('REQUESTING LOCATION PERMISSION');
+
+    try {
+      if (Platform.isAndroid || Platform.isIOS) {
+        LocationPermission geolocatorPermission =
+            await Geolocator.requestPermission();
+        print('GEOLOCATOR PERMISSION RESULT: $geolocatorPermission');
+
+        if (geolocatorPermission == LocationPermission.denied) {
+          _showPermissionDeniedDialog();
+          return;
+        } else if (geolocatorPermission == LocationPermission.deniedForever) {
+          _showPermissionPermanentlyDeniedDialog();
+          return;
+        }
+
+        if (mounted) {
+          setState(() {
+            hasLocationPermission = true;
+          });
+        }
+
+        _initializeLocationFeatures();
+      }
+    } catch (e) {
+      print("Error requesting location permission: $e");
+      _showErrorDialog(
+        "Permission Error",
+        "Failed to request location permission. Please try again.",
+      );
+    }
+  }
+
+  void _showPermissionDeniedDialog() {
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Location Permission Required"),
+          content: Text(
+            "This app needs location permission to show your position on the map.",
+          ),
+          actions: [
+            TextButton(
+              child: Text("Cancel"),
+              onPressed: () => Navigator.pop(context),
+            ),
+            TextButton(
+              child: Text("Try Again"),
+              onPressed: () {
+                Navigator.pop(context);
+                _requestLocationPermission();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showPermissionPermanentlyDeniedDialog() {
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Location Permission Denied"),
+          content: Text(
+            "Location permission is permanently denied. Please enable it in app settings.",
+          ),
+          actions: [
+            TextButton(
+              child: Text("Cancel"),
+              onPressed: () => Navigator.pop(context),
+            ),
+            TextButton(
+              child: Text("Open Settings"),
+              onPressed: () {
+                Navigator.pop(context);
+                openAppSettings();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showLocationServiceDisabledDialog() {
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Location Services Disabled"),
+          content: Text(
+            "Please enable location services in your device settings.",
+          ),
+          actions: [
+            TextButton(
+              child: Text("OK"),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showErrorDialog(String title, String message) {
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: [
+            TextButton(
+              child: Text("OK"),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   // Dispose controllers to prevent memory leaks

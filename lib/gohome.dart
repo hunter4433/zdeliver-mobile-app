@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:Zdeliver/address_selection.dart';
-import 'package:Zdeliver/mapView.dart';
-import 'package:Zdeliver/Home_Recommend_section/standardGorillaCart.dart';
-import 'package:Zdeliver/Home_Recommend_section/gorillaFruitcart.dart';
-import 'package:Zdeliver/Home_Recommend_section/customize_cart.dart';
-import 'package:Zdeliver/map_screen_checkout.dart';
-import 'package:Zdeliver/orderPlace.dart';
+
+import 'package:mrsgorilla/address_selection.dart';
+
+import 'package:mrsgorilla/Home_Recommend_section/standardGorillaCart.dart';
+import 'package:mrsgorilla/Home_Recommend_section/gorillaFruitcart.dart';
+import 'package:mrsgorilla/Home_Recommend_section/customize_cart.dart';
+import 'package:mrsgorilla/map_screen_checkout.dart';
+import 'package:mrsgorilla/orderPlace.dart';
+
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:Zdeliver/new_menu.dart';
@@ -19,8 +21,8 @@ class HomePageWithMap extends StatefulWidget {
   final String? address;
   final Position? userPosition;
   final Position? warehousePosition;
-  final bool isWarehouseAvailable;
-  const HomePageWithMap({
+  bool isWarehouseAvailable;
+  HomePageWithMap({
     Key? key,
     this.address,
     this.userPosition,
@@ -60,6 +62,106 @@ class _HomePageWithMapState extends State<HomePageWithMap>
   // Animation controllers for the selection indicators
   Map<int, AnimationController> _selectionAnimControllers = {};
   Map<int, Animation<double>> _selectionAnimations = {};
+
+  Future<Map<String, dynamic>?> getLatLngAddress() async {
+    try {
+      final storage = FlutterSecureStorage();
+      String? address = await storage.read(key: 'saved_address');
+      String? position = await storage.read(key: 'user_position');
+      if (address != null && position != null) {
+        final coords = position.split(',');
+        if (coords.length == 2) {
+          double lat = double.parse(coords[0]);
+          double lng = double.parse(coords[1]);
+          Position position = Position(
+            latitude: lat,
+            longitude: lng,
+            timestamp: DateTime.now(),
+            accuracy: 0.0,
+            altitude: 0.0,
+            heading: 0.0,
+            speed: 0.0,
+            speedAccuracy: 0.0,
+            altitudeAccuracy: 0.0,
+            headingAccuracy: 0.0,
+          );
+          return {'postion': position, 'address': address};
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Error reading lat/lng/address: $e');
+      return null;
+    }
+  }
+
+  Future findWarehouseLatLng(double lat, double lng) async {
+    print('-------- getting warehouse lat lng --------');
+
+    final String baseUrl =
+        'http://13.126.169.224/api/v1/warehouse-finder/find-warehouse-vendors';
+    try {
+      final response = await http.post(
+        Uri.parse(baseUrl), // Adjust the endpoint to match your backend route
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'latitude': lat, 'longitude': lng}),
+      );
+      print(response.body);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (!data['success']) {
+          return data['error']; // Return the error message
+        }
+        // check if the warehouse is available or not
+        final message = data['message'];
+        if (message != null &&
+            message == "Sorry right now we are not available in your city") {
+          widget.isWarehouseAvailable = false;
+        }
+        // Assuming the response contains a 'warehouse' object with 'latitude' and 'longitude'
+        final warehouse = data['warehouse'];
+        if (warehouse != null) {
+          final double lat = double.parse(warehouse['coordinates']['latitude']);
+          final double lng = double.parse(
+            warehouse['coordinates']['longitude'],
+          );
+          final String address = warehouse['address'] ?? 'No address found';
+          print('Warehouse found at: $lat, $lng, Address: $address');
+
+          // Save the address and position to secure storage
+          final storage = FlutterSecureStorage();
+          await storage.write(key: 'warehouse_address', value: address);
+          await storage.write(key: 'warehouse_position', value: '$lat,$lng');
+
+          // Return the position and address
+          return {
+            'position': Position(
+              latitude: lat,
+              longitude: lng,
+              timestamp: DateTime.now(),
+              accuracy: 0.0,
+              altitude: 0.0,
+              heading: 0.0,
+              speed: 0.0,
+              speedAccuracy: 0.0,
+              altitudeAccuracy: 0.0,
+              headingAccuracy: 0.0,
+            ),
+            'address': address,
+          };
+        } else {
+          throw Exception('Warehouse not found');
+        }
+      } else {
+        // Parse error message from response if available
+        final errorBody = jsonDecode(response.body);
+        throw Exception(errorBody['error'] ?? 'Failed to find warehouse');
+      }
+    } catch (e) {
+      print('Failed to get warehouse: $e');
+    }
+  }
 
   @override
   void initState() {
@@ -144,38 +246,6 @@ class _HomePageWithMapState extends State<HomePageWithMap>
           ),
     );
 
-  }
-
-  Future<Map<String, dynamic>?> getLatLngAddress() async {
-    try {
-      final storage = FlutterSecureStorage();
-      String? address = await storage.read(key: 'saved_address');
-      String? position = await storage.read(key: 'user_position');
-      if (address != null && position != null) {
-        final coords = position.split(',');
-        if (coords.length == 2) {
-          double lat = double.parse(coords[0]);
-          double lng = double.parse(coords[1]);
-          Position position = Position(
-            latitude: lat,
-            longitude: lng,
-            timestamp: DateTime.now(),
-            accuracy: 0.0,
-            altitude: 0.0,
-            heading: 0.0,
-            speed: 0.0,
-            speedAccuracy: 0.0,
-            altitudeAccuracy: 0.0,
-            headingAccuracy: 0.0,
-          );
-          return {'postion': position, 'address': address};
-        }
-      }
-      return null;
-    } catch (e) {
-      print('Error reading lat/lng/address: $e');
-      return null;
-    }
   }
 
 

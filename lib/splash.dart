@@ -26,6 +26,44 @@ class _SplashScreenState extends State<SplashScreen> {
     _checkLogin();
   }
 
+  Future<String> _getAddressFromCoordinates(
+    double latitude,
+    double longitude,
+  ) async {
+    try {
+      // Use Nominatim OpenStreetMap API for reverse geocoding (coords to address)
+      final response = await http.get(
+        Uri.parse(
+          'https://nominatim.openstreetmap.org/reverse?format=json&lat=$latitude&lon=$longitude&zoom=18&addressdetails=1',
+        ),
+        headers: {
+          'Accept-Language': 'en', // Ensure English results
+          'User-Agent':
+              'LocationPickerComponent/1.0', // Required by Nominatim usage policy
+        },
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Network response was not ok (${response.statusCode})');
+      }
+
+      final data = json.decode(response.body);
+      print(data);
+
+      if (data != null && data['display_name'] != null) {
+        // Return the formatted address
+        return data['display_name'] as String;
+      } else {
+        // If no results found, return the raw coordinates
+        return 'Unknown location: $latitude, $longitude';
+      }
+    } catch (error) {
+      print('Error converting coordinates to address: $error');
+      // Return raw coordinates if geocoding fails
+      return '$latitude, $longitude';
+    }
+  }
+
   Future<Map<String, dynamic>?> getLatLngAddress() async {
     try {
       final storage = FlutterSecureStorage();
@@ -148,6 +186,8 @@ class _SplashScreenState extends State<SplashScreen> {
         final updateUrl = data['data']['update_url'];
         final packageInfo = await PackageInfo.fromPlatform();
         final currentVersion = packageInfo.version;
+        print('Current Version: $currentVersion');
+
         final bool forceUpdate = data['data']['force_update'];
         if (latestVersion != currentVersion) {
           return {
@@ -169,6 +209,14 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkLogin() async {
+    String? userId = await _storage.read(key: 'userId');
+    if (userId == null || userId.isEmpty) {
+      // User is not logged in, navigate to AuthPage
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
+      return;
+    }
     // Check for updates first
     var updateInfo = await checkforUpdates();
     if (updateInfo != null) {
@@ -216,15 +264,18 @@ class _SplashScreenState extends State<SplashScreen> {
       }
     }
 
-    String? userId = await _storage.read(key: 'userId');
-
     var latLngAddress = await getLatLngAddress();
     Position? position =
-        latLngAddress?['postion'] ??
+        await latLngAddress?['postion'] ??
         await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high,
         );
-    String? address = latLngAddress?['address'];
+    String? address =
+        latLngAddress?['address'] ??
+        await _getAddressFromCoordinates(
+          position!.latitude,
+          position.longitude,
+        );
     var wareHouseLatLng = await findWarehouseLatLng(
       position!.latitude,
       position.longitude,
@@ -243,23 +294,17 @@ class _SplashScreenState extends State<SplashScreen> {
     );
     print('wareHouseLatLng: $wareHouseLatLng');
 
-    if (userId != null && userId.isNotEmpty) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder:
-              (_) => HomePageWithMap(
-                userPosition: position,
-                address: address,
-                warehousePosition: wareHousePosition,
-                isWarehouseAvailable: _isWareHouseAvailable,
-              ),
-        ),
-      );
-    } else {
-      Navigator.of(
-        context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => LoginScreen()));
-    }
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder:
+            (_) => HomePageWithMap(
+              userPosition: position,
+              address: address,
+              warehousePosition: wareHousePosition,
+              isWarehouseAvailable: _isWareHouseAvailable,
+            ),
+      ),
+    );
   }
 
   @override
