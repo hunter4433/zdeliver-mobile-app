@@ -1,13 +1,12 @@
+import 'package:Zdeliver/Home_Recommend_section/customize_cart.dart';
+import 'package:Zdeliver/Home_Recommend_section/gorillaFruitcart.dart';
+import 'package:Zdeliver/Home_Recommend_section/standardGorillaCart.dart';
+import 'package:Zdeliver/address_selection.dart';
+import 'package:Zdeliver/map_screen_checkout.dart';
+import 'package:Zdeliver/orderPlace.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
-import 'package:mrsgorilla/address_selection.dart';
-
-import 'package:mrsgorilla/Home_Recommend_section/standardGorillaCart.dart';
-import 'package:mrsgorilla/Home_Recommend_section/gorillaFruitcart.dart';
-import 'package:mrsgorilla/Home_Recommend_section/customize_cart.dart';
-import 'package:mrsgorilla/map_screen_checkout.dart';
-import 'package:mrsgorilla/orderPlace.dart';
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;

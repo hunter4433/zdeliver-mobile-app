@@ -77,20 +77,7 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
   }
 
 
-  Future<void> _loadCurrentAddress() async {
-    try {
-      String? savedAddress = await _secureStorage.read(key: 'saved_address');
-      setState(() {
-        selectedAddress = savedAddress ?? 'No address saved';
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        selectedAddress = 'Error loading address';
-        _isLoading = false;
-      });
-    }
-  }
+  
 
 
   Future<void> _navigateToSavedAddresses() async {
@@ -249,7 +236,7 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
 
                     // Full address
                     Text(
-                      selectedAddress ?? 'No address available',
+                      _currentAddress ?? 'No address available',
                       style: const TextStyle(
                         fontSize: 16,
                         color: Color(0xFF6B6B6B),
@@ -316,7 +303,7 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
 
                 style: ElevatedButton.styleFrom(
 
-                  backgroundColor: selectedAddress != null && selectedAddress!.isNotEmpty && selectedAddress != 'No address saved'
+                  backgroundColor: _currentAddress != null && _currentAddress!.isNotEmpty && _currentAddress != 'No address saved'
                       ? const Color(0xFFF15A25)
                       : const Color(0xFFCCCCCC),
 
