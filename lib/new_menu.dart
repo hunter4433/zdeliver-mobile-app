@@ -1,6 +1,7 @@
 import 'package:Zdeliver/about_us.dart';
 import 'package:Zdeliver/home_address_selection_modal.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 
 import 'package:share_plus/share_plus.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -17,7 +18,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 // import ''
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({Key? key}) : super(key: key);
+  final VoidCallback? onUserPositionChanged;
+  const ProfilePage({Key? key, this.onUserPositionChanged}) : super(key: key);
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -26,6 +28,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
   String _selectedAddress = 'loading...';
+  Position? _lastUserPosition;
 
   // Method to retrieve stored user ID
   Future<String?> getUserName() async {
@@ -37,9 +40,32 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  Future<String?> getAddress() async {
+  Future getAddressAndPostion() async {
     try {
-      return await _secureStorage.read(key: 'saved_address');
+      String? address = await _secureStorage.read(key: 'saved_address');
+      String? position = await _secureStorage.read(key: 'user_position');
+      if (position != null) {
+        List<String> positionParts = position.split(',');
+        if (positionParts.length == 2) {
+          double latitude = double.parse(positionParts[0]);
+          double longitude = double.parse(positionParts[1]);
+          _lastUserPosition = Position(
+            latitude: latitude,
+            longitude: longitude,
+            timestamp: DateTime.now(),
+            accuracy: 0.0,
+            altitude: 0.0,
+            heading: 0.0,
+            speed: 0.0,
+            speedAccuracy: 0.0,
+            altitudeAccuracy: 0.0,
+            headingAccuracy: 0.0,
+          );
+        }
+      }
+      setState(() {
+        _selectedAddress = address ?? 'No address selected';
+      });
     } catch (e) {
       print('Error reading saved_address: $e');
       return null;
@@ -58,10 +84,48 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  void _selectAddress(String address) {
+  void _selectAddress(String address) async {
+    print('Selected address: $address');
+    // Get the current position of the user
+    String? positionStr =
+        await _secureStorage.read(key: 'user_position') ?? '26,80';
+    Position? newPosition;
+    if (positionStr != null) {
+      final coords = positionStr.split(',');
+      if (coords.length == 2) {
+        newPosition = Position(
+          latitude: double.parse(coords[0]),
+          longitude: double.parse(coords[1]),
+          timestamp: DateTime.now(),
+          accuracy: 0.0,
+          altitude: 0.0,
+          heading: 0.0,
+          speed: 0.0,
+          speedAccuracy: 0.0,
+          altitudeAccuracy: 0.0,
+          headingAccuracy: 0.0,
+        );
+      }
+    }
+    print(
+      'old position: ${_lastUserPosition?.latitude}, ${_lastUserPosition?.longitude}',
+    );
+    print('New position: ${newPosition?.latitude}, ${newPosition?.longitude}');
+    // Only call update if the position changed
+    if (_lastUserPosition == null ||
+        _lastUserPosition!.latitude != newPosition!.latitude ||
+        _lastUserPosition!.longitude != newPosition.longitude) {
+      print(
+        'User position changed: ${newPosition!.latitude}, ${newPosition.longitude}',
+      );
+      widget.onUserPositionChanged?.call();
+    }
+
     setState(() {
       _selectedAddress = address;
+      _lastUserPosition = newPosition;
     });
+
     Navigator.pop(context); // Close the bottom sheet
   }
 
@@ -79,11 +143,7 @@ class _ProfilePageState extends State<ProfilePage> {
     // TODO: implement initState
     super.initState();
     // Initialize the selected address from secure storage
-    getAddress().then((address) {
-      setState(() {
-        _selectedAddress = address ?? 'No address selected';
-      });
-    });
+    getAddressAndPostion();
   }
 
   @override

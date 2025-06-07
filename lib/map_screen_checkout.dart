@@ -2,9 +2,9 @@ import 'dart:typed_data';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mapbox;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'dart:io' show Platform;
-import 'package:permission_handler/permission_handler.dart';
+
+
+
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
@@ -162,6 +162,22 @@ class _MapScreenCheckoutState extends State<MapScreenCheckout> {
       return [];
     }
   }
+  void _updateMap() async {
+  // Update internal state with new widget values
+  setState(() {
+    userPosition = widget.initialPosition;
+    // If you use a custom type for warehousePosition, convert as needed
+    if (widget.warehousePosition != null) {
+      warehousePosition = CoordinatePair(
+        widget.warehousePosition!.latitude,
+        widget.warehousePosition!.longitude,
+      );
+    }
+  });
+
+  // Re-create warehouse, user marker, and route
+  await _createWarehouseAndRoute();
+}
 
   Future<void> _loadMarkerImages() async {
     try {
@@ -195,7 +211,15 @@ class _MapScreenCheckoutState extends State<MapScreenCheckout> {
       print('Error loading marker images: $e');
     }
   }
-
+  @override
+void didUpdateWidget(covariant MapScreenCheckout oldWidget) {
+  super.didUpdateWidget(oldWidget);
+  if (widget.initialPosition != oldWidget.initialPosition ||
+      widget.warehousePosition != oldWidget.warehousePosition) {
+    // Update the map with new positions
+    _updateMap();
+  }
+}
   @override
   Widget build(BuildContext context) {
     final double initialLat = widget.initialPosition.latitude;
