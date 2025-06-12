@@ -11,7 +11,6 @@ import 'home_address_selection_modal.dart';
 class SavedAddressSelectionSheet extends StatefulWidget {
   final Function(String) onAddressSelected;
 
-
   const SavedAddressSelectionSheet({Key? key, required this.onAddressSelected})
     : super(key: key);
 
@@ -282,21 +281,20 @@ class _AddressSelectionSheetState extends State<SavedAddressSelectionSheet> {
                       address['full_address'] ?? '',
                       address['user_id'].toString(),
                       onTap: () async {
-                        print (address);
+                        print(address);
                         widget.onAddressSelected(
                           address['full_address'] ?? 'Unnamed Address',
                         );
                         await _secureStorage.write(
                           key: 'saved_address',
-                          value:
-                              _addresses[index]['full_address'] ??
-                              'Unnamed Address',
+                          value: address['full_address'] ?? 'Unnamed Address',
                         );
                         // Optionally, you can also save other details like latitude, longitude, etc.
-                        // await _secureStorage.write(
-                        //   key: 'user_position',
-                        //   value: '$_latitude,$_longitude',
-                        // );
+                        await _secureStorage.write(
+                          key: 'user_position',
+                          value:
+                              '${address['latitude']},${address['longitude']}',
+                        );
                         Navigator.pop(
                           context,
                         ); // This will close the bottom sheet

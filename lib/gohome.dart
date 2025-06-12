@@ -7,7 +7,6 @@ import 'package:Zdeliver/orderPlace.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
-
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:Zdeliver/new_menu.dart';
@@ -61,6 +60,8 @@ class _HomePageWithMapState extends State<HomePageWithMap>
   // Animation controllers for the selection indicators
   Map<int, AnimationController> _selectionAnimControllers = {};
   Map<int, Animation<double>> _selectionAnimations = {};
+  Position? userPosition;
+  Position? warehousePosition;
 
   Future<Map<String, dynamic>?> getLatLngAddress() async {
     try {
@@ -162,10 +163,42 @@ class _HomePageWithMapState extends State<HomePageWithMap>
     }
   }
 
+  Future getUserAndWarehousePosition() async {
+    try {
+      // get user postion
+      var userLocation = await getLatLngAddress();
+      Position position = userLocation!['postion'];
+      String address = userLocation['address'];
+      var warehouseLocation = await findWarehouseLatLng(
+        position.latitude,
+        position.longitude,
+      );
+      Position warehousePosition = warehouseLocation['position'];
+      String warehouseAddress = warehouseLocation['address'];
+      if (widget.isWarehouseAvailable == false) {
+        _showNotAvailableDialog();
+      }
+      setState(() {
+        userPosition = position;
+        warehousePosition = warehousePosition;
+      });
+    } catch (e) {
+      print('Error getting user and warehouse position: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to get user and warehouse position.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     // _selectedAddress = widget.address ?? 'No address selected';
+    userPosition = widget.userPosition;
+    warehousePosition = widget.warehousePosition;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!widget.isWarehouseAvailable) {
         _showNotAvailableDialog();
@@ -188,9 +221,6 @@ class _HomePageWithMapState extends State<HomePageWithMap>
     // Add listener to the drag controller to implement snap behavior
     _dragController.addListener(_handleDragUpdate);
   }
-
-
-
 
   void _showNotAvailableDialog() {
     showDialog(
@@ -244,9 +274,7 @@ class _HomePageWithMapState extends State<HomePageWithMap>
             ],
           ),
     );
-
   }
-
 
   Future<String?> getAddress() async {
     try {
@@ -267,8 +295,6 @@ class _HomePageWithMapState extends State<HomePageWithMap>
     }
   }
 
-
-
   Future<String?> getUserName() async {
     try {
       String? fullName = await _secureStorage.read(key: 'user_name');
@@ -278,7 +304,6 @@ class _HomePageWithMapState extends State<HomePageWithMap>
       }
 
       return fullName!.trim().split(' ').last;
-
     } catch (e) {
       print('Error reading user_name: $e');
       return 'Hey Guest';
@@ -310,14 +335,11 @@ class _HomePageWithMapState extends State<HomePageWithMap>
     );
   }
 
-
   void _selectAddress(String address) async {
     setState(() {
       _addressSelected = true;
       _selectedAddress = address; // Store the selected address
     });
-
-
 
     // Show loading indicator
     showDialog(
@@ -572,8 +594,8 @@ class _HomePageWithMapState extends State<HomePageWithMap>
           MapScreenCheckout(
             containerHeight: MediaQuery.of(context).size.height,
             isEmbedded: false,
-            warehousePosition: widget.warehousePosition,
-            initialPosition: widget.userPosition!,
+            warehousePosition: warehousePosition ?? widget.warehousePosition,
+            initialPosition: userPosition ?? widget.userPosition!,
             initialAddress: widget.address ?? 'No address selected',
           ),
 
@@ -601,7 +623,14 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                         await Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => ProfilePage(),
+                            builder:
+                                (context) => ProfilePage(
+                                  onUserPositionChanged: ()async {
+                                    // Refresh user position after returning from ProfilePage
+                                    await getUserAndWarehousePosition();
+                                  },
+                                      
+                                ),
                           ),
                         );
                         setState(() {
@@ -700,8 +729,12 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(MediaQuery.of(context).size.width * 0.08), // Responsive border radius
-                    topRight: Radius.circular(MediaQuery.of(context).size.width * 0.08),
+                    topLeft: Radius.circular(
+                      MediaQuery.of(context).size.width * 0.08,
+                    ), // Responsive border radius
+                    topRight: Radius.circular(
+                      MediaQuery.of(context).size.width * 0.08,
+                    ),
                   ),
                   boxShadow: [
                     BoxShadow(
@@ -721,19 +754,29 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                       // Handle
                       Center(
                         child: Container(
-                          margin: EdgeInsets.only(top: MediaQuery.of(context).size.height * 0.0), // Responsive top margin
-                          width: MediaQuery.of(context).size.width * 0.12, // Responsive width for handle
-                          height: MediaQuery.of(context).size.height * 0.001, // Responsive height
+                          margin: EdgeInsets.only(
+                            top: MediaQuery.of(context).size.height * 0.0,
+                          ), // Responsive top margin
+                          width:
+                              MediaQuery.of(context).size.width *
+                              0.12, // Responsive width for handle
+                          height:
+                              MediaQuery.of(context).size.height *
+                              0.001, // Responsive height
                           decoration: BoxDecoration(
                             color: Colors.grey[300],
-                            borderRadius: BorderRadius.circular(MediaQuery.of(context).size.width * 0.08), // Responsive border radius
+                            borderRadius: BorderRadius.circular(
+                              MediaQuery.of(context).size.width * 0.08,
+                            ), // Responsive border radius
                           ),
                         ),
                       ),
                       // Promotional banner with updated gradient
                       Container(
                         width: double.infinity,
-                        height: MediaQuery.of(context).size.height * 0.17, // Responsive height
+                        height:
+                            MediaQuery.of(context).size.height *
+                            0.17, // Responsive height
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
@@ -741,11 +784,17 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                             colors: [Color(0xFF3F2E78), Color(0xFF5421FF)],
                           ),
                           borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(MediaQuery.of(context).size.width * 0.08), // Responsive border radius
-                            topRight: Radius.circular(MediaQuery.of(context).size.width * 0.08),
+                            topLeft: Radius.circular(
+                              MediaQuery.of(context).size.width * 0.08,
+                            ), // Responsive border radius
+                            topRight: Radius.circular(
+                              MediaQuery.of(context).size.width * 0.08,
+                            ),
                           ),
                         ),
-                        padding: EdgeInsets.all(MediaQuery.of(context).size.width * 0.04), // Responsive padding
+                        padding: EdgeInsets.all(
+                          MediaQuery.of(context).size.width * 0.04,
+                        ), // Responsive padding
                         child: Row(
                           children: [
                             Expanded(
@@ -760,7 +809,11 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                                         "Hey ",
                                         style: TextStyle(
                                           color: Colors.white,
-                                          fontSize: MediaQuery.of(context).size.width * 0.055, // Responsive font size
+                                          fontSize:
+                                              MediaQuery.of(
+                                                context,
+                                              ).size.width *
+                                              0.055, // Responsive font size
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
@@ -770,7 +823,12 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                                           return Text(
                                             snapshot.data ?? 'Loading...',
                                             style: const TextStyle(
-                                              color: Color.fromRGBO(241, 90, 37, 1),
+                                              color: Color.fromRGBO(
+                                                241,
+                                                90,
+                                                37,
+                                                1,
+                                              ),
                                               fontSize: 24,
                                               fontWeight: FontWeight.bold,
                                             ),
@@ -785,19 +843,32 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                                     "call your first cart",
                                     style: TextStyle(
                                       color: Colors.white,
-                                      fontSize: MediaQuery.of(context).size.width * 0.06, // Responsive font size
+                                      fontSize:
+                                          MediaQuery.of(context).size.width *
+                                          0.06, // Responsive font size
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  SizedBox(height: MediaQuery.of(context).size.height * 0.007), // Responsive spacing
+                                  SizedBox(
+                                    height:
+                                        MediaQuery.of(context).size.height *
+                                        0.007,
+                                  ), // Responsive spacing
                                   Container(
                                     padding: EdgeInsets.symmetric(
-                                      horizontal: MediaQuery.of(context).size.width * 0.03, // Responsive horizontal padding
-                                      vertical: MediaQuery.of(context).size.height * 0.005, // Responsive vertical padding
+                                      horizontal:
+                                          MediaQuery.of(context).size.width *
+                                          0.03, // Responsive horizontal padding
+                                      vertical:
+                                          MediaQuery.of(context).size.height *
+                                          0.005, // Responsive vertical padding
                                     ),
                                     decoration: BoxDecoration(
                                       color: Colors.transparent,
-                                      borderRadius: BorderRadius.circular(MediaQuery.of(context).size.width * 0.05), // Responsive border radius
+                                      borderRadius: BorderRadius.circular(
+                                        MediaQuery.of(context).size.width *
+                                            0.05,
+                                      ), // Responsive border radius
                                       border: Border.all(
                                         color: Colors.white,
                                         width: 0.8,
@@ -805,13 +876,18 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                                     ),
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Text(
                                           discountPercentage + "%",
                                           style: TextStyle(
                                             color: Colors.amber,
-                                            fontSize: MediaQuery.of(context).size.width * 0.035, // Responsive font size
+                                            fontSize:
+                                                MediaQuery.of(
+                                                  context,
+                                                ).size.width *
+                                                0.035, // Responsive font size
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
@@ -819,7 +895,11 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                                           " off on your first bill",
                                           style: TextStyle(
                                             color: Colors.white,
-                                            fontSize: MediaQuery.of(context).size.width * 0.035, // Responsive font size
+                                            fontSize:
+                                                MediaQuery.of(
+                                                  context,
+                                                ).size.width *
+                                                0.035, // Responsive font size
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
@@ -934,11 +1014,11 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                                 onTap:
                                     selectedRecommendedIndex != null
                                         ? () async {
-
-                                          showAddressSelectionSheet(selectedRecommendedIndex);
-
-                                } : null,
-
+                                          showAddressSelectionSheet(
+                                            selectedRecommendedIndex,
+                                          );
+                                        }
+                                        : null,
 
                                 child: Container(
                                   height: 64,
