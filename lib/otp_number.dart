@@ -1,3 +1,7 @@
+import 'package:Zdeliver/coordinate_class.dart';
+import 'package:Zdeliver/services/local_storage.dart';
+import 'package:Zdeliver/services/userlocation_service.dart';
+import 'package:Zdeliver/services/warehouse_service.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:async';
@@ -50,8 +54,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         // Store user data for existing user
         final userId = responseData['userId']?.toString();
         final phone_number = responseData['phone_number']?.toString();
-        await _secureStorage.write(key: 'phone_number', value: phone_number!);
-        await _secureStorage.write(key: 'userId', value: userId!);
+        LocalStorage localStorage = LocalStorage();
+        await localStorage.saveUserId(userId!);
+        await localStorage.saveUserPhoneNumber(phone_number!);
 
         return {
           'success': true,
@@ -65,8 +70,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         // Store user data for new user
         final userId = responseData['userId']?.toString();
         final phone_number = responseData['phone_number']?.toString();
-        await _secureStorage.write(key: 'phone_number', value: phone_number!);
-        await _secureStorage.write(key: 'userId', value: userId!);
+        LocalStorage localStorage = LocalStorage();
+        await localStorage.saveUserId(userId!);
+        await localStorage.saveUserPhoneNumber(phone_number!);
 
         return {
           'success': true,
@@ -101,6 +107,18 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         key: 'user_position',
         value: '${geoPosition.latitude},${geoPosition.longitude}',
       );
+      Position userPosition = Position(
+        latitude: geoPosition.latitude,
+        longitude: geoPosition.longitude,
+        timestamp: DateTime.now(),
+        accuracy: geoPosition.accuracy,
+        altitude: geoPosition.altitude,
+        heading: geoPosition.heading,
+        speed: geoPosition.speed,
+        speedAccuracy: geoPosition.speedAccuracy,
+        altitudeAccuracy: 0.0,
+        headingAccuracy: 0.0,
+      );
 
       // Fetch address for the current location
       String? address = await _getAddressFromCoordinates(
@@ -111,7 +129,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         key: 'saved_address',
         value: address ?? 'Address not found',
       );
-      return {'user_postion': geoPosition, 'address': address};
+      return {'user_postion': userPosition, 'address': address};
     } catch (e) {
       print('Error getting user location: $e');
     }
@@ -370,14 +388,40 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                 widget.phoneNumber,
                                 otp,
                               );
-                              // Get user location
-                              var userLocation = await getUserLocation();
 
+                              // Get user location
+                              CoordinatesPair? userLocation =
+                                  await UserLocationService()
+                                      .getCurrentLocation(context);
+                              if (userLocation == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Failed to get current location. Please enable location services.',
+                                    ),
+                                  ),
+                                );
+                                setState(() {
+                                  isLoading = false;
+                                });
+                                return;
+                              }
+                              userLocation.address = await UserLocationService()
+                                  .getAddressFromCoordinates(
+                                    userLocation.latitude,
+                                    userLocation.longitude,
+                                    context,
+                                  );
+                              Warehouse? warehouseData =
+                                  await WarehouseService().getWareHouse(
+                                    userLocation.latitude,
+                                    userLocation.longitude,
+                                    context,
+                                  );
                               // Show message in SnackBar
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text(result['message'])),
                               );
-
                               // Navigate if verification was successful
                               if (result['success']) {
                                 if (result['isNewUser']) {
@@ -389,6 +433,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                       builder:
                                           (context) => ProfileSetupPage(
                                             userPoistion: userLocation,
+                                            warehousePosition: warehouseData,
                                           ),
                                     ),
                                     (route) => false,
@@ -401,9 +446,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                     MaterialPageRoute(
                                       builder:
                                           (context) => HomePageWithMap(
-                                            userPosition:
-                                                userLocation['user_postion'],
-                                            address: userLocation['address'],
+                                            userPosition: userLocation,
+                                            warehousePosition: warehouseData,
                                           ),
                                     ),
                                     (route) => false,

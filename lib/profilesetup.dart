@@ -1,21 +1,31 @@
 // profile_setup.dart
+
+
+import 'package:Zdeliver/coordinate_class.dart';
+import 'package:Zdeliver/services/local_storage.dart';
+import 'package:Zdeliver/services/warehouse_service.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+
 import 'package:google_fonts/google_fonts.dart';
+
 import 'gohome.dart';
 
 class ProfileSetupPage extends StatefulWidget {
-  final userPoistion;
-  const ProfileSetupPage({Key? key, this.userPoistion}) : super(key: key);
+   final CoordinatesPair? userPoistion;
+   Warehouse? warehousePosition;
+
+   ProfileSetupPage({Key? key, this.userPoistion, this.warehousePosition}) : super(key: key);
   @override
   _ProfileSetupPageState createState() => _ProfileSetupPageState();
 }
 
 class _ProfileSetupPageState extends State<ProfileSetupPage> {
   final TextEditingController _nameController = TextEditingController();
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  
   bool isSaving = false;
   String? _selectedGender;
+  
   Future<void> _saveNameAndContinue() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
@@ -30,17 +40,23 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
       ).showSnackBar(SnackBar(content: Text('Please select your gender')));
       return;
     }
+   
     setState(() => isSaving = true);
-    await _storage.write(key: 'user_name', value: name);
-    await _storage.write(key: 'gender', value:_selectedGender );
+    LocalStorage localStorage = LocalStorage();
+    // Save user data locally
+    await localStorage.saveUserName(name);
+    await localStorage.saveUserGender(_selectedGender!);
+
     setState(() => isSaving = false);
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(
         builder:
             (context) => HomePageWithMap(
-              userPosition: widget.userPoistion['user_position'],
-              address: widget.userPoistion['address'],
+              userPosition: widget.userPoistion,
+              
+              warehousePosition: widget.warehousePosition,
+             
             ),
       ),
       (route) => false,

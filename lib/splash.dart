@@ -1,5 +1,11 @@
 import 'dart:convert';
 
+import 'package:Zdeliver/coordinate_class.dart';
+import 'package:Zdeliver/services/local_storage.dart';
+import 'package:Zdeliver/profilesetup.dart';
+import 'package:Zdeliver/services/userlocation_service.dart';
+
+import 'package:Zdeliver/services/warehouse_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -26,146 +32,7 @@ class _SplashScreenState extends State<SplashScreen> {
     _checkLogin();
   }
 
-  Future<String> _getAddressFromCoordinates(
-    double latitude,
-    double longitude,
-  ) async {
-    try {
-      // Use Nominatim OpenStreetMap API for reverse geocoding (coords to address)
-      final response = await http.get(
-        Uri.parse(
-          'https://nominatim.openstreetmap.org/reverse?format=json&lat=$latitude&lon=$longitude&zoom=18&addressdetails=1',
-        ),
-        headers: {
-          'Accept-Language': 'en', // Ensure English results
-          'User-Agent':
-              'LocationPickerComponent/1.0', // Required by Nominatim usage policy
-        },
-      );
-
-      if (response.statusCode != 200) {
-        throw Exception('Network response was not ok (${response.statusCode})');
-      }
-
-      final data = json.decode(response.body);
-      print(data);
-
-      if (data != null && data['display_name'] != null) {
-        // Return the formatted address
-        return data['display_name'] as String;
-      } else {
-        // If no results found, return the raw coordinates
-        return 'Unknown location: $latitude, $longitude';
-      }
-    } catch (error) {
-      print('Error converting coordinates to address: $error');
-      // Return raw coordinates if geocoding fails
-      return '$latitude, $longitude';
-    }
-  }
-
-  Future<Map<String, dynamic>?> getLatLngAddress() async {
-    try {
-      final storage = FlutterSecureStorage();
-      String? address = await storage.read(key: 'saved_address');
-      String? position = await storage.read(key: 'user_position');
-      if (address != null && position != null) {
-        final coords = position.split(',');
-        if (coords.length == 2) {
-          double lat = double.parse(coords[0]);
-          double lng = double.parse(coords[1]);
-          Position position = Position(
-            latitude: lat,
-            longitude: lng,
-            timestamp: DateTime.now(),
-            accuracy: 0.0,
-            altitude: 0.0,
-            heading: 0.0,
-            speed: 0.0,
-            speedAccuracy: 0.0,
-            altitudeAccuracy: 0.0,
-            headingAccuracy: 0.0,
-          );
-          return {'postion': position, 'address': address};
-        }
-      }
-      return null;
-    } catch (e) {
-      print('Error reading lat/lng/address: $e');
-      return null;
-    }
-  }
-
-  Future findWarehouseLatLng(double lat, double lng) async {
-    print('-------- getting warehouse lat lng --------');
-
-    final String baseUrl =
-        'http://13.126.169.224/api/v1/warehouse-finder/find-warehouse-vendors';
-    try {
-      final response = await http.post(
-        Uri.parse(baseUrl), // Adjust the endpoint to match your backend route
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'latitude': lat, 'longitude': lng}),
-      );
-      print(response.body);
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (!data['success']) {
-          return data['error']; // Return the error message
-        }
-        // check if the warehouse is available or not
-        final message = data['message'];
-        if (message != null &&
-            message == "Sorry right now we are not available in your city") {
-          _isWareHouseAvailable = false;
-        }
-        // Assuming the response contains a 'warehouse' object with 'latitude' and 'longitude'
-        final warehouse = data['warehouse'];
-        if (warehouse != null) {
-          final double lat = double.parse(warehouse['coordinates']['latitude']);
-          final double lng = double.parse(
-            warehouse['coordinates']['longitude'],
-          );
-          final String address = warehouse['address'] ?? 'No address found';
-          print('Warehouse found at: $lat, $lng, Address: $address');
-
-          // Save the address and position to secure storage
-          final storage = FlutterSecureStorage();
-          await storage.write(key: 'warehouse_address', value: address);
-          await storage.write(key: 'warehouse_position', value: '$lat,$lng');
-
-          // Return the position and address
-          return {
-            'position': Position(
-              latitude: lat,
-              longitude: lng,
-              timestamp: DateTime.now(),
-              accuracy: 0.0,
-              altitude: 0.0,
-              heading: 0.0,
-              speed: 0.0,
-              speedAccuracy: 0.0,
-              altitudeAccuracy: 0.0,
-              headingAccuracy: 0.0,
-            ),
-            'address': address,
-          };
-        } else {
-          throw Exception('Warehouse not found');
-        }
-      } else {
-        // Parse error message from response if available
-        final errorBody = jsonDecode(response.body);
-        throw Exception(errorBody['error'] ?? 'Failed to find warehouse');
-      }
-    } catch (e) {
-      print('Failed to get warehouse: $e');
-    }
-  }
-
   //check if any new update is available
-
   Future checkforUpdates() async {
     print('-------- checking for updates --------');
 
@@ -208,8 +75,10 @@ class _SplashScreenState extends State<SplashScreen> {
     }
   }
 
+  // check if user is logged in and navigate accordingly
   Future<void> _checkLogin() async {
-    String? userId = await _storage.read(key: 'userId');
+    String? userId = await LocalStorage().getUserId();
+
     if (userId == null || userId.isEmpty) {
       // User is not logged in, navigate to AuthPage
       Navigator.of(
@@ -217,6 +86,7 @@ class _SplashScreenState extends State<SplashScreen> {
       ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
       return;
     }
+
     // Check for updates first
     var updateInfo = await checkforUpdates();
     if (updateInfo != null) {
@@ -264,44 +134,64 @@ class _SplashScreenState extends State<SplashScreen> {
       }
     }
 
-    var latLngAddress = await getLatLngAddress();
-    Position? position =
-        await latLngAddress?['postion'] ??
-        await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high,
+    CoordinatesPair? userPosition =
+        await LocalStorage().getUserPositionLocally();
+
+    if(userPosition == null) {
+      // No user position stored, get current location
+      userPosition = await UserLocationService().getCurrentLocation(context);
+      if (userPosition == null) {
+        // If still null, show error and exit
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to get current location, please enable location services.')),
         );
-    String? address =
-        latLngAddress?['address'] ??
-        await _getAddressFromCoordinates(
-          position!.latitude,
-          position.longitude,
-        );
-    var wareHouseLatLng = await findWarehouseLatLng(
-      position!.latitude,
-      position.longitude,
-    );
-    Position? wareHousePosition = Position(
-      latitude: wareHouseLatLng?['position']?.latitude ?? 0.0,
-      longitude: wareHouseLatLng?['position']?.longitude ?? 0.0,
-      timestamp: DateTime.now(),
-      accuracy: 0.0,
-      altitude: 0.0,
-      heading: 0.0,
-      speed: 0.0,
-      speedAccuracy: 0.0,
-      altitudeAccuracy: 0.0,
-      headingAccuracy: 0.0,
-    );
-    print('wareHouseLatLng: $wareHouseLatLng');
+        return;
+      }
+      String address =
+          await UserLocationService().getAddressFromCoordinates(
+            userPosition.latitude,
+            userPosition.longitude,
+            context,
+          ) ?? 'Unknown Address';
+          userPosition.address = address;
+      // Save the user position locally
+      await LocalStorage().saveUserPositionLocally(
+        userPosition.latitude,
+        userPosition.longitude,
+        address,
+        
+      );
+    }
+
+
+    Warehouse? wareHousePosition =
+        await WarehouseService().getWareHouse(userPosition.latitude,userPosition.longitude, context);
+    
+
+    // check profile completion
+    String? username = await  LocalStorage().getUserName();
+
+    if (username == null || username.isEmpty) {
+      // User profile is not complete, navigate to AuthPage
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder:
+              (_) => ProfileSetupPage(userPoistion: userPosition, 
+              warehousePosition: wareHousePosition
+              ),
+        ),
+      );
+      return;
+    }
 
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder:
             (_) => HomePageWithMap(
-              userPosition: position,
-              address: address,
+              userPosition: userPosition,
+              
               warehousePosition: wareHousePosition,
-              isWarehouseAvailable: _isWareHouseAvailable,
+              
             ),
       ),
     );

@@ -1,3 +1,7 @@
+import 'package:Zdeliver/address_model.dart';
+import 'package:Zdeliver/coordinate_class.dart';
+import 'package:Zdeliver/services/local_storage.dart';
+import 'package:Zdeliver/services/warehouse_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:Zdeliver/address_selection_sheet.dart';
@@ -48,17 +52,22 @@ class _CheckoutPage extends State<CheckoutPage> {
 
   Future setAddress() async {
     try {
-      String? address = await _secureStorage.read(key: 'saved_address');
-
-      if (address == null || address.isEmpty) {
-        address = 'No address saved';
+      Address? addressData = await LocalStorage().getUserSelectedAddress();
+      if (addressData == null) {
+        setState(() {
+          _selectedAddress = 'No address saved';
+          _addressSelected = false; // Set address as not selected
+        });
+        return;
       }
+
+      String? address = addressData.fullAddress;
 
       // Optional: Format the address for better display
       // You can adjust the character limit as needed
-      // if (address.length > 35) {
-      //   address = '${address.substring(0, 35)}...';
-      // }
+      if (address.length > 100) {
+        address = '${address.substring(0, 100)}...';
+      }
       setState(() {
         _selectedAddress = address!;
         _addressSelected = true; // Set address as selected
@@ -741,6 +750,18 @@ class _CheckoutPage extends State<CheckoutPage> {
                           return Center(child: CircularProgressIndicator());
                         },
                       );
+                      CoordinatesPair? userposition =
+                          await LocalStorage().getUserPositionLocally();
+                      if (userposition != null) {
+                        bool wareHouseAvailable =
+                            await WarehouseService()
+                                .checkWarehouseAvailability();
+                        if (!wareHouseAvailable) {
+                          Navigator.pop(context);
+                          _showNotAvailableDialog();
+                          return;
+                        }
+                      }
                       // Place order
                       // var placeOrder = await _placeOrder();
                       // print('placeOrder: $placeOrder');
@@ -946,11 +967,15 @@ class _CheckoutPage extends State<CheckoutPage> {
 
   void _showAddressSelectionSheet() {
     // Use the static method from AddressSelectionSheet class
-    AddressSelectionSheet.showAddressSelectionSheet(context, (address) {
-      // Handle the selected address
-      _selectAddress(address);
-      // The sheet will be closed automatically
-    }, currentAddress: _selectedAddress);
+    AddressSelectionSheet.showAddressSelectionSheet(
+      context,
+      (address) {
+        // Handle the selected address
+        _selectAddress(address);
+        // The sheet will be closed automatically
+      },
+      //  currentAddress: _selectedAddress
+    );
   }
 
   Widget _buildCartItem(int index, String name, String imageName) {
@@ -1096,12 +1121,79 @@ class _CheckoutPage extends State<CheckoutPage> {
     );
   }
 
-  void _selectAddress(String address) {
+  void _showNotAvailableDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+            title: Text(
+              "Oops! , Sorry ",
+              style: GoogleFonts.leagueSpartan(
+                color: Color.fromRGBO(63, 46, 120, 1),
+                fontWeight: FontWeight.w500,
+                fontSize: 18,
+              ),
+            ),
+            content: Text(
+              'Right now we are not available in your city.',
+              style: GoogleFonts.leagueSpartan(
+                fontWeight: FontWeight.w400,
+                fontSize: 16,
+                color: Color.fromRGBO(67, 67, 67, 1),
+              ),
+            ),
+            actions: [
+              Center(
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: Size(double.infinity, 50),
+                    backgroundColor: Color.fromRGBO(72, 72, 72, 1),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    child: Text(
+                      'Continue Browsing',
+                      style: GoogleFonts.leagueSpartan(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+    );
+  }
+
+  void _selectAddress(String address) async {
     setState(() {
       _addressSelected = true;
       _selectedAddress = address;
     });
     Navigator.pop(context); // Close the bottom sheet
+    CoordinatesPair? userposition =
+        await LocalStorage().getUserPositionLocally();
+    if (userposition != null) {
+      Warehouse? warehousePosition = await WarehouseService().getWareHouse(
+        userposition.latitude,
+        userposition.longitude,
+        context,
+      );
+      if (warehousePosition == null || !warehousePosition.isAvailable) {
+        _showNotAvailableDialog();
+        return;
+      }
+    }
   }
 
   void _proceedToPayment() {
