@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:Zdeliver/address_model.dart';
+import 'package:Zdeliver/services/local_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
@@ -39,6 +41,7 @@ class _SelectAddressPageState extends State<SelectAddressPage> {
   String ACCESS_TOKEN = const String.fromEnvironment("ACCESS_TOKEN");
   bool _isProgrammaticMove = false;
 
+  LocalStorage _localStorage = LocalStorage();
   late final _placesSearch;
 
   @override
@@ -101,7 +104,6 @@ class _SelectAddressPageState extends State<SelectAddressPage> {
           altitudeAccuracy: 0,
           headingAccuracy: 0,
         );
-        ;
 
         String? savedAddress = await _secureStorage.read(key: 'saved_address');
         if (savedAddress != null) {
@@ -340,7 +342,8 @@ class _SelectAddressPageState extends State<SelectAddressPage> {
 
   Future<void> _initializePage() async {
     // Retrieve saved address first
-    _selectedAddress = await _secureStorage.read(key: 'saved_address');
+    _selectedAddress =
+        await _localStorage.getUserAddressLocally() ?? 'No address selected';
     print(_selectedAddress);
 
     setState(() {
@@ -375,7 +378,7 @@ class _SelectAddressPageState extends State<SelectAddressPage> {
       return;
     }
     print('saving address $_selectedAddress $_latitude $_longitude');
-    final userId = await _secureStorage.read(key: 'userId');
+    final userId = await _localStorage.getUserId();
     // Prepare the address data
     final addressData = {
       'user_id':
@@ -404,25 +407,27 @@ class _SelectAddressPageState extends State<SelectAddressPage> {
         },
         body: json.encode(addressData),
       );
-      print(
-        '----------------------------------' +
-            response.body +
-            " " +
-            response.statusCode.toString(),
-      );
+      final responseData = json.decode(response.body);
+      print('response data: $responseData');
+
       // Handle API response
       if (response.statusCode == 201) {
+        // Address saved successfully
+        print('Address saved successfully: $responseData');
         // Save address to secure storage
-
-        await _secureStorage.write(
-          key: 'saved_address',
-          value: _selectedAddress,
-        );
+        Address address = Address.fromMap(responseData['data']);
+        print('Address model created: ${address.toString()}');
+        await _localStorage.saveUserAddressLocally(_selectedAddress!);
         // Optionally, you can also save other details like latitude, longitude, etc.
-        await _secureStorage.write(
-          key: 'user_position',
-          value: '$_latitude,$_longitude',
+        await _localStorage.saveUserPositionLocally(
+          _latitude!,
+          _longitude!,
+          _selectedAddress!,
         );
+
+        // save user selected address model locally
+        await _localStorage.saveUserSelectedAddress(address);
+
         // Successfully saved address
         Fluttertoast.showToast(
           msg: "Address saved successfully'",

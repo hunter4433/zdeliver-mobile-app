@@ -1,12 +1,12 @@
+import 'package:Zdeliver/address_model.dart';
+import 'package:Zdeliver/services/local_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:http/http.dart' as _secureStorage;
+
 import 'dart:convert';
 import 'package:Zdeliver/address_selection.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-import 'home_address_selection_modal.dart';
 
 class SavedAddressSelectionSheet extends StatefulWidget {
   final Function(String) onAddressSelected;
@@ -34,10 +34,10 @@ class SavedAddressSelectionSheet extends StatefulWidget {
 }
 
 class _AddressSelectionSheetState extends State<SavedAddressSelectionSheet> {
-  List<dynamic> _addresses = [];
+  List<Address> _addresses = [];
   bool _isLoading = true;
   String _errorMessage = '';
-  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+  LocalStorage _localStorage = LocalStorage();
 
   @override
   void initState() {
@@ -47,8 +47,7 @@ class _AddressSelectionSheetState extends State<SavedAddressSelectionSheet> {
 
   Future<void> _fetchAddresses() async {
     try {
-      String? userId = await _secureStorage.read(key: 'userId');
-      String? savedAddress = await _secureStorage.read(key: 'saved_address');
+      String? userId = await _localStorage.getUserId();
 
       print('http://13.126.169.224/api/v1/addresses?user_id=$userId');
       // Replace with your actual API endpoint
@@ -67,18 +66,11 @@ class _AddressSelectionSheetState extends State<SavedAddressSelectionSheet> {
         final responseData = json.decode(response.body);
 
         setState(() {
-          _addresses = responseData['data'] ?? [];
-          ;
+          _addresses =
+              (responseData['data'] as List)
+                  .map((address) => Address.fromMap(address))
+                  .toList();
 
-          // Add saved address to the beginning of the list if it exists
-          // if (savedAddress != null && savedAddress.isNotEmpty) {
-          _addresses.insert(0, {
-            'id': 'saved_location',
-            'full_address': savedAddress,
-            'type': 'Current Location',
-            'isCurrentLocation': true,
-          });
-          // }
           print('mohit here');
           print(_addresses);
 
@@ -274,27 +266,33 @@ class _AddressSelectionSheetState extends State<SavedAddressSelectionSheet> {
                 child: ListView.builder(
                   itemCount: _addresses.length,
                   itemBuilder: (context, index) {
-                    final address = _addresses[index];
+                    final Address? address = _addresses[index];
+                    if (address == null) {
+                      return const SizedBox.shrink(); // Skip null addresses
+                    }
                     return _buildAddressItem(
                       context,
-                      address['full_address'] ?? 'Unnamed Address',
-                      address['full_address'] ?? '',
-                      address['user_id'].toString(),
+                      address.receiverName,
+                      address.fullAddress ?? 'Unnamed Address',
+                      address.userId.toString(),
                       onTap: () async {
                         print(address);
-                        widget.onAddressSelected(
-                          address['full_address'] ?? 'Unnamed Address',
-                        );
-                        await _secureStorage.write(
-                          key: 'saved_address',
-                          value: address['full_address'] ?? 'Unnamed Address',
+                        String selectedAddress = address.fullAddress;
+                        double latitude = address.latitude;
+                        double longitude = address.longitude;
+
+                        // Save the selected address to secure storage
+                        await _localStorage.saveUserAddressLocally(
+                          selectedAddress,
                         );
                         // Optionally, you can also save other details like latitude, longitude, etc.
-                        await _secureStorage.write(
-                          key: 'user_position',
-                          value:
-                              '${address['latitude']},${address['longitude']}',
+                        await _localStorage.saveUserPositionLocally(
+                          latitude,
+                          longitude,
+                          selectedAddress,
                         );
+                        await _localStorage.saveUserSelectedAddress(address);
+                        widget.onAddressSelected(selectedAddress);
                         Navigator.pop(
                           context,
                         ); // This will close the bottom sheet

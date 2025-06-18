@@ -1,3 +1,5 @@
+import 'package:Zdeliver/coordinate_class.dart';
+import 'package:Zdeliver/services/local_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:lottie/lottie.dart';
@@ -63,57 +65,7 @@ class _OrderPlacedPageState extends State<OrderPlacedPage>
     });
   }
 
-  Future<Map<String, dynamic>?> getLatLngAddress() async {
-    try {
-      final storage = FlutterSecureStorage();
-      String? address = await storage.read(key: 'saved_address');
-      String? position = await storage.read(key: 'user_position');
-      if (address != null && position != null) {
-        final coords = position.split(',');
-        if (coords.length == 2) {
-          double lat = double.parse(coords[0]);
-          double lng = double.parse(coords[1]);
-          Position position = Position(
-            latitude: lat,
-            longitude: lng,
-            timestamp: DateTime.now(),
-            accuracy: 0.0,
-            altitude: 0.0,
-            heading: 0.0,
-            speed: 0.0,
-            speedAccuracy: 0.0,
-            altitudeAccuracy: 0.0,
-            headingAccuracy: 0.0,
-          );
-          return {'postion': position, 'address': address};
-        }
-      }
-      return null;
-    } catch (e) {
-      print('Error reading lat/lng/address: $e');
-      return null;
-    }
-  }
-
-  Future<String?> getAddress() async {
-    try {
-      return await _secureStorage.read(key: 'saved_address');
-    } catch (e) {
-      print('Error reading saved_address: $e');
-      return null;
-    }
-  }
-
-  Future<String?> getPhoneNumber() async {
-    try {
-      String? number = await _secureStorage.read(key: 'phone_number');
-      String details = "Guest $number";
-      return details;
-    } catch (e) {
-      print('Error reading phone number: $e');
-      return null;
-    }
-  }
+  
 
   @override
   void dispose() {
@@ -188,8 +140,8 @@ class _OrderPlacedPageState extends State<OrderPlacedPage>
                 SizedBox(
                   height: 422,
                   width: MediaQuery.of(context).size.width,
-                  child: FutureBuilder<Map<String, dynamic>?>(
-                    future: getLatLngAddress(),
+                  child: FutureBuilder<CoordinatesPair?>(
+                    future: LocalStorage().getUserPositionLocally(),
                     builder: (context, snapshot) {
                       if (!snapshot.hasData) {
                         return const SizedBox(
@@ -197,16 +149,16 @@ class _OrderPlacedPageState extends State<OrderPlacedPage>
                           child: Center(child: CircularProgressIndicator()),
                         );
                       }
-                      final position = snapshot.data!['postion'] as Position;
-                      final address = snapshot.data!['address'] as String;
+                      
+                   
                       return SizedBox(
                         height: 422,
                         width: MediaQuery.of(context).size.width,
                         child: MapScreenCheckout(
                           containerHeight: 422,
                           isEmbedded: true,
-                          initialPosition: position,
-                          initialAddress: address,
+                          initialPosition: snapshot.data!,
+                        
                           onEtaCalculated: (eta) {
                             setState(() {
                               etaText = eta;
@@ -381,7 +333,7 @@ class _OrderPlacedPageState extends State<OrderPlacedPage>
                     ),
                   ),
                   FutureBuilder<String?>(
-                    future: getAddress(), // Use your authService instance
+                    future: LocalStorage().getUserAddressLocally(), // Use your authService instance
                     builder: (context, snapshot) {
                       return Text(
                         snapshot.data ?? 'Loading...',
@@ -404,7 +356,7 @@ class _OrderPlacedPageState extends State<OrderPlacedPage>
                   ),
                   const SizedBox(height: 4),
                   FutureBuilder<String?>(
-                    future: getPhoneNumber(), // Use your authService instance
+                    future: LocalStorage().getUserPhoneNumber(), // Use your authService instance
                     builder: (context, snapshot) {
                       return Text(
                         snapshot.data ?? 'Loading...',

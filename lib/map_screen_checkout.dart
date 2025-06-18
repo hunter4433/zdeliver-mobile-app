@@ -1,9 +1,11 @@
 import 'dart:typed_data';
 import 'dart:math' as math;
+import 'package:Zdeliver/coordinate_class.dart';
+import 'package:Zdeliver/services/local_storage.dart';
+import 'package:Zdeliver/services/userlocation_service.dart';
+import 'package:Zdeliver/services/warehouse_service.dart';
 import 'package:flutter/material.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mapbox;
-
-
 
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -20,16 +22,16 @@ Future<void> setupMapbox() async {
 class MapScreenCheckout extends StatefulWidget {
   final double containerHeight;
   final bool isEmbedded;
-  final Position initialPosition;
-  final String initialAddress;
+  final CoordinatesPair? initialPosition;
+
   final void Function(String)? onEtaCalculated;
-  final Position? warehousePosition;
+  final Warehouse? warehousePosition;
   const MapScreenCheckout({
     Key? key,
     this.containerHeight = double.infinity,
     this.isEmbedded = false,
     required this.initialPosition,
-    required this.initialAddress,
+
     this.onEtaCalculated,
     this.warehousePosition,
   }) : super(key: key);
@@ -63,67 +65,22 @@ class _MapScreenCheckoutState extends State<MapScreenCheckout> {
   Uint8List? warehouseIconData;
 
   // Warehouse and user locations
-  Position? userPosition;
-  CoordinatePair? warehousePosition;
+  CoordinatesPair? userPosition;
+  Warehouse? warehousePosition;
 
   @override
   void initState() {
     super.initState();
     userPosition = widget.initialPosition;
-    currentAddress = widget.initialAddress;
+    currentAddress = widget.initialPosition?.address ?? 'No address found';
     _loadMarkerImages();
-  }
-
-  Future<String> _getAddressFromCoordinates(
-    double latitude,
-    double longitude,
-  ) async {
-    try {
-      // Use Nominatim OpenStreetMap API for reverse geocoding (coords to address)
-      final response = await http.get(
-        Uri.parse(
-          'https://nominatim.openstreetmap.org/reverse?format=json&lat=$latitude&lon=$longitude&zoom=18&addressdetails=1',
-        ),
-        headers: {
-          'Accept-Language': 'en', // Ensure English results
-          'User-Agent':
-              'LocationPickerComponent/1.0', // Required by Nominatim usage policy
-        },
-      );
-
-      if (response.statusCode != 200) {
-        throw Exception('Network response was not ok (${response.statusCode})');
-      }
-
-      final data = json.decode(response.body);
-      print(data);
-
-      if (data != null && data['display_name'] != null) {
-        await _secureStorage.write(
-          key: 'saved_address',
-          value: data['display_name']!,
-        );
-        String? savedAddress = await _secureStorage.read(key: 'saved_address');
-        print('changdan hee');
-        print(savedAddress);
-        // Return the formatted address
-        return data['display_name'] as String;
-      } else {
-        // If no results found, return the raw coordinates
-        return '$latitude, $longitude';
-      }
-    } catch (error) {
-      print('Error converting coordinates to address: $error');
-      // Return raw coordinates if geocoding fails
-      return '$latitude, $longitude';
-    }
   }
 
   // Add this method to fetch directions
   // In your _getDirections method, update the coordinate handling:
   Future<List<List<double>>> _getDirections(
-    CoordinatePair start,
-    CoordinatePair end,
+    CoordinatesPair start,
+    CoordinatesPair end,
   ) async {
     String ACCESS_TOKEN = const String.fromEnvironment("ACCESS_TOKEN");
     final url =
@@ -162,22 +119,18 @@ class _MapScreenCheckoutState extends State<MapScreenCheckout> {
       return [];
     }
   }
-  void _updateMap() async {
-  // Update internal state with new widget values
-  setState(() {
-    userPosition = widget.initialPosition;
-    // If you use a custom type for warehousePosition, convert as needed
-    if (widget.warehousePosition != null) {
-      warehousePosition = CoordinatePair(
-        widget.warehousePosition!.latitude,
-        widget.warehousePosition!.longitude,
-      );
-    }
-  });
 
-  // Re-create warehouse, user marker, and route
-  await _createWarehouseAndRoute();
-}
+  void _updateMap() async {
+    // Update internal state with new widget values
+    setState(() {
+      userPosition = widget.initialPosition;
+     warehousePosition = widget.warehousePosition;
+      
+    });
+
+    // Re-create warehouse, user marker, and route
+    await _createWarehouseAndRoute();
+  }
 
   Future<void> _loadMarkerImages() async {
     try {
@@ -211,19 +164,21 @@ class _MapScreenCheckoutState extends State<MapScreenCheckout> {
       print('Error loading marker images: $e');
     }
   }
+
   @override
-void didUpdateWidget(covariant MapScreenCheckout oldWidget) {
-  super.didUpdateWidget(oldWidget);
-  if (widget.initialPosition != oldWidget.initialPosition ||
-      widget.warehousePosition != oldWidget.warehousePosition) {
-    // Update the map with new positions
-    _updateMap();
+  void didUpdateWidget(covariant MapScreenCheckout oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialPosition != oldWidget.initialPosition ||
+        widget.warehousePosition != oldWidget.warehousePosition) {
+      // Update the map with new positions
+      _updateMap();
+    }
   }
-}
+
   @override
   Widget build(BuildContext context) {
-    final double initialLat = widget.initialPosition.latitude;
-    final double initialLng = widget.initialPosition.longitude;
+    final double initialLat = widget.initialPosition!.latitude;
+    final double initialLng = widget.initialPosition!.longitude;
     final mapbox.CameraOptions camera = mapbox.CameraOptions(
       center: mapbox.Point(
         coordinates: mapbox.Position(initialLng, initialLat),
@@ -365,10 +320,7 @@ void didUpdateWidget(covariant MapScreenCheckout oldWidget) {
 
       // User location from the Api
       if (widget.warehousePosition != null) {
-        warehousePosition = CoordinatePair(
-          widget.warehousePosition!.latitude,
-          widget.warehousePosition!.longitude,
-        );
+        warehousePosition = widget.warehousePosition;
       }
       // If no warehouse position provided, generate a random one
       else {
@@ -385,8 +337,8 @@ void didUpdateWidget(covariant MapScreenCheckout oldWidget) {
           mapbox.PointAnnotationOptions(
             geometry: mapbox.Point(
               coordinates: mapbox.Position(
-                warehousePosition!.longitude,
-                warehousePosition!.latitude,
+                warehousePosition!.warehousePosition.longitude,
+                warehousePosition!.warehousePosition.latitude,
               ),
             ),
             image: warehouseIconData!,
@@ -401,8 +353,8 @@ void didUpdateWidget(covariant MapScreenCheckout oldWidget) {
         // Generate position near warehouse (within ~50-100 meters)
         final offset = _getRandomOffsetInMeters(50, 100);
         final cartPosition = _getPositionWithOffset(
-          warehousePosition!.latitude,
-          warehousePosition!.longitude,
+          warehousePosition!.warehousePosition.latitude,
+          warehousePosition!.warehousePosition. longitude,
           offset.first, // latitude offset
           offset.second, // longitude offset
         );
@@ -429,11 +381,11 @@ void didUpdateWidget(covariant MapScreenCheckout oldWidget) {
       // Get route that follows roads
       // In your _createWarehouseAndRoute method, update the route creation part:
       List<List<double>> routeCoordinates = await _getDirections(
-        CoordinatePair(
-          warehousePosition!.latitude,
-          warehousePosition!.longitude,
+        CoordinatesPair(
+         latitude:   warehousePosition!.warehousePosition.latitude,
+         longitude:  warehousePosition!.warehousePosition.longitude,
         ),
-        CoordinatePair(userPosition!.latitude, userPosition!.longitude),
+        CoordinatesPair(latitude:  userPosition!.latitude, longitude:  userPosition!.longitude),
       );
 
       if (routeCoordinates.isNotEmpty) {
@@ -457,22 +409,22 @@ void didUpdateWidget(covariant MapScreenCheckout oldWidget) {
 
       // Calculate bearing for the camera to point along the route direction
       double bearing = _calculateBearing(
-        warehousePosition!.latitude,
-        warehousePosition!.longitude,
+        warehousePosition!.warehousePosition.latitude,
+        warehousePosition!.warehousePosition. longitude,
         userPosition!.latitude,
         userPosition!.longitude,
       );
 
       // Calculate center point of the route
       double centerLat =
-          (warehousePosition!.latitude + userPosition!.latitude) / 2;
+          (warehousePosition!.warehousePosition.latitude + userPosition!.latitude) / 2;
       double centerLng =
-          (warehousePosition!.longitude + userPosition!.longitude) / 2;
+          (warehousePosition!.warehousePosition.longitude + userPosition!.longitude) / 2;
 
       // Calculate appropriate zoom level based on distance
       double distance = _calculateDistanceInKm(
-        warehousePosition!.latitude,
-        warehousePosition!.longitude,
+        warehousePosition!.warehousePosition.latitude,
+        warehousePosition!.warehousePosition.longitude,
         userPosition!.latitude,
         userPosition!.longitude,
       );
@@ -520,10 +472,7 @@ void didUpdateWidget(covariant MapScreenCheckout oldWidget) {
 
     try {
       // Update current position
-      userPosition = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-        timeLimit: Duration(seconds: 5),
-      );
+      userPosition = await LocalStorage().getUserPositionLocally();
 
       // Create new warehouse and route
       await _createWarehouseAndRoute();
@@ -534,7 +483,7 @@ void didUpdateWidget(covariant MapScreenCheckout oldWidget) {
   }
 
   // Helper method to get random location within a specific distance range
-  CoordinatePair _getRandomLocationWithinDistance(
+  Warehouse _getRandomLocationWithinDistance(
     double lat,
     double lng, {
     required double minDistanceKm,
@@ -574,8 +523,11 @@ void didUpdateWidget(covariant MapScreenCheckout oldWidget) {
     // Convert back to degrees
     final double newLat = newLatRad * 180 / math.pi;
     final double newLng = newLngRad * 180 / math.pi;
-
-    return CoordinatePair(newLat, newLng);
+   CoordinatesPair warehousePosition = CoordinatesPair(
+      latitude: newLat,
+      longitude: newLng,
+    );
+    return Warehouse(warehousePosition: warehousePosition);
   }
 
   // Helper method to get random offset in meters
@@ -594,19 +546,19 @@ void didUpdateWidget(covariant MapScreenCheckout oldWidget) {
     final double latOffset = (randomDistance * math.cos(randomAngle)) / 111000;
     final double lngOffset =
         (randomDistance * math.sin(randomAngle)) /
-        (111000 * math.cos(math.pi * warehousePosition!.latitude / 180));
+        (111000 * math.cos(math.pi * warehousePosition!.warehousePosition.latitude / 180));
 
     return Pair(latOffset, lngOffset);
   }
 
   // Helper method to get a position with an offset
-  CoordinatePair _getPositionWithOffset(
+  CoordinatesPair _getPositionWithOffset(
     double lat,
     double lng,
     double latOffset,
     double lngOffset,
   ) {
-    return CoordinatePair(lat + latOffset, lng + lngOffset);
+    return CoordinatesPair( latitude: lat + latOffset, longitude: lng + lngOffset);
   }
 
   // Calculate bearing between two points (in degrees)
@@ -698,18 +650,21 @@ void didUpdateWidget(covariant MapScreenCheckout oldWidget) {
   }
 }
 
-// Helper class for latitude and longitude pairs
-class CoordinatePair {
-  final double latitude;
-  final double longitude;
-
-  CoordinatePair(this.latitude, this.longitude);
-}
-
 // Generic pair class for two values
 class Pair<A, B> {
   final A first;
   final B second;
 
   Pair(this.first, this.second);
+}
+
+class CurrentLocationResult {
+  final double latitude;
+  final double longitude;
+  final String address;
+  CurrentLocationResult({
+    required this.latitude,
+    required this.longitude,
+    required this.address,
+  });
 }
