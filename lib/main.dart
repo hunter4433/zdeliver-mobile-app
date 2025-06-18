@@ -1,3 +1,6 @@
+import 'dart:ui';
+
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mapbox;
@@ -18,7 +21,6 @@ import 'gohome.dart';
 
 // Global navigator key for use in notification navigation
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-
 
 // Handler for background messages (must be a top-level function)
 @pragma('vm:entry-point')
@@ -47,7 +49,6 @@ Future<void> requestLocationPermission() async {
       print('Location permissions denied');
     } else {
       print('Location permission granted: $permission');
-    
     }
   } catch (e) {
     print('Error requesting location permission: $e');
@@ -57,7 +58,6 @@ Future<void> requestLocationPermission() async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-
   try {
     // Register background handler before initializing Firebase
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
@@ -66,6 +66,15 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    // Pass all uncaught "fatal" errors from the framework to Crashlytics
+    FlutterError.onError = (errorDetails) {
+      FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+    };
+    // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
+    PlatformDispatcher.instance.onError = (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      return true;
+    };
 
     // Initialize notification service
     await NotificationService().initialize();
@@ -86,30 +95,27 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Zdeliver',
       debugShowCheckedModeBanner: false,
       navigatorKey: navigatorKey, // Used for navigation from notifications
-// <<<<<<< HEAD
-//
-//       theme: ThemeData(
-//         primarySwatch: Colors.deepPurple,
-//         fontFamily: 'Roboto',
-//       ),
-//       home: LoginScreen(),
-//       //   home:  HomePageWithMap(),
-//
-//
-// =======
+      // <<<<<<< HEAD
+      //
+      //       theme: ThemeData(
+      //         primarySwatch: Colors.deepPurple,
+      //         fontFamily: 'Roboto',
+      //       ),
+      //       home: LoginScreen(),
+      //       //   home:  HomePageWithMap(),
+      //
+      //
+      // =======
       theme: ThemeData(primarySwatch: Colors.deepPurple, fontFamily: 'Roboto'),
 
       home: SplashScreen(),
-// >>>>>>> origin/aman1
+      // >>>>>>> origin/aman1
     );
   }
-
-
 }
