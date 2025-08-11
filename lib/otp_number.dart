@@ -1,3 +1,7 @@
+import 'package:Zdeliver/coordinate_class.dart';
+import 'package:Zdeliver/services/local_storage.dart';
+import 'package:Zdeliver/services/userlocation_service.dart';
+import 'package:Zdeliver/services/warehouse_service.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:async';
@@ -7,6 +11,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:Zdeliver/profilesetup.dart';
 import 'gohome.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:Zdeliver/services/local_storage.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
   final String phoneNumber;
@@ -50,8 +55,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         // Store user data for existing user
         final userId = responseData['userId']?.toString();
         final phone_number = responseData['phone_number']?.toString();
-        await _secureStorage.write(key: 'phone_number', value: phone_number!);
-        await _secureStorage.write(key: 'userId', value: userId!);
+        LocalStorage localStorage = LocalStorage();
+        await localStorage.saveUserId(userId!);
+        await localStorage.saveUserPhoneNumber(phone_number!);
 
         return {
           'success': true,
@@ -65,8 +71,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         // Store user data for new user
         final userId = responseData['userId']?.toString();
         final phone_number = responseData['phone_number']?.toString();
-        await _secureStorage.write(key: 'phone_number', value: phone_number!);
-        await _secureStorage.write(key: 'userId', value: userId!);
+        LocalStorage localStorage = LocalStorage();
+        await localStorage.saveUserId(userId!);
+        await localStorage.saveUserPhoneNumber(phone_number!);
 
         return {
           'success': true,
@@ -85,75 +92,87 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     }
   }
 
-  Future getUserLocation() async {
-    try {
-      print('GETTING CURRENT LOCATION...');
-      Position geoPosition = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-        timeLimit: Duration(seconds: 10),
-      );
-      print(
-        'CURRENT LOCATION: ${geoPosition.latitude}, ${geoPosition.longitude}',
-      );
+  // Future getUserLocation() async {
+  //   try {
+  //     print('GETTING CURRENT LOCATION...');
+  //     Position geoPosition = await Geolocator.getCurrentPosition(
+  //       desiredAccuracy: LocationAccuracy.high,
+  //       timeLimit: Duration(seconds: 10),
+  //     );
+  //     print(
+  //       'CURRENT LOCATION: ${geoPosition.latitude}, ${geoPosition.longitude}',
+  //     );
+  //
+  //     // Save user position for later use
+  //     await _secureStorage.write(
+  //       key: 'user_position',
+  //       value: '${geoPosition.latitude},${geoPosition.longitude}',
+  //     );
+  //     Position userPosition = Position(
+  //       latitude: geoPosition.latitude,
+  //       longitude: geoPosition.longitude,
+  //       timestamp: DateTime.now(),
+  //       accuracy: geoPosition.accuracy,
+  //       altitude: geoPosition.altitude,
+  //       heading: geoPosition.heading,
+  //       speed: geoPosition.speed,
+  //       speedAccuracy: geoPosition.speedAccuracy,
+  //       altitudeAccuracy: 0.0,
+  //       headingAccuracy: 0.0,
+  //     );
+  //
+  //     // Fetch address for the current location
+  //     String? address = await _getAddressFromCoordinates(
+  //       geoPosition.latitude,
+  //       geoPosition.longitude,
+  //     );
+  //     await _secureStorage.write(
+  //       key: 'saved_address',
+  //       value: address ?? 'Address not found',
+  //     );
+  //     return {'user_postion': userPosition, 'address': address};
+  //   } catch (e) {
+  //     print('Error getting user location: $e');
+  //   }
+  // }
 
-      // Save user position for later use
-      await _secureStorage.write(
-        key: 'user_position',
-        value: '${geoPosition.latitude},${geoPosition.longitude}',
-      );
-
-      // Fetch address for the current location
-      String? address = await _getAddressFromCoordinates(
-        geoPosition.latitude,
-        geoPosition.longitude,
-      );
-      await _secureStorage.write(
-        key: 'saved_address',
-        value: address ?? 'Address not found',
-      );
-      return {'user_postion': geoPosition, 'address': address};
-    } catch (e) {
-      print('Error getting user location: $e');
-    }
-  }
-
-  Future<String> _getAddressFromCoordinates(
-    double latitude,
-    double longitude,
-  ) async {
-    try {
-      // Use Nominatim OpenStreetMap API for reverse geocoding (coords to address)
-      final response = await http.get(
-        Uri.parse(
-          'https://nominatim.openstreetmap.org/reverse?format=json&lat=$latitude&lon=$longitude&zoom=18&addressdetails=1',
-        ),
-        headers: {
-          'Accept-Language': 'en', // Ensure English results
-          'User-Agent':
-              'LocationPickerComponent/1.0', // Required by Nominatim usage policy
-        },
-      );
-
-      if (response.statusCode != 200) {
-        throw Exception('Network response was not ok (${response.statusCode})');
-      }
-
-      final data = json.decode(response.body);
-      print(data);
-
-      if (data != null && data['display_name'] != null) {
-        // Return the formatted address
-        return data['display_name'] as String;
-      } else {
-        // If no results found, return the raw coordinates
-        return 'Unknown location: $latitude, $longitude';
-      }
-    } catch (error) {
-      print('Error converting coordinates to address: $error');
-      // Return raw coordinates if geocoding fails
-      return '$latitude, $longitude';
-    }
-  }
+  // Future<String> _getAddressFromCoordinates(
+  //   double latitude,
+  //   double longitude,
+  // ) async {
+  //   try {
+  //     // Use Nominatim OpenStreetMap API for reverse geocoding (coords to address)
+  //     final response = await http.get(
+  //       Uri.parse(
+  //         'https://nominatim.openstreetmap.org/reverse?format=json&lat=$latitude&lon=$longitude&zoom=18&addressdetails=1',
+  //       ),
+  //       headers: {
+  //         'Accept-Language': 'en', // Ensure English results
+  //         'User-Agent':
+  //             'LocationPickerComponent/1.0', // Required by Nominatim usage policy
+  //       },
+  //     );
+  //
+  //     if (response.statusCode != 200) {
+  //       throw Exception('Network response was not ok (${response.statusCode})');
+  //     }
+  //
+  //     final data = json.decode(response.body);
+  //     print(data);
+  //
+  //     if (data != null && data['display_name'] != null) {
+  //       // Return the formatted address
+  //       return data['display_name'] as String;
+  //     } else {
+  //       // If no results found, return the raw coordinates
+  //       return 'Unknown location: $latitude, $longitude';
+  //     }
+  //   } catch (error) {
+  //     print('Error converting coordinates to address: $error');
+  //     // Return raw coordinates if geocoding fails
+  //     return '$latitude, $longitude';
+  //   }
+  // }
 
   @override
   void initState() {
@@ -370,14 +389,58 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                 widget.phoneNumber,
                                 otp,
                               );
-                              // Get user location
-                              var userLocation = await getUserLocation();
 
+                              print('-------------------otp result came-------');
+                              print(result);
+
+                              // Get user location
+                              CoordinatesPair? userLocation =
+                                  await UserLocationService()
+                                      .getCurrentLocation(context);
+
+                              print('---------------onpressed user location permisiion------------');
+                              print(userLocation);
+
+                              if (userLocation == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Failed to get current location. Please enable location services.',
+                                    ),
+                                  ),
+                                );
+                                setState(() {
+                                  isLoading = false;
+                                });
+                                return;
+                              }
+                              userLocation.address = await UserLocationService()
+                                  .getAddressFromCoordinates(
+                                    userLocation.latitude,
+                                    userLocation.longitude,
+                                    context,
+                                  );
+
+
+
+                              await LocalStorage().saveUserPositionLocally(
+                                userLocation.latitude,
+                                userLocation.longitude,
+                                userLocation.address,
+
+                              );
+                              print('vdhgcfjhkjkkjnkn--------');
+                              print(userLocation.address);
+                              Warehouse? warehouseData =
+                                  await WarehouseService().getWareHouse(
+                                    userLocation.latitude,
+                                    userLocation.longitude,
+                                    context,
+                                  );
                               // Show message in SnackBar
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text(result['message'])),
                               );
-
                               // Navigate if verification was successful
                               if (result['success']) {
                                 if (result['isNewUser']) {
@@ -389,6 +452,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                       builder:
                                           (context) => ProfileSetupPage(
                                             userPoistion: userLocation,
+                                            warehousePosition: warehouseData,
                                           ),
                                     ),
                                     (route) => false,
@@ -400,10 +464,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                     context,
                                     MaterialPageRoute(
                                       builder:
-                                          (context) => HomePageWithMap(
-                                            userPosition:
-                                                userLocation['user_postion'],
-                                            address: userLocation['address'],
+                                          (context) => ProfileSetupPage(
+                                            userPoistion: userLocation,
+                                            warehousePosition: warehouseData,
                                           ),
                                     ),
                                     (route) => false,

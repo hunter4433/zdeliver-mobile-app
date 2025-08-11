@@ -1,3 +1,7 @@
+import 'package:Zdeliver/address_model.dart';
+import 'package:Zdeliver/coordinate_class.dart';
+import 'package:Zdeliver/services/local_storage.dart';
+import 'package:Zdeliver/services/warehouse_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:Zdeliver/address_selection_sheet.dart';
@@ -7,6 +11,7 @@ import 'package:Zdeliver/orderPlace.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'home_address_selection_modal.dart';
+// import 'vendorAssignAndNotification.dart';
 
 class CheckoutPage extends StatefulWidget {
   final List<Map<String, dynamic>> selectedProducts;
@@ -48,17 +53,22 @@ class _CheckoutPage extends State<CheckoutPage> {
 
   Future setAddress() async {
     try {
-      String? address = await _secureStorage.read(key: 'saved_address');
-
-      if (address == null || address.isEmpty) {
-        address = 'No address saved';
+      Address? addressData = await LocalStorage().getUserSelectedAddress();
+      if (addressData == null) {
+        setState(() {
+          _selectedAddress = 'No address saved';
+          _addressSelected = false; // Set address as not selected
+        });
+        return;
       }
+
+      String? address = addressData.fullAddress;
 
       // Optional: Format the address for better display
       // You can adjust the character limit as needed
-      // if (address.length > 35) {
-      //   address = '${address.substring(0, 35)}...';
-      // }
+      if (address.length > 100) {
+        address = '${address.substring(0, 100)}...';
+      }
       setState(() {
         _selectedAddress = address!;
         _addressSelected = true; // Set address as selected
@@ -77,8 +87,7 @@ class _CheckoutPage extends State<CheckoutPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF0F8FF),
       appBar: AppBar(
-        backgroundColor: const Color.fromRGBO(253, 204, 41, 1),
-        elevation: 0,
+        backgroundColor: const Color.fromRGBO(253, 204, 41, 1), elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.of(context).pop(widget.selectedProducts),
@@ -299,418 +308,12 @@ class _CheckoutPage extends State<CheckoutPage> {
             ),
           ),
 
-          // Fixed bottom button - UPDATED
-          // Positioned(
-          //   left: 0,
-          //   right: 0,
-          //   bottom: 0,
-          //   child: Container(
-          //     color: Colors.white,
-          //     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          //     child: Column(
-          //       mainAxisSize: MainAxisSize.min,
-          //       children: [
-          //         // Only show this when address is selected
-          //         if (_addressSelected)
-          //           Padding(
-          //             padding: const EdgeInsets.only(bottom: 12),
-          //             child: Row(
-          //               children: [
-          //                 Expanded(
-          //                   child: Column(
-          //                     crossAxisAlignment: CrossAxisAlignment.start,
-          //                     children: [
-          //                       const Text(
-          //                         "Deliver to",
-          //                         style: TextStyle(
-          //                           fontSize: 15,
-          //                           fontWeight: FontWeight.w700,
-          //                           color: Color(0xFFE47650),
-          //                         ),
-          //                       ),
-          //                       Text(
-          //                         _selectedAddress.split(' - ').first,
-          //                         style: const TextStyle(
-          //                           fontSize: 16,
-          //                           fontWeight: FontWeight.bold,
-          //                         ),
-          //                       ),
-          //                       Text(
-          //                         "Hs no. 15, Sharadanagari, karjat, mirajgaon road...",
-          //                         style: TextStyle(
-          //                           fontSize: 15,
-          //                           color: Colors.grey.shade600,
-          //                           overflow: TextOverflow.ellipsis,
-          //                         ),
-          //                       ),
-          //                     ],
-          //                   ),
-          //                 ),
-          //                 OutlinedButton(
-          //                   onPressed: () {
-          //                     _showAddressSelectionSheet();
-          //                   },
-          //                   style: OutlinedButton.styleFrom(
-          //                     padding: const EdgeInsets.symmetric(
-          //                       horizontal: 16,
-          //                       vertical: 0,
-          //                     ),
-          //                     side: const BorderSide(color: Color(0xFFE47650)),
-          //                     shape: RoundedRectangleBorder(
-          //                       borderRadius: BorderRadius.circular(13),
-          //                     ),
-          //                   ),
-          //                   child: const Text(
-          //                     "Change",
-          //                     style: TextStyle(
-          //                       fontSize: 16,
-          //                       color: Color(0xFFE47650),
-          //                       fontWeight: FontWeight.w800,
-          //                     ),
-          //                   ),
-          //                 ),
-          //               ],
-          //             ),
-          //           ),
-
-          //         // Payment row
-          //         Row(
-          //           children: [
-          //             // Only show payment method when address is selected
-          //             if (_addressSelected)
-          //               Expanded(
-          //                 flex: 2,
-          //                 child: Container(
-          //                   padding: const EdgeInsets.symmetric(vertical: 35),
-          //                   child: Row(
-          //                     children: [
-          //                       const SizedBox(width: 8),
-          //                       Column(
-          //                         crossAxisAlignment: CrossAxisAlignment.start,
-          //                         children: [
-          //                           const Text(
-          //                             "Pay using",
-          //                             style: TextStyle(
-          //                               fontSize: 14,
-          //                               color: Colors.grey,
-          //                             ),
-          //                           ),
-          //                           Row(
-          //                             children: [
-          //                               const Text(
-          //                                 "Cash on delivery",
-          //                                 style: TextStyle(
-          //                                   fontSize: 14,
-          //                                   fontWeight: FontWeight.bold,
-          //                                 ),
-          //                               ),
-          //                               const SizedBox(width: 5),
-          //                             ],
-          //                           ),
-          //                         ],
-          //                       ),
-          //                     ],
-          //                   ),
-          //                 ),
-          //               ),
-
-          //             // Payment button - MODIFIED
-          //             Expanded(
-          //               flex: _addressSelected ? 3 : 5,
-          //               child: ElevatedButton(
-          //                 onPressed: () async {
-          //                   if (_addressSelected) {
-          //                     placeOrder();
-
-          //                     showDialog(
-          //                       context: context,
-          //                       barrierDismissible: false,
-          //                       builder: (BuildContext context) {
-          //                         return Center(
-          //                           child: CircularProgressIndicator(),
-          //                         );
-          //                       },
-          //                     );
-
-          //                     // Make API call
-          //                     bool success = await sendVendorNotification();
-
-          //                     // Close loading indicator
-          //                     Navigator.pop(context);
-
-          //                     if (success) {
-          //                       // Navigate to next page
-          //                       Navigator.push(
-          //                         context,
-          //                         MaterialPageRoute(
-          //                           builder: (context) => OrderPlacedPage(),
-          //                         ),
-          //                       );
-          //                     }
-          //                   } else {
-          //                     // Show address selection
-          //                     _showAddressSelectionSheet();
-          //                   }
-          //                 },
-          //                 style: ElevatedButton.styleFrom(
-          //                   backgroundColor: const Color(0xFF3F2E78),
-          //                   padding: const EdgeInsets.symmetric(
-          //                     vertical: 16,
-          //                     horizontal: 18,
-          //                   ),
-          //                   shape: RoundedRectangleBorder(
-          //                     borderRadius: BorderRadius.circular(20),
-          //                   ),
-          //                 ),
-          //                 child:
-          //                     _addressSelected
-          //                         // Content when address is selected - Show price and "Place Order"
-          //                         ? Row(
-          //                           children: [
-          //                             // Left side: To pay + Rs. 120
-          //                             Column(
-          //                               crossAxisAlignment:
-          //                                   CrossAxisAlignment.start,
-          //                               children: [
-          //                                 Text(
-          //                                   "To pay",
-          //                                   style: TextStyle(
-          //                                     fontWeight: FontWeight.w600,
-          //                                     fontSize: 14,
-          //                                     color: Colors.white70,
-          //                                   ),
-          //                                 ),
-          //                               ],
-          //                             ),
-          //                             SizedBox(width: 17),
-          //                             // Right side: Place Order text
-          //                             Text(
-          //                               "Place Order",
-          //                               style: GoogleFonts.leagueSpartan(
-          //                                 fontSize: 19,
-          //                                 fontWeight: FontWeight.w600,
-          //                                 color: Colors.white,
-          //                               ),
-          //                             ),
-          //                           ],
-          //                         )
-          //                         // Content when no address is selected - Only "Select Address to deliver order"
-          //                         : Center(
-          //                           child: Text(
-          //                             "Select Address to deliver order",
-          //                             style: GoogleFonts.leagueSpartan(
-          //                               fontSize: 18,
-          //                               fontWeight: FontWeight.w600,
-          //                               color: Colors.white,
-          //                             ),
-          //                           ),
-          //                         ),
-          //               ),
-          //             ),
-          //           ],
-          //         ),
-          //       ],
-          //     ),
-          //   ),
-          // ),
-          // Fixed bottom button
           Positioned(
             bottom: 10,
             left: 30,
             right: 30,
             child: Container(
-              // <<<<<<< HEAD
-              //               color: Colors.white,
-              //               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              //               child: Column(
-              //                 mainAxisSize: MainAxisSize.min,
-              //                 children: [
-              //                   // Only show this when address is selected
-              //                   if (_addressSelected)
-              //                     Padding(
-              //                       padding: const EdgeInsets.only(bottom: 12),
-              //                       child: Row(
-              //                         children: [
-              //                           Expanded(
-              //                             child: Column(
-              //                               crossAxisAlignment: CrossAxisAlignment.start,
-              //                               children: [
-              //                                 const Text(
-              //                                   "Deliver to",
-              //                                   style: TextStyle(
-              //                                     fontSize: 15,fontWeight: FontWeight.w700,
-              //                                     color: Color(0xFFE47650),
-              //                                   ),
-              //                                 ),
-              //                                 Text(
-              //                                   _selectedAddress.split(' - ').first,
-              //                                   style: const TextStyle(
-              //                                     fontSize: 16,
-              //                                     fontWeight: FontWeight.bold,
-              //                                   ),
-              //                                 ),
-              //                                 Text(
-              //                                   "Hs no. 15, Sharadanagari, karjat, mirajgaon road...",
-              //                                   style: TextStyle(
-              //                                     fontSize: 15,
-              //                                     color: Colors.grey.shade600,
-              //                                     overflow: TextOverflow.ellipsis,
-              //                                   ),
-              //                                 ),
-              //                               ],
-              //                             ),
-              //                           ),
-              //                           OutlinedButton(
-              //                             onPressed: () {
-              //                               _showAddressSelectionSheet();
-              //                             },
-              //                             style: OutlinedButton.styleFrom(
-              //                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-              //                               side: const BorderSide(color: Color(0xFFE47650)),
-              //                               shape: RoundedRectangleBorder(
-              //                                 borderRadius: BorderRadius.circular(13),
-              //                               ),
-              //                             ),
-              //                             child: const Text(
-              //                               "Change",
-              //                               style: TextStyle(fontSize: 16,
-              //                                 color: Color(0xFFE47650),
-              //                                 fontWeight: FontWeight.w800,
-              //                               ),
-              //                             ),
-              //                           ),
-              //                         ],
-              //                       ),
-              //                     ),
-              //
-              //
-              //                   // Payment row
-              //                   Row(
-              //                     children: [
-              //                       // Only show payment method when address is selected
-              //                       if (_addressSelected)
-              //                         Expanded(
-              //                           flex: 2,
-              //                           child: Container(
-              //                             padding: const EdgeInsets.symmetric(vertical: 35),
-              //                             child: Row(
-              //                               children: [
-              //                                 const SizedBox(width: 8),
-              //                                 Column(
-              //                                   crossAxisAlignment: CrossAxisAlignment.start,
-              //                                   children: [
-              //                                     const Text(
-              //                                       "Pay using",
-              //                                       style: TextStyle(fontSize: 14, color: Colors.grey),
-              //                                     ),
-              //                                     Row(
-              //                                       children: [
-              //                                         const Text(
-              //                                           "Cash on delivery",
-              //                                           style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-              //                                         ),
-              //                                         const SizedBox(width: 5),
-              //                                       ],
-              //                                     ),
-              //                                   ],
-              //                                 ),
-              //                               ],
-              //                             ),
-              //                           ),
-              //                         ),
-              //
-              //
-              //                       // Payment button - MODIFIED
-              //                       Expanded(
-              //                         flex: _addressSelected ? 3 : 5,
-              //                         child: ElevatedButton(
-              //                           onPressed: () async {
-              //                             if (_addressSelected) {
-              //                               // placeOrder();
-              //
-              //                               showDialog(
-              //                                 context: context,
-              //                                 barrierDismissible: false,
-              //                                 builder: (BuildContext context) {
-              //                                   return Center(
-              //                                       child: CircularProgressIndicator());
-              //                                 },
-              //                               );
-              //
-              //                               // Make API call
-              //                               // bool success = await sendVendorNotification();
-              //
-              //                               // Close loading indicator
-              //                               Navigator.pop(context);
-              //
-              //                               // if (success) {
-              //                                 // Navigate to next page
-              //                                 Navigator.push(
-              //                                   context,
-              //                                   MaterialPageRoute(
-              //                                       builder: (context) => OrderPlacedPage()),
-              //                                 );
-              //                               // }
-              //                             }else {
-              //                               // Show address selection
-              //                               _showAddressSelectionSheet();
-              //                             }
-              //                           },
-              //                           style: ElevatedButton.styleFrom(
-              //                             backgroundColor: const Color(0xFF3F2E78),
-              //                             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 18),
-              //                             shape: RoundedRectangleBorder(
-              //                               borderRadius: BorderRadius.circular(20),
-              //                             ),
-              //                           ),
-              //                           child: _addressSelected
-              //                           // Content when address is selected - Show price and "Place Order"
-              //                               ? Row(
-              //                             children: [
-              //                               // Left side: To pay + Rs. 120
-              //                               Column(
-              //                                 crossAxisAlignment: CrossAxisAlignment.start,
-              //                                 children:  [
-              //                                   Text(
-              //                                     "To pay",
-              //                                     style: TextStyle(
-              //                                       fontWeight: FontWeight.w600,
-              //                                       fontSize: 14,
-              //                                       color: Colors.white70,
-              //                                     ),
-              //                                   ),
-              //
-              //                                 ],
-              //                               ),
-              //                               SizedBox(width: 17),
-              //                               // Right side: Place Order text
-              //                               Text(
-              //                                 "Place Order",
-              //                                 style: GoogleFonts.leagueSpartan(
-              //                                   fontSize: 19,
-              //                                   fontWeight: FontWeight.w600,
-              //                                   color: Colors.white,
-              //                                 ),
-              //                               ),
-              //                             ],
-              //                           )
-              //                           // Content when no address is selected - Only "Select Address to deliver order"
-              //                               : Center(
-              //                             child: Text(
-              //                               "Select Address to deliver order",
-              //                               style: GoogleFonts.leagueSpartan(
-              //                                 fontSize: 18,
-              //                                 fontWeight: FontWeight.w600,
-              //                                 color: Colors.white,
-              //                               ),
-              //                             ),
-              //                           ),
-              //                         ),
-              //
-              //
-              //                       ),
-              //                     ],
-              // =======
+
               height: 60,
               width: 350,
               decoration: BoxDecoration(
@@ -741,36 +344,47 @@ class _CheckoutPage extends State<CheckoutPage> {
                           return Center(child: CircularProgressIndicator());
                         },
                       );
-                      // Place order
-                      // var placeOrder = await _placeOrder();
-                      // print('placeOrder: $placeOrder');
-                      // if (placeOrder == false) {
-                      //   // Show error message
-                      //   ScaffoldMessenger.of(context).showSnackBar(
-                      //     SnackBar(content: Text('Failed to place order')),
-                      //   );
-                      //   return;
-                      // }
+                      CoordinatesPair? userposition =
+                          await LocalStorage().getUserPositionLocally();
+                      if (userposition != null) {
+                        bool wareHouseAvailable =
+                            await WarehouseService()
+                                .checkWarehouseAvailability();
 
-                      // Make API call to send notification
+                        if (!wareHouseAvailable) {
+                          Navigator.pop(context);
+                          _showNotAvailableDialog();
+                          return;
+                        }
+                      }
 
-                      // bool success = await sendVendorNotification();
-                      // if (!success) {
-                      //   // Show error message
-                      //   ScaffoldMessenger.of(context).showSnackBar(
-                      //     SnackBar(
-                      //       content: Text('Failed to send notification'),
-                      //     ),
-                      //   );
-                      //   return;
-                      // }
+
+                      // Place order and wait for completionr
+                      Map<String, dynamic>? orderResult = await placeOrder();
+                      String? booking_id= orderResult!['data']['data']['booking_id'].toString();
+print(orderResult);
+                      print('--------------bookingid is ------------$booking_id');
+
+
+
+
+                      if (orderResult == null || orderResult['success'] != true) {
+                        // Order failed
+                        Navigator.pop(context); // Close loading dialog
+
+                        String errorMessage = orderResult?['error'] ?? 'Failed to place order';
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(errorMessage)),
+                        );
+                        return;
+                      }
+
 
                       // Close loading indicator
                       Navigator.pop(context);
 
-                      if (
+                      // if (true) {
                       // success && placeOrder != false
-                      true) {
                         // Show success message
 
                         // Navigate to next page
@@ -778,10 +392,13 @@ class _CheckoutPage extends State<CheckoutPage> {
                           context,
                           MaterialPageRoute(
                             builder:
-                                (context) => OrderPlacedPage(address: null),
+                                (context) => OrderPlacedPage(
+                                  address: null,
+                                  bookingId:booking_id
+                                ),
                           ),
                         );
-                      }
+                      // }
                     } else {
                       // Show address selection
                       _showAddressSelectionSheet();
@@ -822,83 +439,112 @@ class _CheckoutPage extends State<CheckoutPage> {
     );
   }
 
-  Future _placeOrder() async {
+// Fixed placeOrder function
+  Future<Map<String, dynamic>?> placeOrder() async {
     String? ordertype;
+
+    String? userId = await LocalStorage().getUserId();
+
     // Check if we have selected products to order
     if (widget.selectedProducts.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No items selected for order')),
       );
-      return false;
+      return null;
     }
 
     try {
       print(widget.selectedProducts);
+
       // Format items as required by API
-      final List<Map<String, dynamic>> formattedItems =
-          widget.selectedProducts.map((product) {
-            return {
-              "item_id": product['id'], // Assuming your product has an id field
-              "quantity": product['quantity'],
-              "price_per_unit": product['price_per_unit'],
-            };
-          }).toList();
+      final List<Map<String, dynamic>> formattedItems = widget.selectedProducts.map((product) {
+        return {
+          "item_id": product['id'], // Fixed: removed asterisk
+          "quantity": product['quantity'],
+          "price_per_unit": product['price_per_unit'],
+        };
+      }).toList();
+
       print(formattedItems);
 
-      if (widget.sourceScreen == 'GroceryPage') {
-        ordertype =
-            "order"; // Assign order value if sourcescreen is GroceryPage
-      } else {
-        ordertype = "cart"; // Otherwise, assign cart value
-      }
+      // if (widget.sourceScreen == 'GroceryPage') {
+      //   ordertype = "order";
+      // } else {
+      //   ordertype = "cart";
+      // }
 
       // Prepare request body
       final Map<String, dynamic> requestBody = {
-        "user_id": 1, // Changed to 1 as shown in the Postman screenshot
-        "booking_type": "order",
-        "order_address": _selectedAddress,
+        "user_id": userId,
+        "booking_type": "order", // Use the determined order type
+        "address": _selectedAddress, // Fixed: removed asterisk
         "items": formattedItems,
       };
 
+      print('Request Body: ${jsonEncode(requestBody)}');
+
       // Make API call
       final response = await http.post(
-        Uri.parse(
-          'http://13.126.169.224/api/v1/book/create',
-        ), // Updated URL from screenshot
+        Uri.parse('http://13.126.169.224/api/v1/book/create'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(requestBody),
       );
-      print('mohit here');
-      print(response.body);
+
+      print('Response Status Code: ${response.statusCode}');
+      print('Response Body: ${response.body}');
+
       // Handle response
-      if (response.statusCode == 201) {
-        // Changed to specifically check for 201 Created
+      if (response.statusCode == 200 || response.statusCode == 201) {
         // Success, order created
         final responseData = jsonDecode(response.body);
-        print(responseData);
-        String address = responseData['data']['order_address'];
-        print(address);
+        print('Order created successfully: $responseData');
 
-        return {true, address};
+        String? address;
+        if (responseData['data'] != null && responseData['data']['order_address'] != null) {
+          address = responseData['data']['order_address']; // Fixed: removed asterisk
+        }
 
-        // Navigator.push(
-        //   context,
-        //   MaterialPageRoute(
-        //     builder: (context) => OrderPlacedPage(address: address),
-        //   ),
-        // );
+        return {
+          'success': true,
+          'address': address,
+          'data': responseData
+        };
       } else {
-        // Handle error
-        throw Exception(
-          'Failed to place order. Status code: ${response.statusCode}',
+        // Handle API error
+        print('API Error: Status ${response.statusCode}, Body: ${response.body}');
+
+        // Try to parse error message from response
+        String errorMessage = 'Failed to place order';
+        try {
+          final errorData = jsonDecode(response.body);
+          if (errorData['message'] != null) {
+            errorMessage = errorData['message'];
+          }
+        } catch (e) {
+          // Use default error message if parsing fails
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
         );
+
+        return {
+          'success': false,
+          'error': errorMessage
+        };
       }
     } catch (e) {
+      print('Exception in placeOrder: $e');
+
       // Show error message
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   SnackBar(content: Text('Error placing order: ${e.toString()}')),
-      // );
-      return false; // Return false to indicate failure
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error placing order: ${e.toString()}')),
+      );
+
+      return {
+        'success': false,
+        'error': e.toString()
+      };
     }
   }
 
@@ -946,11 +592,15 @@ class _CheckoutPage extends State<CheckoutPage> {
 
   void _showAddressSelectionSheet() {
     // Use the static method from AddressSelectionSheet class
-    AddressSelectionSheet.showAddressSelectionSheet(context, (address) {
-      // Handle the selected address
-      _selectAddress(address);
-      // The sheet will be closed automatically
-    }, currentAddress: _selectedAddress);
+    AddressSelectionSheet.showAddressSelectionSheet(
+      context,
+      (address) {
+        // Handle the selected address
+        _selectAddress(address);
+        // The sheet will be closed automatically
+      },
+      //  currentAddress: _selectedAddress
+    );
   }
 
   Widget _buildCartItem(int index, String name, String imageName) {
@@ -1096,12 +746,93 @@ class _CheckoutPage extends State<CheckoutPage> {
     );
   }
 
-  void _selectAddress(String address) {
+  void _showNotAvailableDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+            title: Text(
+              "Oops! , Sorry ",
+              style: GoogleFonts.leagueSpartan(
+                color: Color.fromRGBO(63, 46, 120, 1),
+                fontWeight: FontWeight.w500,
+                fontSize: 18,
+              ),
+            ),
+            content: Text(
+              'Right now we are not available in your city.',
+              style: GoogleFonts.leagueSpartan(
+                fontWeight: FontWeight.w400,
+                fontSize: 16,
+                color: Color.fromRGBO(67, 67, 67, 1),
+              ),
+            ),
+            actions: [
+              Center(
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: Size(double.infinity, 50),
+                    backgroundColor: Color.fromRGBO(72, 72, 72, 1),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    child: Text(
+                      'Continue Browsing',
+                      style: GoogleFonts.leagueSpartan(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+    );
+  }
+
+  void _selectAddress(String address) async {
     setState(() {
       _addressSelected = true;
       _selectedAddress = address;
     });
     Navigator.pop(context); // Close the bottom sheet
+    CoordinatesPair? userposition =
+        await LocalStorage().getUserPositionLocally();
+    if (userposition != null) {
+      print('------------calling getWareHouse------');
+      Warehouse? warehouse = await WarehouseService().getWareHouse(
+        userposition.latitude,
+        userposition.longitude,
+        context,
+      );
+      print('----sdncjk----');
+      // print( warehousePosition);
+
+
+      if (warehouse != null) {
+        print('Warehouse position: ${warehouse.warehousePosition
+            .latitude}, ${warehouse.warehousePosition.longitude}');
+        print('Warehouse available: ${warehouse.isAvailable}');
+
+        if (!warehouse.isAvailable) {
+          _showNotAvailableDialog();
+          return;
+        }
+      }
+
+
+
+    }
   }
 
   void _proceedToPayment() {
@@ -1115,31 +846,3 @@ class _CheckoutPage extends State<CheckoutPage> {
   }
 }
 
-// class DashPainter extends CustomPainter {
-//   final Color color;
-//   final double dashWidth;
-//   final double dashSpace;
-
-//   DashPainter({
-//     required this.color,
-//     this.dashWidth = 5.0,
-//     this.dashSpace = 3.0,
-//   });
-
-//   @override
-//   void paint(Canvas canvas, Size size) {
-//     final paint =
-//         Paint()
-//           ..color = color
-//           ..strokeWidth = 1.5;
-
-//     double startX = 0;
-//     while (startX < size.width) {
-//       canvas.drawLine(Offset(startX, 0), Offset(startX + dashWidth, 0), paint);
-//       startX += dashWidth + dashSpace;
-//     }
-//   }
-
-//   @override
-//   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-// }

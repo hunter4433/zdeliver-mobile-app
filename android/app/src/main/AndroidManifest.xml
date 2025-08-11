@@ -1,4 +1,9 @@
+<!--<<<<<<< HEAD-->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.zdeliver.mrsgorilla">
+<!--=======-->
+<!--<manifest xmlns:android="http://schemas.android.com/apk/res/android"-->
+<!--    package="com.zdeliver.mrsgorilla">-->
+<!--&gt;>>>>>> 6e6a2a2e5762033d8a767ed843a36c3a59fcc36b-->
     <application
         android:label="Zdeliver"
         android:name="${applicationName}"

@@ -136,6 +136,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     try {
       final url = Uri.parse('http://13.126.169.224/api/v1/book/user/${widget.userId}');
       final response = await http.get(url);
+      print(widget.userId);
       print('Response body: ${response.body}');
 
       if (response.statusCode == 200) {

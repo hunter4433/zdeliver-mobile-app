@@ -1,34 +1,38 @@
-import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
-
-import 'package:Zdeliver/address_selection.dart';
-
-import 'package:Zdeliver/Home_Recommend_section/standardGorillaCart.dart';
-import 'package:Zdeliver/Home_Recommend_section/gorillaFruitcart.dart';
 import 'package:Zdeliver/Home_Recommend_section/customize_cart.dart';
+import 'package:Zdeliver/Home_Recommend_section/gorillaFruitcart.dart';
+import 'package:Zdeliver/Home_Recommend_section/standardGorillaCart.dart';
+import 'package:Zdeliver/address_selection.dart';
+import 'package:Zdeliver/coordinate_class.dart';
+import 'package:Zdeliver/services/local_storage.dart';
 import 'package:Zdeliver/map_screen_checkout.dart';
 import 'package:Zdeliver/orderPlace.dart';
-
+import 'package:Zdeliver/services/warehouse_service.dart';
+import 'package:flutter/material.dart';
+// <<<<<<< HEAD
+// import 'package:geolocator/geolocator.dart';
+//
+// import 'package:Zdeliver/address_selection.dart';
+//
+// import 'package:Zdeliver/Home_Recommend_section/standardGorillaCart.dart';
+// import 'package:Zdeliver/Home_Recommend_section/gorillaFruitcart.dart';
+// import 'package:Zdeliver/Home_Recommend_section/customize_cart.dart';
+// import 'package:Zdeliver/map_screen_checkout.dart';
+// import 'package:Zdeliver/orderPlace.dart';
+//
+// =======
+// >>>>>>> 6e6a2a2e5762033d8a767ed843a36c3a59fcc36b
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:Zdeliver/new_menu.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
-// import 'package:mrsgorilla/address_selection_sheet.dart';
 import 'package:Zdeliver/home_address_selection_modal.dart';
 
 class HomePageWithMap extends StatefulWidget {
-  final String? address;
-  final Position? userPosition;
-  final Position? warehousePosition;
-  bool isWarehouseAvailable;
-  HomePageWithMap({
-    Key? key,
-    this.address,
-    this.userPosition,
-    this.warehousePosition,
-    this.isWarehouseAvailable = true,
-  }) : super(key: key);
+  final CoordinatesPair? userPosition;
+  final Warehouse? warehousePosition;
+
+  HomePageWithMap({Key? key, this.userPosition, this.warehousePosition})
+    : super(key: key);
 
   @override
   State<HomePageWithMap> createState() => _HomePageWithMapState();
@@ -38,7 +42,8 @@ class _HomePageWithMapState extends State<HomePageWithMap>
     with TickerProviderStateMixin {
   // Track which recommended item is selected
   int? selectedRecommendedIndex;
-  bool _addressSelected = false;
+
+  LocalStorage _localStorage = LocalStorage();
 
   // Animation controller for the menu drawer
   late AnimationController _drawerController;
@@ -46,9 +51,8 @@ class _HomePageWithMapState extends State<HomePageWithMap>
   late Animation<double> _scrimAnimation;
   bool _isDrawerOpen = false;
   bool _isCardExpanded = false;
-  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
-  String _selectedAddress = "";
+  // String _selectedAddress = "loading ...";
   String name = "Nirmala";
   String discountPercentage = "25";
   // Drag controller
@@ -63,103 +67,40 @@ class _HomePageWithMapState extends State<HomePageWithMap>
   Map<int, AnimationController> _selectionAnimControllers = {};
   Map<int, Animation<double>> _selectionAnimations = {};
 
-  Future<Map<String, dynamic>?> getLatLngAddress() async {
-    try {
-      final storage = FlutterSecureStorage();
-      String? address = await storage.read(key: 'saved_address');
-      String? position = await storage.read(key: 'user_position');
-      if (address != null && position != null) {
-        final coords = position.split(',');
-        if (coords.length == 2) {
-          double lat = double.parse(coords[0]);
-          double lng = double.parse(coords[1]);
-          Position position = Position(
-            latitude: lat,
-            longitude: lng,
-            timestamp: DateTime.now(),
-            accuracy: 0.0,
-            altitude: 0.0,
-            heading: 0.0,
-            speed: 0.0,
-            speedAccuracy: 0.0,
-            altitudeAccuracy: 0.0,
-            headingAccuracy: 0.0,
-          );
-          return {'postion': position, 'address': address};
-        }
-      }
-      return null;
-    } catch (e) {
-      print('Error reading lat/lng/address: $e');
-      return null;
-    }
-  }
+  CoordinatesPair? userPosition;
+  Warehouse? warehousePosition;
 
-  Future findWarehouseLatLng(double lat, double lng) async {
-    print('-------- getting warehouse lat lng --------');
-
-    final String baseUrl =
-        'http://13.126.169.224/api/v1/warehouse-finder/find-warehouse-vendors';
+  Future getUserAndWarehousePosition() async {
     try {
-      final response = await http.post(
-        Uri.parse(baseUrl), // Adjust the endpoint to match your backend route
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'latitude': lat, 'longitude': lng}),
+      // get user postion
+      CoordinatesPair? userLocation =
+          await LocalStorage().getUserPositionLocally();
+
+      Warehouse? warehouseLocation = await WarehouseService().getWareHouse(
+        userLocation!.latitude,
+        userLocation.longitude,
+        context,
       );
-      print(response.body);
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (!data['success']) {
-          return data['error']; // Return the error message
-        }
-        // check if the warehouse is available or not
-        final message = data['message'];
-        if (message != null &&
-            message == "Sorry right now we are not available in your city") {
-          widget.isWarehouseAvailable = false;
-        }
-        // Assuming the response contains a 'warehouse' object with 'latitude' and 'longitude'
-        final warehouse = data['warehouse'];
-        if (warehouse != null) {
-          final double lat = double.parse(warehouse['coordinates']['latitude']);
-          final double lng = double.parse(
-            warehouse['coordinates']['longitude'],
-          );
-          final String address = warehouse['address'] ?? 'No address found';
-          print('Warehouse found at: $lat, $lng, Address: $address');
-
-          // Save the address and position to secure storage
-          final storage = FlutterSecureStorage();
-          await storage.write(key: 'warehouse_address', value: address);
-          await storage.write(key: 'warehouse_position', value: '$lat,$lng');
-
-          // Return the position and address
-          return {
-            'position': Position(
-              latitude: lat,
-              longitude: lng,
-              timestamp: DateTime.now(),
-              accuracy: 0.0,
-              altitude: 0.0,
-              heading: 0.0,
-              speed: 0.0,
-              speedAccuracy: 0.0,
-              altitudeAccuracy: 0.0,
-              headingAccuracy: 0.0,
-            ),
-            'address': address,
-          };
-        } else {
-          throw Exception('Warehouse not found');
-        }
-      } else {
-        // Parse error message from response if available
-        final errorBody = jsonDecode(response.body);
-        throw Exception(errorBody['error'] ?? 'Failed to find warehouse');
+      if (warehouseLocation == null) {
+        _showNotAvailableDialog();
+        return;
       }
+      if (warehouseLocation.isAvailable == false) {
+        _showNotAvailableDialog();
+      }
+      setState(() {
+        userPosition = userLocation;
+        warehousePosition = warehouseLocation;
+      });
     } catch (e) {
-      print('Failed to get warehouse: $e');
+      print('Error getting user and warehouse position: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to get user and warehouse position.'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -167,9 +108,17 @@ class _HomePageWithMapState extends State<HomePageWithMap>
   void initState() {
     super.initState();
     // _selectedAddress = widget.address ?? 'No address selected';
+    userPosition = widget.userPosition;
+    warehousePosition = widget.warehousePosition;
+    // _selectedAddress = userPosition?.address ?? 'No address selected';
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!widget.isWarehouseAvailable) {
+      if (!widget.warehousePosition!.isAvailable) {
         _showNotAvailableDialog();
+      }
+      else {
+        // Show operation dialog only when warehouse is available
+        _showOperationDialog();
       }
     });
 
@@ -189,9 +138,6 @@ class _HomePageWithMapState extends State<HomePageWithMap>
     // Add listener to the drag controller to implement snap behavior
     _dragController.addListener(_handleDragUpdate);
   }
-
-
-
 
   void _showNotAvailableDialog() {
     showDialog(
@@ -232,7 +178,7 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                   child: Padding(
                     padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                     child: Text(
-                      'Continue anyway',
+                      'Continue Browsing',
                       style: GoogleFonts.leagueSpartan(
                         fontSize: 18,
                         fontWeight: FontWeight.w400,
@@ -245,45 +191,142 @@ class _HomePageWithMapState extends State<HomePageWithMap>
             ],
           ),
     );
-
-  }
-
-
-  Future<String?> getAddress() async {
-    try {
-      String? address =
-          await _secureStorage.read(key: 'saved_address') ?? 'No saved address';
-
-      // Optional: Format the address for better display
-      // You can adjust the character limit as needed
-      if (address.length > 35) {
-        return '${address.substring(0, 35)}...';
-      }
-      _selectedAddress = address; // Store the selected address
-      _addressSelected = true; // Set address selected to true
-      return address;
-    } catch (e) {
-      print('Error reading saved_address: $e');
-      return 'loading address...';
-    }
   }
 
 
 
-  Future<String?> getUserName() async {
-    try {
-      String? fullName = await _secureStorage.read(key: 'user_name');
 
-      if (fullName?.trim().isEmpty ?? true) {
-        return 'Hey Guest';
-      }
 
-      return fullName!.trim().split(' ').last;
+  void _showOperationDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        elevation: 16,
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white,
+                Color.fromRGBO(248, 250, 255, 1),
+              ],
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icon with gradient background
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color(0xFF3F2E78),
+                      Color(0xFF5421FF),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(50),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0xFF3F2E78).withOpacity(0.3),
+                      blurRadius: 12,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  Icons.location_on_rounded,
+                  size: 32,
+                  color: Colors.white,
+                ),
+              ),
 
-    } catch (e) {
-      print('Error reading user_name: $e');
-      return 'Hey Guest';
-    }
+              const SizedBox(height: 20),
+
+              // Title
+              Text(
+                "Operation Region",
+                textAlign: TextAlign.center,
+                style: GoogleFonts.leagueSpartan(
+                  color: Color(0xFF3F2E78),
+                  fontWeight: FontWeight.w600,
+                  fontSize: 22,
+                  letterSpacing: -0.5,
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Content
+              Text(
+                'We are currently only operating nearby Gomti Nagar.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.leagueSpartan(
+                  fontWeight: FontWeight.w400,
+                  fontSize: 16,
+                  color: Color.fromRGBO(67, 67, 67, 1),
+                  height: 1.4,
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Button
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color(0xFF3F2E78),
+                      Color(0xFF5421FF),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0xFF3F2E78).withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    minimumSize: Size(double.infinity, 54),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    'Continue Browsing',
+                    style: GoogleFonts.leagueSpartan(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void _handleDragUpdate() {
@@ -308,18 +351,35 @@ class _HomePageWithMapState extends State<HomePageWithMap>
         _selectAddress(address);
       },
       selectedRecommendedIndex: selectedRecommendedIndex, // Pass the parameter
+      // Pass the current
     );
   }
 
-
   void _selectAddress(String address) async {
-    setState(() {
-      _addressSelected = true;
-      _selectedAddress = address; // Store the selected address
-    });
+    // Get the current position of the user
+    CoordinatesPair? newPosition = await _localStorage.getUserPositionLocally();
 
-
-
+    // Only call update if the position changed
+    if (userPosition == null ||
+        userPosition!.latitude != newPosition!.latitude ||
+        userPosition!.longitude != newPosition.longitude) {
+      // Update user position
+      Warehouse? newWarehousePosition = await WarehouseService().getWareHouse(
+        newPosition!.latitude,
+        newPosition.longitude,
+        context,
+      );
+      setState(() {
+        userPosition = newPosition;
+        warehousePosition = newWarehousePosition;
+      });
+    }
+    if (warehousePosition == null || !warehousePosition!.isAvailable) {
+      // Close loading indicator
+      // Navigator.pop(context);
+      _showNotAvailableDialog();
+      return;
+    }
     // Show loading indicator
     showDialog(
       context: context,
@@ -573,9 +633,8 @@ class _HomePageWithMapState extends State<HomePageWithMap>
           MapScreenCheckout(
             containerHeight: MediaQuery.of(context).size.height,
             isEmbedded: false,
-            warehousePosition: widget.warehousePosition,
-            initialPosition: widget.userPosition!,
-            initialAddress: widget.address ?? 'No address selected',
+            warehousePosition: warehousePosition ?? widget.warehousePosition,
+            initialPosition: userPosition ?? widget.userPosition!,
           ),
 
           // Top app bar with profile and menu - UPDATED
@@ -602,7 +661,13 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                         await Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => ProfilePage(),
+                            builder:
+                                (context) => ProfilePage(
+                                  onUserPositionChanged: () async {
+                                    // Refresh user position after returning from ProfilePage
+                                    await getUserAndWarehousePosition();
+                                  },
+                                ),
                           ),
                         );
                         setState(() {
@@ -631,36 +696,31 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                               fontSize: 16,
                             ),
                           ),
-                          FutureBuilder<String?>(
-                            future: getAddress(),
-                            builder: (context, snapshot) {
-                              return Text(
-                                snapshot.data ?? 'Loading...',
-                                style: const TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 14,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              );
-                            },
+                          Text(
+                            userPosition!.address ?? 'No address selected',
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 14,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
                     ),
                     InkWell(
                       onTap: () async {
-                        final res = await Navigator.of(context).push(
+                        // final res =
+                        await Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (context) => SelectAddressPage(),
                           ),
                         );
-                        if (res != null && res is String) {
-                          setState(() {
-                            _selectedAddress = res;
-                            _addressSelected = true;
-                          });
-                        }
+                        // if (res != null && res is String) {
+                        //   setState(() {
+                        //     _selectedAddress = res;
+                        //   });
+                        // }
                       },
                       child: Container(
                         decoration: BoxDecoration(
@@ -690,19 +750,23 @@ class _HomePageWithMapState extends State<HomePageWithMap>
 
           // Draggable bottom sheet with modified snap behavior
           DraggableScrollableSheet(
-            initialChildSize: 0.66,
+            initialChildSize: 0.45,
             minChildSize: 0.15,
-            maxChildSize: 0.66,
+            maxChildSize: 0.45,
             controller: _dragController,
             snap: true,
-            snapSizes: [0.15, 0.60],
+            snapSizes: [0.15, 0.45],
             builder: (context, scrollController) {
               return Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(MediaQuery.of(context).size.width * 0.08), // Responsive border radius
-                    topRight: Radius.circular(MediaQuery.of(context).size.width * 0.08),
+                    topLeft: Radius.circular(
+                      MediaQuery.of(context).size.width * 0.08,
+                    ), // Responsive border radius
+                    topRight: Radius.circular(
+                      MediaQuery.of(context).size.width * 0.08,
+                    ),
                   ),
                   boxShadow: [
                     BoxShadow(
@@ -722,19 +786,29 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                       // Handle
                       Center(
                         child: Container(
-                          margin: EdgeInsets.only(top: MediaQuery.of(context).size.height * 0.0), // Responsive top margin
-                          width: MediaQuery.of(context).size.width * 0.12, // Responsive width for handle
-                          height: MediaQuery.of(context).size.height * 0.001, // Responsive height
+                          margin: EdgeInsets.only(
+                            top: MediaQuery.of(context).size.height * 0.0,
+                          ), // Responsive top margin
+                          width:
+                              MediaQuery.of(context).size.width *
+                              0.12, // Responsive width for handle
+                          height:
+                              MediaQuery.of(context).size.height *
+                              0.001, // Responsive height
                           decoration: BoxDecoration(
                             color: Colors.grey[300],
-                            borderRadius: BorderRadius.circular(MediaQuery.of(context).size.width * 0.08), // Responsive border radius
+                            borderRadius: BorderRadius.circular(
+                              MediaQuery.of(context).size.width * 0.08,
+                            ), // Responsive border radius
                           ),
                         ),
                       ),
                       // Promotional banner with updated gradient
                       Container(
                         width: double.infinity,
-                        height: MediaQuery.of(context).size.height * 0.17, // Responsive height
+                        height:
+                            MediaQuery.of(context).size.height *
+                            0.17, // Responsive height
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
@@ -742,11 +816,17 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                             colors: [Color(0xFF3F2E78), Color(0xFF5421FF)],
                           ),
                           borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(MediaQuery.of(context).size.width * 0.08), // Responsive border radius
-                            topRight: Radius.circular(MediaQuery.of(context).size.width * 0.08),
+                            topLeft: Radius.circular(
+                              MediaQuery.of(context).size.width * 0.08,
+                            ), // Responsive border radius
+                            topRight: Radius.circular(
+                              MediaQuery.of(context).size.width * 0.08,
+                            ),
                           ),
                         ),
-                        padding: EdgeInsets.all(MediaQuery.of(context).size.width * 0.04), // Responsive padding
+                        padding: EdgeInsets.all(
+                          MediaQuery.of(context).size.width * 0.04,
+                        ), // Responsive padding
                         child: Row(
                           children: [
                             Expanded(
@@ -761,17 +841,28 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                                         "Hey ",
                                         style: TextStyle(
                                           color: Colors.white,
-                                          fontSize: MediaQuery.of(context).size.width * 0.055, // Responsive font size
+                                          fontSize:
+                                              MediaQuery.of(
+                                                context,
+                                              ).size.width *
+                                              0.055, // Responsive font size
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                       FutureBuilder<String?>(
-                                        future: getUserName(),
+                                        future:
+                                            LocalStorage()
+                                                .getUserName(), // Fetch username
                                         builder: (context, snapshot) {
                                           return Text(
                                             snapshot.data ?? 'Loading...',
                                             style: const TextStyle(
-                                              color: Color.fromRGBO(241, 90, 37, 1),
+                                              color: Color.fromRGBO(
+                                                241,
+                                                90,
+                                                37,
+                                                1,
+                                              ),
                                               fontSize: 24,
                                               fontWeight: FontWeight.bold,
                                             ),
@@ -786,19 +877,32 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                                     "call your first cart",
                                     style: TextStyle(
                                       color: Colors.white,
-                                      fontSize: MediaQuery.of(context).size.width * 0.06, // Responsive font size
+                                      fontSize:
+                                          MediaQuery.of(context).size.width *
+                                          0.06, // Responsive font size
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  SizedBox(height: MediaQuery.of(context).size.height * 0.007), // Responsive spacing
+                                  SizedBox(
+                                    height:
+                                        MediaQuery.of(context).size.height *
+                                        0.007,
+                                  ), // Responsive spacing
                                   Container(
                                     padding: EdgeInsets.symmetric(
-                                      horizontal: MediaQuery.of(context).size.width * 0.03, // Responsive horizontal padding
-                                      vertical: MediaQuery.of(context).size.height * 0.005, // Responsive vertical padding
+                                      horizontal:
+                                          MediaQuery.of(context).size.width *
+                                          0.03, // Responsive horizontal padding
+                                      vertical:
+                                          MediaQuery.of(context).size.height *
+                                          0.005, // Responsive vertical padding
                                     ),
                                     decoration: BoxDecoration(
                                       color: Colors.transparent,
-                                      borderRadius: BorderRadius.circular(MediaQuery.of(context).size.width * 0.05), // Responsive border radius
+                                      borderRadius: BorderRadius.circular(
+                                        MediaQuery.of(context).size.width *
+                                            0.05,
+                                      ), // Responsive border radius
                                       border: Border.all(
                                         color: Colors.white,
                                         width: 0.8,
@@ -806,13 +910,18 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                                     ),
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Text(
                                           discountPercentage + "%",
                                           style: TextStyle(
                                             color: Colors.amber,
-                                            fontSize: MediaQuery.of(context).size.width * 0.035, // Responsive font size
+                                            fontSize:
+                                                MediaQuery.of(
+                                                  context,
+                                                ).size.width *
+                                                0.035, // Responsive font size
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
@@ -820,7 +929,11 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                                           " off on your first bill",
                                           style: TextStyle(
                                             color: Colors.white,
-                                            fontSize: MediaQuery.of(context).size.width * 0.035, // Responsive font size
+                                            fontSize:
+                                                MediaQuery.of(
+                                                  context,
+                                                ).size.width *
+                                                0.035, // Responsive font size
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
@@ -855,28 +968,28 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                         ),
                       ),
 
-                      // Vegetable cart option
-                      _buildCartOption(
-                        index: 0,
-                        iconPath:
-                            'assets/images/yellow_truck_2-removebg-preview (1).png',
-                        title: 'Z vegetable cart',
-                        subtitle: 'includes 13 veggie',
-                        time: '7 min',
-                        checkText: 'check here',
-                        color: Colors.yellow,
-                      ),
-
-                      // Fruit cart option
-                      _buildCartOption(
-                        index: 1,
-                        iconPath: 'assets/images/homefruitcart.png',
-                        title: 'Z fruit cart',
-                        subtitle: 'includes 15 fruits',
-                        time: '11 min',
-                        checkText: 'check here',
-                        color: Colors.orange,
-                      ),
+                      // // Vegetable cart option
+                      // _buildCartOption(
+                      //   index: 0,
+                      //   iconPath:
+                      //       'assets/images/yellow_truck_2-removebg-preview (1).png',
+                      //   title: 'Z vegetable cart',
+                      //   subtitle: 'includes 13 veggie',
+                      //   time: '7 min',
+                      //   checkText: 'check here',
+                      //   color: Colors.yellow,
+                      // ),
+                      //
+                      // // Fruit cart option
+                      // _buildCartOption(
+                      //   index: 1,
+                      //   iconPath: 'assets/images/homefruitcart.png',
+                      //   title: 'Z fruit cart',
+                      //   subtitle: 'includes 15 fruits',
+                      //   time: '11 min',
+                      //   checkText: 'check here',
+                      //   color: Colors.orange,
+                      // ),
 
                       // Customized cart option
                       _buildCartOption(
@@ -933,21 +1046,33 @@ class _HomePageWithMapState extends State<HomePageWithMap>
                             Expanded(
                               child: GestureDetector(
                                 onTap:
-                                    selectedRecommendedIndex != null
-                                        ? () async {
+                                    // selectedRecommendedIndex != null
+                                    //     ? () async {
+                                    //       showAddressSelectionSheet(
+                                    //         selectedRecommendedIndex,
+                                    //       );
+                                    //     }
+                                    //     : null,
 
-                                          showAddressSelectionSheet(selectedRecommendedIndex);
+                                    () async {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (context) => customize_cart()),
+                                      );
 
-                                } : null,
-
+                                  // showAddressSelectionSheet(
+                                  //   selectedRecommendedIndex,
+                                  // );
+                                }
+                                    ,
 
                                 child: Container(
                                   height: 64,
                                   decoration: BoxDecoration(
-                                    color:
-                                        selectedRecommendedIndex != null
-                                            ? Color(0xFFF15A25)
-                                            : Colors.grey[300],
+                                    color: Color(0xFFF15A25),
+                                        // selectedRecommendedIndex != null
+
+                                            // : Colors.grey[300],
                                     borderRadius: BorderRadius.only(
                                       topLeft: Radius.circular(12),
                                       bottomLeft: Radius.circular(12),

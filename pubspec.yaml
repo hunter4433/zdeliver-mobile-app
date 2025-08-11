@@ -16,7 +16,7 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+2
+version: 1.4.0+6
 
 environment:
   sdk: ^3.7.0
@@ -39,7 +39,7 @@ dependencies:
   firebase_messaging: ^15.2.5
   firebase_core: ^3.13.0
   flutter_local_notifications: ^19.1.0
-  firebase_crashlytics: ^4.3.5
+  firebase_crashlytics: ^4.3.7
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
@@ -53,6 +53,8 @@ dependencies:
   package_info_plus: ^8.3.0
   flutter_native_splash: ^2.4.6
   flutter_launcher_icons: ^0.14.3
+  socket_io_client: ^3.1.2
+  provider: ^6.1.5
 
 dev_dependencies:
   flutter_test:
@@ -86,18 +88,19 @@ flutter:
     # This should be at the ROOT level, not under flutter:
 flutter_native_splash:
       color: "#ffffff"
-      image: assets/images/newlogo.png
+      image: assets/images/logo1152*1152.jpg
       color_dark: "#000000"
-      image_dark: assets/images/newlogo.png
+      fullscreen: true
+      image_dark: assets/images/logo1152*1152.jpg
       android_12:
-        image: assets/images/newlogo.png
+        image: assets/images/logo1152*1152.jpg
         icon_background_color: "#ffffff"
       web: false
 
 flutter_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/images/newlogo.png"
+  image_path: "assets/images/logo1024*1024.jpg"
   min_sdk_android: 21 # android min sdk min:16, default 21
 
 

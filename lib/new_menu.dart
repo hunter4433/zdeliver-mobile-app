@@ -1,18 +1,25 @@
-import 'package:flutter/material.dart';
-
 import 'package:Zdeliver/about_us.dart';
-import 'package:Zdeliver/address_selection.dart';
+import 'package:Zdeliver/coordinate_class.dart';
 import 'package:Zdeliver/home_address_selection_modal.dart';
-import 'package:Zdeliver/mapView.dart';
+import 'package:Zdeliver/services/local_storage.dart';
+import 'package:flutter/material.dart';
+// <<<<<<< HEAD
+//
+// import 'package:Zdeliver/about_us.dart';
+// import 'package:Zdeliver/address_selection.dart';
+// import 'package:Zdeliver/home_address_selection_modal.dart';
+// import 'package:Zdeliver/mapView.dart';
+// =======
+import 'package:geolocator/geolocator.dart';
+// >>>>>>> 6e6a2a2e5762033d8a767ed843a36c3a59fcc36b
 
 import 'package:share_plus/share_plus.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'address_book.dart';
-import 'address_selection.dart';
+
 import 'auth_page.dart';
-import 'locationselectionMapview.dart';
-import 'menu/Addreass.dart';
+
 import 'menu/notifications.dart';
 import 'menu/order_history.dart';
 import 'menu/support.dart';
@@ -20,7 +27,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 // import ''
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({Key? key}) : super(key: key);
+  final VoidCallback? onUserPositionChanged;
+  const ProfilePage({Key? key, this.onUserPositionChanged}) : super(key: key);
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -29,52 +37,68 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
   String _selectedAddress = 'loading...';
+  CoordinatesPair? _lastUserPosition;
+  LocalStorage _localStorage = LocalStorage();
 
-  // Method to retrieve stored user ID
-  Future<String?> getUserName() async {
+  Future getAddress() async {
     try {
-      return await _secureStorage.read(key: 'user_name') ?? 'Hey Guest ';
-    } catch (e) {
-      print('Error reading user_name: $e');
-      return null;
-    }
-  }
-
-  Future<String?> getAddress() async {
-    try {
-      return await _secureStorage.read(key: 'saved_address');
+      // Read the saved address from secure storage
+      CoordinatesPair? userPosition =
+          await _localStorage.getUserPositionLocally();
+      if (userPosition == null) {
+        setState(() {
+          _selectedAddress = 'No address selected';
+          _lastUserPosition = null;
+        });
+        return null; // No address saved
+      }
+      setState(() {
+        _selectedAddress = userPosition.address ?? 'No address selected';
+        _lastUserPosition = userPosition;
+      });
     } catch (e) {
       print('Error reading saved_address: $e');
       return null;
     }
   }
 
-  // Method to retrieve stored phone number
-  Future<String?> getPhoneNumber() async {
-    try {
-      String? number = await _secureStorage.read(key: 'phone_number');
-      String? modified_number = "+91 $number";
-      return modified_number;
-    } catch (e) {
-      print('Error reading phone number: $e');
-      return null;
+  void _selectAddress(String address) async {
+    print('Selected address: $address');
+    // Get the current position of the user
+    CoordinatesPair? newPosition = await _localStorage.getUserPositionLocally();
+    print(
+      'old position: ${_lastUserPosition?.latitude}, ${_lastUserPosition?.longitude}',
+    );
+    print('New position: ${newPosition?.latitude}, ${newPosition?.longitude}');
+    // Only call update if the position changed
+    if (_lastUserPosition == null ||
+        _lastUserPosition!.latitude != newPosition!.latitude ||
+        _lastUserPosition!.longitude != newPosition.longitude) {
+      print(
+        'User position changed: ${newPosition!.latitude}, ${newPosition.longitude}',
+      );
+      widget.onUserPositionChanged?.call();
     }
-  }
 
-  void _selectAddress(String address) {
     setState(() {
       _selectedAddress = address;
+      _lastUserPosition = newPosition;
     });
+
     Navigator.pop(context); // Close the bottom sheet
   }
 
   void _showAddressSelectionSheet() {
     // Use the static method from AddressSelectionSheet class
-    AddressSelectionSheet.showAddressSelectionSheet(context, (address) {
-      // Handle the selected address
-      _selectAddress(address);
-      // The sheet will be closed automatically
-    }, currentAddress: _selectedAddress);
+    AddressSelectionSheet.showAddressSelectionSheet(
+      context,
+      (address) {
+        // Handle the selected address
+        _selectAddress(address);
+        // The sheet will be closed automatically
+      },
+      //currentAddress: _selectedAddress
+    );
   }
 
   @override
@@ -82,11 +106,7 @@ class _ProfilePageState extends State<ProfilePage> {
     // TODO: implement initState
     super.initState();
     // Initialize the selected address from secure storage
-    getAddress().then((address) {
-      setState(() {
-        _selectedAddress = address ?? 'No address selected';
-      });
-    });
+    getAddress();
   }
 
   @override
@@ -164,7 +184,8 @@ class _ProfilePageState extends State<ProfilePage> {
                               children: [
                                 FutureBuilder<String?>(
                                   future:
-                                      getUserName(), // Use your authService instance
+                                      _localStorage
+                                          .getUserName(), // Use your authService instance
                                   builder: (context, snapshot) {
                                     return Text(
                                       snapshot.data ?? 'Loading...',
@@ -179,7 +200,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                 const SizedBox(height: 2),
                                 FutureBuilder<String?>(
                                   future:
-                                      getPhoneNumber(), // Use your authService instance
+                                      _localStorage
+                                          .getUserPhoneNumber(), // Use your authService instance
                                   builder: (context, snapshot) {
                                     return Text(
                                       snapshot.data ?? 'Loading...',
@@ -443,7 +465,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
                         onTap: () async {
                           // Clear secure storage
-                          await _secureStorage.deleteAll();
 
                           _showLogoutDialog(context);
 
@@ -467,8 +488,6 @@ class _ProfilePageState extends State<ProfilePage> {
                           style: TextStyle(fontSize: 16),
                         ),
                         onTap: () async {
-                          await _secureStorage.deleteAll();
-
                           _showDeleteAccountDialog(context);
                         },
                       ),
@@ -652,8 +671,10 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  void _performLogout(BuildContext context) {
+  void _performLogout(BuildContext context) async {
     // Add your logout logic here (clear user data, tokens, etc.)
+    await _secureStorage.deleteAll();
+    // Navigate to the login screen
 
     Navigator.pushAndRemoveUntil(
       context,
@@ -662,8 +683,9 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  void _performDeleteAccount(BuildContext context) {
+  void _performDeleteAccount(BuildContext context) async {
     // Add your delete account logic here (API call, clear data, etc.)
+    await _secureStorage.deleteAll();
 
     Navigator.pushAndRemoveUntil(
       context,

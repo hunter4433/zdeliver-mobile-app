@@ -1,8 +1,10 @@
+import 'package:Zdeliver/address_model.dart';
+import 'package:Zdeliver/services/local_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
 import 'package:google_fonts/google_fonts.dart';
 import 'address_selection_sheet.dart';
-import 'orderPlace.dart';
+
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -10,14 +12,12 @@ import 'package:http/http.dart' as http;
 class AddressSelectionSheet extends StatefulWidget {
   final Function(String) onAddressSelected;
   final int? selectedRecommendedIndex; // Added parameter
-  final String currentAddress; // Default value
 
   const AddressSelectionSheet({
     Key? key,
 
     required this.onAddressSelected,
     this.selectedRecommendedIndex,
-    required this.currentAddress, // Added parameter
   }) : super(key: key);
 
   // Updated static method to accept selectedRecommendedIndex
@@ -25,8 +25,6 @@ class AddressSelectionSheet extends StatefulWidget {
     BuildContext context,
     Function(String) onAddressSelected, {
     int? selectedRecommendedIndex, // Added optional parameter
-    String currentAddress =
-        'No address saved', // Default value for currentAddress
   }) {
     showModalBottomSheet(
       context: context,
@@ -42,7 +40,6 @@ class AddressSelectionSheet extends StatefulWidget {
         return AddressSelectionSheet(
           onAddressSelected: onAddressSelected,
           selectedRecommendedIndex: selectedRecommendedIndex,
-          currentAddress: currentAddress, // Pass parameter
         );
       },
     );
@@ -53,45 +50,58 @@ class AddressSelectionSheet extends StatefulWidget {
 }
 
 class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
-  String? _currentAddress;
+  String? _currentAddress = 'loading...'; // Initialize with loading state
 
-   bool _isLoading = true;
-
-  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+// <<<<<<< HEAD
+//    bool _isLoading = true;
+//
+//   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+// =======
+  LocalStorage localStorage = LocalStorage();
+// >>>>>>> 6e6a2a2e5762033d8a767ed843a36c3a59fcc36b
 
   @override
   void initState() {
     super.initState();
-    // _loadCurrentAddress();
-    _currentAddress = widget.currentAddress; // Initialize with passed value
+
+    _loadCurrentAddress();
   }
-
-
-  Future<String?> getUserId() async {
-    try {
-      return await _secureStorage.read(key: 'userId');
-    } catch (e) {
-      print('Error reading userId: $e');
-      return null;
-    }
-  }
-
 
   Future<void> _loadCurrentAddress() async {
     try {
-      String? savedAddress = await _secureStorage.read(key: 'saved_address');
-      setState(() {
-        _currentAddress = savedAddress ?? 'No address saved';
-        _isLoading = false;
-      });
+// <<<<<<< HEAD
+//       String? savedAddress = await _secureStorage.read(key: 'saved_address');
+//       setState(() {
+//         _currentAddress = savedAddress ?? 'No address saved';
+//         _isLoading = false;
+//       });
+// =======
+      // Fetch the current address from secure storage
+      Address? address = await localStorage.getUserSelectedAddress();
+      if (address == null) {
+        setState(() {
+          _currentAddress =
+              'No address saved'; // Default message if no address is found
+        });
+      } else {
+        setState(() {
+          _currentAddress = address.fullAddress; // Set the current address
+        });
+      }
+// >>>>>>> 6e6a2a2e5762033d8a767ed843a36c3a59fcc36b
     } catch (e) {
+      print('Error loading current address: $e');
       setState(() {
-        _currentAddress = 'Error loading address';
-        _isLoading = false;
+// <<<<<<< HEAD
+//         _currentAddress = 'Error loading address';
+//         _isLoading = false;
+// =======
+        _currentAddress =
+            'No address saved'; // Default message in case of error
+// >>>>>>> 6e6a2a2e5762033d8a767ed843a36c3a59fcc36b
       });
     }
   }
-
 
   Future<void> _navigateToSavedAddresses() async {
     _showAddressSelectionSheet();
@@ -106,10 +116,9 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
 
   void _selectAddress(String address) async {
     setState(() {
-
       _currentAddress = address; // Store the selected address
-
     });
+    
     widget.onAddressSelected(address); // Notify the parent widget
   }
 
@@ -271,7 +280,6 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
               width: double.infinity,
               height: 56,
               child: ElevatedButton(
-
                 onPressed:
                 // _currentAddress != null &&
                 // _currentAddress!.isNotEmpty &&
@@ -297,7 +305,6 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
                   //   );
                   widget.onAddressSelected(_currentAddress!);
 
-
                   // Close loading indicator
                   // Navigator.pop(context);
 
@@ -315,10 +322,19 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
                 },
 
                 style: ElevatedButton.styleFrom(
-
-                  backgroundColor: _currentAddress != null && _currentAddress!.isNotEmpty && _currentAddress != 'No address saved'
-                      ? const Color(0xFFF15A25)
-                      : const Color(0xFFCCCCCC),
+// <<<<<<< HEAD
+//
+//                   backgroundColor: _currentAddress != null && _currentAddress!.isNotEmpty && _currentAddress != 'No address saved'
+//                       ? const Color(0xFFF15A25)
+//                       : const Color(0xFFCCCCCC),
+// =======
+                  backgroundColor:
+                      _currentAddress != null &&
+                              _currentAddress!.isNotEmpty &&
+                              _currentAddress != 'No address saved'
+                          ? const Color(0xFFF15A25)
+                          : const Color(0xFFCCCCCC),
+// >>>>>>> 6e6a2a2e5762033d8a767ed843a36c3a59fcc36b
 
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
@@ -370,8 +386,7 @@ class CartBookingService {
     required int userId,
 
     required String cartType,
-     required String address,
-
+    required String address,
   }) async {
     try {
       final url = Uri.parse('$baseUrl/book/create-cart');
@@ -380,8 +395,7 @@ class CartBookingService {
         "user_id": userId,
 
         "cart_type": cartType,
-         "address": address,
-
+        "address": address,
       };
 
       final response = await http.post(

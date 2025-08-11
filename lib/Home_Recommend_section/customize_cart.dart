@@ -320,9 +320,14 @@ class _GroceryPageState extends State<customize_cart> {
 
         body: Stack(
           children: [
-            // Main scrollable content
+            // Main scrollable content with bottom padding
             Padding(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.only(
+                left: 10,
+                right: 10,
+                top: 10,
+                bottom: 100, // Add bottom padding to prevent overlap with button
+              ),
               child: GridView.builder(
                 itemCount: items.length,
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -349,7 +354,7 @@ class _GroceryPageState extends State<customize_cart> {
             // Toast message for first item only
             if (showToast)
               Positioned(
-                top: 100,
+                top: 10,
                 left: 0,
                 right: 0,
                 child: Center(
@@ -418,104 +423,108 @@ class _GroceryPageState extends State<customize_cart> {
                 ),
               ),
 
-            // Fixed bottom button
+            // Fixed bottom button with SafeArea for better positioning
             Positioned(
-              bottom: 32,
-              left: 30,
-              right: 30,
+              bottom: 0,
+              left: 0,
+              right: 0,
               child: Container(
-                height: 60,
-                width: 350,
-                decoration: BoxDecoration(
-                  color: Color(0xFF328616),
-                  borderRadius: BorderRadius.circular(50),
-                  border: Border.all(color: Colors.white, width: 2),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.4),
-                      blurRadius: 10,
-                      spreadRadius: 2,
-                      offset: Offset(0, 6),
-                    ),
-                  ],
+                // Background color to prevent transparency issues
+                padding: EdgeInsets.only(
+                  left: 30,
+                  right: 30,
+                  bottom: MediaQuery.of(context).padding.bottom + 16, // Respect safe area
+                  top: 4,
                 ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 16.0),
-                        child: Text(
-                          '$itemCount ${itemCount == 1 ? 'item' : 'items'} added',
-                          style: const TextStyle(
-                            fontSize: 17,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                child: Container(
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: Color(0xFF328616),
+                    borderRadius: BorderRadius.circular(50),
+                    border: Border.all(color: Colors.white, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.4),
+                        blurRadius: 10,
+                        spreadRadius: 2,
+                        offset: Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 16.0),
+                          child: Text(
+                            '$itemCount ${itemCount == 1 ? 'item' : 'items'} added',
+                            style: const TextStyle(
+                              fontSize: 17,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () async {
-                          
-                          // Pass the selected products data to the checkout page
-                          final updatedList = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (context) => CheckoutPage(
-                                    selectedProducts:
-                                        selectedProducts.values.toList(),
-                                    sourceScreen: 'customiseCart',
-                                  ),
-                            ),
-                          );
-                          print(updatedList);
-                          if (updatedList != null) {
-                            // Handle any updates from the checkout page if needed
-                            setState(() {
-                              selectedProducts = {
-                                for (var item in updatedList)
-                                  item['name']: item,
-                              };
-                              itemCount = selectedProducts.length;
-                              remainingItems = maxItems - itemCount;
-                              showStickyCounter = itemCount > 0;
-                            });
-                          }
-                        },
-                        child: Container(
-                          height: double.infinity,
-                          decoration: BoxDecoration(
-                            color: Color(0xFF328616),
-                            borderRadius: const BorderRadius.only(
-                              topRight: Radius.circular(32),
-                              bottomRight: Radius.circular(32),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
-                              Text(
-                                'View order',
-                                style: TextStyle(
-                                  fontSize: 17,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () async {
+                            // Pass the selected products data to the checkout page
+                            final updatedList = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CheckoutPage(
+                                  selectedProducts: selectedProducts.values.toList(),
+                                  sourceScreen: 'customiseCart',
                                 ),
                               ),
-                              SizedBox(width: 4),
-                              Icon(
-                                Icons.arrow_forward,
-                                color: Colors.white,
-                                size: 18,
+                            );
+                            print(updatedList);
+                            if (updatedList != null) {
+                              // Handle any updates from the checkout page if needed
+                              setState(() {
+                                selectedProducts = {
+                                  for (var item in updatedList) item['name']: item,
+                                };
+                                itemCount = selectedProducts.length;
+                                remainingItems = maxItems - itemCount;
+                                showStickyCounter = itemCount > 0;
+                              });
+                            }
+                          },
+                          child: Container(
+                            height: double.infinity,
+                            decoration: BoxDecoration(
+                              color: Color(0xFF328616),
+                              borderRadius: const BorderRadius.only(
+                                topRight: Radius.circular(32),
+                                bottomRight: Radius.circular(32),
                               ),
-                            ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: const [
+                                Text(
+                                  'View order',
+                                  style: TextStyle(
+                                    fontSize: 17,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(width: 4),
+                                Icon(
+                                  Icons.arrow_forward,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
